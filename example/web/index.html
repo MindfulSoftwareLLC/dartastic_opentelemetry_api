@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OpenTelemetry API Web Example</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      line-height: 1.6;
+    }
+    
+    h1 {
+      color: #333;
+      border-bottom: 1px solid #ddd;
+      padding-bottom: 10px;
+    }
+    
+    button {
+      background-color: #4CAF50;
+      border: none;
+      color: white;
+      padding: 10px 20px;
+      text-align: center;
+      text-decoration: none;
+      display: inline-block;
+      font-size: 16px;
+      margin: 20px 0;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    
+    button:hover {
+      background-color: #45a049;
+    }
+    
+    #output {
+      background-color: #f8f8f8;
+      border: 1px solid #ddd;
+      padding: 15px;
+      border-radius: 4px;
+      margin-top: 20px;
+    }
+    
+    p {
+      margin: 8px 0;
+    }
+  </style>
+</head>
+<body>
+  <h1>OpenTelemetry API Web Example</h1>
+  
+  <p>
+    This example demonstrates using the OpenTelemetry API in a web application.
+    Click the button below to create a span and view its details.
+  </p>
+  
+  <button id="traceButton">Create Span</button>
+  
+  <div id="output">
+    <p>Click the button to create a span and see its details here.</p>
+  </div>
+  
+  <script type="module">
+    // Import the Dart loader
+    import { dartMainRunner } from '/packages/web/dart_main_runner.mjs';
+    
+    // Load the Dart application
+    dartMainRunner.runMain('web_example.dart.js');
+  </script>
+</body>
+</html>
