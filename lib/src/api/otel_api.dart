@@ -89,6 +89,20 @@ class OTelAPI {
     return OTelFactory.otelFactory!.context(baggage: baggage);
   }
 
+  /// returns a list of [APITracerProvider]s including the the global default
+  /// and any named providers added.
+  static List<APITracerProvider> tracerProviders() {
+    _getAndCacheOtelFactory();
+    return _otelFactory!.getTracerProviders();
+  }
+
+  /// returns a list of [APITracerProvider]s including the the global default
+  /// and any named providers added.
+  static List<APIMeterProvider> meterProviders() {
+    _getAndCacheOtelFactory();
+    return _otelFactory!.getMeterProviders();
+  }
+
   /// Gets a TracerProvider.  If name is null, this returns
   /// the global default [APITracerProvider], if not it returns a
   /// TracerProvider for the name.  If the TracerProvider does not exist,
