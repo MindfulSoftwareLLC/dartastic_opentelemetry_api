@@ -1,7 +1,11 @@
 // Licensed under the Apache License, Version 2.0
 // Copyright 2025, Michael Bushe, All rights reserved.
 
+library instrumentation_scope;
+
 import '../../../dartastic_opentelemetry_api.dart';
+
+part 'instrumentation_scope_create.dart';
 
 /// Represents the instrumentation scope information.
 class InstrumentationScope {
@@ -23,10 +27,10 @@ class InstrumentationScope {
   /// [version] is optional and specifies the version of the instrumentation scope
   /// [schemaUrl] is optional and specifies the Schema URL
   /// [attributes] is optional and specifies instrumentation scope attributes
-  const InstrumentationScope({
-    required this.name,
+  const InstrumentationScope._(
+    this.name,
     this.version,
     this.schemaUrl,
     this.attributes,
-  });
+  );
 }

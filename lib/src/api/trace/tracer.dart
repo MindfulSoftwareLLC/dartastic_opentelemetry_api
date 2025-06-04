@@ -307,8 +307,11 @@ class APITracer {
 
     final apiSpan = APISpanCreate.create(
       name: name,
-      instrumentationScope: InstrumentationScope(
-          name: this.name, version: version, attributes: attributes),
+      instrumentationScope: InstrumentationScopeCreate.create(
+          name: this.name,
+          version: version ?? '1.0.0',
+          schemaUrl: schemaUrl,
+          attributes: attributes),
       spanContext: effectiveSpanContext,
       parentSpan: parentSpan,
       spanKind: kind,

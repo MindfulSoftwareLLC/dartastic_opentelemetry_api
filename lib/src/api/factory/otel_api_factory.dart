@@ -6,6 +6,7 @@ import 'dart:typed_data';
 import 'package:dartastic_opentelemetry_api/dartastic_opentelemetry_api.dart'
     show OTelAPI, Timestamp;
 import 'package:dartastic_opentelemetry_api/src/api/baggage/baggage.dart';
+import 'package:dartastic_opentelemetry_api/src/api/common/instrumentation_scope.dart';
 import 'package:dartastic_opentelemetry_api/src/api/metrics/counter.dart';
 import 'package:dartastic_opentelemetry_api/src/api/metrics/gauge.dart';
 import 'package:dartastic_opentelemetry_api/src/api/metrics/histogram.dart';
@@ -224,6 +225,16 @@ class OTelAPIFactory extends OTelFactory {
   @override
   Attribute<List<double>> attributeDoubleList(String key, List<double> value) {
     return AttributeCreate.create(key, value);
+  }
+
+  @override
+  InstrumentationScope instrumentationScope({required String name, String version = '1.0.0', String? schemaUrl, Attributes? attributes}) {
+    return InstrumentationScopeCreate.create(
+      name: name,
+      version: version,
+      schemaUrl: schemaUrl,
+      attributes: attributes,
+    );
   }
 
   @override

@@ -16,7 +16,7 @@ import 'package:dartastic_opentelemetry_api/src/api/trace/trace_id.dart';
 import 'package:dartastic_opentelemetry_api/src/api/trace/trace_state.dart';
 import 'package:dartastic_opentelemetry_api/src/api/trace/tracer_provider.dart';
 
-import '../../dartastic_opentelemetry_api.dart' show OTelAPI;
+import '../../dartastic_opentelemetry_api.dart' show InstrumentationScope, OTelAPI;
 import '../api/baggage/baggage.dart';
 import '../api/baggage/baggage_entry.dart';
 import '../api/common/attribute.dart';
@@ -68,11 +68,10 @@ abstract class OTelFactory {
   /// @param apiServiceName The name of the service being instrumented
   /// @param apiServiceVersion The version of the service being instrumented
   /// @param factoryFactory Factory method that can reconstruct this factory type across process boundaries
-  OTelFactory(
-      {required String apiEndpoint,
-      required String apiServiceName,
-      required String apiServiceVersion,
-      required this.factoryFactory})
+  OTelFactory({required String apiEndpoint,
+    required String apiServiceName,
+    required String apiServiceVersion,
+    required this.factoryFactory})
       : _apiServiceVersion = apiServiceVersion,
         _apiServiceName = apiServiceName,
         _apiEndpoint = apiEndpoint;
@@ -116,8 +115,8 @@ abstract class OTelFactory {
 
   /// Deserializes the factory configuration from a map from [serialize], used
   /// to reproduce the factory across execution contexts (isolates)
-  static OTelFactory deserialize(
-      Map<String, dynamic> data, OTelFactoryCreationFunction factoryFactory) {
+  static OTelFactory deserialize(Map<String, dynamic> data,
+      OTelFactoryCreationFunction factoryFactory) {
     // For example, returning an instance of OTelAPIFactory.
     final oTelFactory = factoryFactory(
       apiEndpoint: data['apiEndpoint'] as String,
@@ -135,6 +134,7 @@ abstract class OTelFactory {
         serviceName: _apiServiceName,
         serviceVersion: _apiServiceVersion);
   }
+
 
   /// Returns the global default meter provider
   APIMeterProvider globalDefaultMeterProvider() {
@@ -180,6 +180,42 @@ abstract class OTelFactory {
         endpoint: endpoint ?? _apiEndpoint,
         serviceName: serviceName ?? _apiServiceName,
         serviceVersion: serviceVersion ?? _apiServiceVersion);
+  }
+
+  /// return an array combining the global default tracer provider and any
+  /// additional named trace providers added.
+  List<APITracerProvider> getTracerProviders() {
+    if (_tracerProviders == null || _tracerProviders!.isEmpty) {
+      if (_globalDefaultTracerProvider == null) {
+        return [];
+      } else {
+        return [_globalDefaultTracerProvider!];
+      }
+    } else {
+      if (_globalDefaultTracerProvider == null) {
+        return List.unmodifiable(_tracerProviders!.values);
+      } else {
+        return [_globalDefaultTracerProvider!, ..._tracerProviders!.values];
+      }
+    }
+  }
+
+  /// return an array combining the global default tracer provider and any
+  /// additional named trace providers added.
+  List<APIMeterProvider> getMeterProviders() {
+    if (_meterProviders == null || _meterProviders!.isEmpty) {
+      if (_globalDefaultMeterProvider == null) {
+        return [];
+      } else {
+        return [_globalDefaultMeterProvider!];
+      }
+    } else {
+      if (_globalDefaultMeterProvider == null) {
+        return List.unmodifiable(_meterProviders!.values);
+      } else {
+        return [_globalDefaultMeterProvider!, ..._meterProviders!.values];
+      }
+    }
   }
 
   /// Creates a [APITracerProvider]
@@ -244,6 +280,14 @@ abstract class OTelFactory {
   /// Creates an `Attributes` from a list of values;
   Attributes attributesFromList(List<Attribute> attributeList);
 
+  /// Creates a new InstrumentationScope.
+  ///
+  /// [name] is required and represents the instrumentation scope name (e.g. 'io.opentelemetry.contrib.mongodb')
+  /// [version] is optional and specifies the version of the instrumentation scope, defaults to '1.0.0'
+  /// [schemaUrl] is optional and specifies the Schema URL
+  /// [attributes] is optional and specifies instrumentation scope attributes
+  InstrumentationScope instrumentationScope({required String name, String version = '1.0.0', String? schemaUrl, Attributes? attributes});
+
   /// Creates a new [TraceState] with the provided `entries`
   TraceState traceState(Map<String, String>? entries);
 
@@ -307,13 +351,12 @@ abstract class OTelFactory {
 
   ///Creates a span context. Random trace and span ids
   ///will be generated if not provided.
-  SpanContext spanContext(
-      {TraceId? traceId,
-      SpanId? spanId,
-      SpanId? parentSpanId,
-      TraceFlags? traceFlags,
-      TraceState? traceState,
-      bool? isRemote = false});
+  SpanContext spanContext({TraceId? traceId,
+    SpanId? spanId,
+    SpanId? parentSpanId,
+    TraceFlags? traceFlags,
+    TraceState? traceState,
+    bool? isRemote = false});
 
   /// Resets the factory to its initial state.
   ///

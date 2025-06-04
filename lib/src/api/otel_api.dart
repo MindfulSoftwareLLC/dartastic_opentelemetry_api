@@ -89,6 +89,42 @@ class OTelAPI {
     return OTelFactory.otelFactory!.context(baggage: baggage);
   }
 
+  /// Creates a new InstrumentationScope.
+  ///
+  /// [name] is required and represents the instrumentation scope name (e.g. 'io.opentelemetry.contrib.mongodb')
+  /// [version] is optional and specifies the version of the instrumentation scope, defaults to '1.0.0'
+  /// [schemaUrl] is optional and specifies the Schema URL
+  /// [attributes] is optional and specifies instrumentation scope attributes
+  static InstrumentationScope instrumentationScope(
+      {required String name,
+      String version = '1.0.0',
+      String? schemaUrl,
+      Attributes? attributes}) {
+    return OTelFactory.otelFactory == null
+        ? OTelAPI.instrumentationScope(
+            name: name,
+            version: version,
+            schemaUrl: schemaUrl,
+            attributes: attributes)
+        : OTelFactory.otelFactory!.instrumentationScope(
+            name: name,
+            version: version,
+            schemaUrl: schemaUrl,
+            attributes: attributes);
+  }
+
+  /// returns a list of [APITracerProvider]s including the the global default
+  /// and any named providers added.
+  static List<APITracerProvider> tracerProviders() {
+    return _otelFactory == null ? [] : _otelFactory!.getTracerProviders();
+  }
+
+  /// returns a list of [APITracerProvider]s including the the global default
+  /// and any named providers added.
+  static List<APIMeterProvider> meterProviders() {
+    return _otelFactory == null ? [] : _otelFactory!.getMeterProviders();
+  }
+
   /// Gets a TracerProvider.  If name is null, this returns
   /// the global default [APITracerProvider], if not it returns a
   /// TracerProvider for the name.  If the TracerProvider does not exist,
@@ -572,14 +608,28 @@ class OTelAPI {
   }
 
   static OTelFactory _getAndCacheOtelFactory() {
-    if (_otelFactory != null) {
+    // Always check if a new (potentially better) factory has been installed
+    if (OTelFactory.otelFactory != null) {
+      // If we have a cached factory but a new one is available, update the cache
+      if (_otelFactory != OTelFactory.otelFactory) {
+        _otelFactory = OTelFactory.otelFactory;
+      }
       return _otelFactory!;
     }
-    if (OTelFactory.otelFactory == null) {
-      throw StateError('initialize() must be called first.');
+
+    // If no factory is installed, create the API factory (NoOp implementations)
+    if (_otelFactory == null) {
+      // According to OpenTelemetry spec, when no SDK is installed,
+      // the API should provide NoOp implementations automatically
+      OTelFactory.otelFactory = otelApiFactoryFactoryFunction(
+        apiEndpoint: OTelFactory.defaultEndpoint,
+        apiServiceName: defaultServiceName,
+        apiServiceVersion: defaultServiceVersion,
+      );
+      _otelFactory = OTelFactory.otelFactory;
     }
-    _otelFactory = OTelFactory.otelFactory;
-    return _otelFactory ?? OTelFactory.otelFactory!;
+
+    return _otelFactory!;
   }
 
   /// Reset API state (only public for testing)
