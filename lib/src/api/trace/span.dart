@@ -322,7 +322,7 @@ class APISpan {
   /// Sets the status of the Span. Ignored if isEnded
   /// Setting `Status` with `StatusCode=Ok` will override any prior or future
   /// attempts to set span `Status` with `StatusCode=Error` or `StatusCode=Unset`
-  /// [description] MUST only be used with the `Error` `StatusCode` value.
+  /// [description] An optional description of the status.
   ///  An empty `Description` is equivalent with a not present one.
   ///  Attempts to set value Unset is ignored.
   /// [description] When [statusCode] is error, description should include the
@@ -343,7 +343,7 @@ class APISpan {
       if (_spanStatusCode == SpanStatusCode.Error &&
           description != null &&
           description.isNotEmpty) {
-        _statusDescription = description;
+          _statusDescription = description;
       }
     }
   }

@@ -3,6 +3,8 @@
 
 library attributes;
 
+import 'dart:convert';
+
 import 'package:collection/collection.dart';
 import 'package:meta/meta.dart';
 import '../../../dartastic_opentelemetry_api.dart';
@@ -294,7 +296,19 @@ class Attributes {
   }
 
   @override
-  String toString() => _entries.toString();
+  String toString() {
+    return const JsonEncoder.withIndent('  ').convert(toJson());
+  }
+
+  /// Converts the attributes to a JSON-serializable map.
+  /// This is useful for logging or debugging.
+  Map<String, dynamic> toJson() {
+    final result = <String, dynamic>{};
+    for (final entry in _entries.entries) {
+      result[entry.key] = entry.value.value;
+    }
+    return result;
+  }
 
   @override
   bool operator ==(Object other) {
@@ -308,16 +322,6 @@ class Attributes {
 
   @override
   int get hashCode => const MapEquality<String, Attribute>().hash(_entries);
-
-  /// Converts the attributes to a JSON-serializable map.
-  /// This is useful for logging or debugging.
-  Map<String, dynamic> toJson() {
-    final result = <String, dynamic>{};
-    for (final entry in _entries.entries) {
-      result[entry.key] = entry.value.value;
-    }
-    return result;
-  }
 }
 
 /// Extension to create Attributes from a simple Map

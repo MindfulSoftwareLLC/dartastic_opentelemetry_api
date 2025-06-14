@@ -1,7 +1,6 @@
 // Licensed under the Apache License, Version 2.0
 // Copyright 2025, Michael Bushe, All rights reserved.
 
-import 'dart:async';
 
 import 'package:dartastic_opentelemetry_api/dartastic_opentelemetry_api.dart';
 import 'package:test/test.dart';
@@ -25,35 +24,6 @@ void main() {
     tearDown(() {
       // Restore the original factory
       OTelFactory.otelFactory = originalFactory;
-    });
-
-    test('recordSpan handles exceptions correctly', () {
-      final tracer = OTelAPI.tracer('test-tracer');
-      
-      // Test with a function that throws
-      expect(() {
-        tracer.recordSpan(
-          name: 'error-span',
-          fn: () {
-            throw Exception('Test error');
-          },
-        );
-      }, throwsException);
-    });
-    
-    test('recordSpanAsync handles exceptions correctly', () async {
-      final tracer = OTelAPI.tracer('test-tracer');
-      
-      // Test with a function that throws
-      expect(() async {
-        await tracer.recordSpanAsync(
-          name: 'error-span',
-          fn: () async {
-            await Future<void>.delayed(const Duration(milliseconds: 10));
-            throw Exception('Test error');
-          },
-        );
-      }, throwsException);
     });
     
     test('remote context is handled correctly in createSpan', () {

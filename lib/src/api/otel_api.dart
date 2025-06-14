@@ -126,9 +126,10 @@ class OTelAPI {
   }
 
   /// Gets a TracerProvider.  If name is null, this returns
-  /// the global default [APITracerProvider], if not it returns a
-  /// TracerProvider for the name.  If the TracerProvider does not exist,
-  /// it is created.
+  /// the global default [APITracerProvider] from the installed factory,
+  /// (API if no SDK is installed), if not it returns an
+  /// APITracerProvider for the name.
+  /// If the TracerProvider does not exist, it is created.
   static APITracerProvider tracerProvider([String? name]) {
     _getAndCacheOtelFactory();
     if (name != null && name.isEmpty) {
