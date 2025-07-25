@@ -33,4 +33,9 @@ class InstrumentationScope {
     this.schemaUrl,
     this.attributes,
   );
+
+  @override
+  String toString() {
+    return 'InstrumentationScope{name: $name, version: $version, schemaUrl: $schemaUrl, attributes: $attributes}';
+  }
 }
