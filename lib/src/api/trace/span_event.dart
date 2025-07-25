@@ -38,4 +38,9 @@ class SpanEvent {
     required this.timestamp,
     this.attributes,
   });
+
+  @override
+  String toString() {
+    return 'SpanEvent{name: $name, timestamp: $timestamp, attributes: $attributes}';
+  }
 }
