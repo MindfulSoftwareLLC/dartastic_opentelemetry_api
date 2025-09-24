@@ -9,7 +9,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - bumped all dependencies to latest
-- InstrumentationScope toString
 
 ## [0.8.5] - 2025-07-25
 
