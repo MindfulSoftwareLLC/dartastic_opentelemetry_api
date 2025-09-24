@@ -46,8 +46,7 @@ void main() {
 
     test('provides access to raw bytes', () {
       final id = OTelAPI.spanId();
-      expect(id.bytes.length, equals(8),
-          reason: 'Span ID should be 8 bytes');
+      expect(id.bytes.length, equals(8), reason: 'Span ID should be 8 bytes');
     });
 
     test('implements value equality', () {

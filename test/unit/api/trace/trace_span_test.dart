@@ -23,9 +23,11 @@ void main() {
 
     expect(span.name, equals('root-span'));
     expect(span.kind, equals(SpanKind.internal));
-    expect(span.spanContext.isValid, isTrue);  // Root spans MUST have valid context
+    expect(
+        span.spanContext.isValid, isTrue); // Root spans MUST have valid context
     expect(span.spanContext.parentSpanId, isNotNull);
-    expect(span.spanContext.parentSpanId!.hexString, equals(  '0000000000000000'));  // Zero SpanId indicates no parent
+    expect(span.spanContext.parentSpanId!.hexString,
+        equals('0000000000000000')); // Zero SpanId indicates no parent
     expect(span.isRecording, isTrue);
 
     span.end();
@@ -46,17 +48,21 @@ void main() {
         reason: 'Child should inherit trace ID');
 
     // Verify parent span ID relationship
-    expect(childSpan.spanContext.parentSpanId, equals(rootSpan.spanContext.spanId),
+    expect(
+        childSpan.spanContext.parentSpanId, equals(rootSpan.spanContext.spanId),
         reason: 'Child should reference parent span ID');
 
     // Verify unique span ID
-    expect(childSpan.spanContext.spanId, isNot(equals(rootSpan.spanContext.spanId)),
+    expect(childSpan.spanContext.spanId,
+        isNot(equals(rootSpan.spanContext.spanId)),
         reason: 'Child should have different span ID');
 
     // Verify flags and state inheritance
-    expect(childSpan.spanContext.traceFlags, equals(rootSpan.spanContext.traceFlags),
+    expect(childSpan.spanContext.traceFlags,
+        equals(rootSpan.spanContext.traceFlags),
         reason: 'Child should inherit trace flags');
-    expect(childSpan.spanContext.traceState, equals(rootSpan.spanContext.traceState),
+    expect(childSpan.spanContext.traceState,
+        equals(rootSpan.spanContext.traceState),
         reason: 'Child should inherit trace state');
   });
 

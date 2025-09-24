@@ -16,7 +16,7 @@ void main() {
         serviceName: 'test-service',
         serviceVersion: '1.0.0',
       );
-      
+
       meter = OTelAPI.meterProvider().getMeter(name: 'test-meter');
       gauge = meter.createGauge<double>(
         name: 'test-gauge',
@@ -31,7 +31,8 @@ void main() {
       expect(gauge.unit, equals('celsius'));
       expect(gauge.description, equals('A test gauge'));
       expect(gauge.meter, equals(meter));
-      expect(gauge.enabled, isFalse); // API implementation is disabled by default
+      expect(
+          gauge.enabled, isFalse); // API implementation is disabled by default
       expect(gauge.isCounter, isFalse);
       expect(gauge.isUpDownCounter, isFalse);
       expect(gauge.isGauge, isTrue);
@@ -61,7 +62,8 @@ void main() {
       gauge.recordWithMap(-10.5, attributeMap);
     });
 
-    test('setWithMap with empty map is equivalent to set with null attributes', () {
+    test('setWithMap with empty map is equivalent to set with null attributes',
+        () {
       // Act & Assert - No exception should be thrown
       gauge.recordWithMap(42.5, {});
       gauge.recordWithMap(-10.5, {});

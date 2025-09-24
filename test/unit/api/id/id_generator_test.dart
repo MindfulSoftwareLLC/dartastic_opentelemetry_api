@@ -39,6 +39,5 @@ void main() {
       expect(IdGenerator.hexToBytes('invalid'), isNull);
       expect(IdGenerator.hexToBytes('123'), isNull);
     });
-
   });
 }

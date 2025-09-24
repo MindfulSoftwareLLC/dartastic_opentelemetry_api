@@ -343,7 +343,7 @@ class APISpan {
       if (_spanStatusCode == SpanStatusCode.Error &&
           description != null &&
           description.isNotEmpty) {
-          _statusDescription = description;
+        _statusDescription = description;
       }
     }
   }
@@ -417,109 +417,6 @@ class APISpan {
     }
   }
 
-  /// Adds a string attribute to the span by merging with existing attributes.
-  ///
-  /// Adding attributes at span creation is preferred to calling this method later,
-  /// as samplers can only consider information already present during span creation.
-  ///
-  /// @param attributes The attributes to add to this span
-  /// @return void
-  void addAttributeString(String key, String value) {
-    if (!isEnded) {
-      _attributes = _attributes.copyWithStringAttribute(key, value);
-    }
-  }
-
-  /// Adds a list of string attribute to the span by merging with existing attributes.
-  ///
-  /// Adding attributes at span creation is preferred to calling this method later,
-  /// as samplers can only consider information already present during span creation.
-  ///
-  /// @param attributes The attributes to add to this span
-  /// @return void
-  void addAttributeStringList(String key, List<String> value) {
-    if (!isEnded) {
-      _attributes = _attributes.copyWithStringListAttribute(key, value);
-    }
-  }
-
-  /// Adds a boolean attribute to the span by merging with existing attributes.
-  ///
-  /// Adding attributes at span creation is preferred to calling this method later,
-  /// as samplers can only consider information already present during span creation.
-  ///
-  /// @param attributes The attributes to add to this span
-  /// @return void
-  void addAttributeBool(String key, bool value) {
-    if (!isEnded) {
-      _attributes = _attributes.copyWithBoolAttribute(key, value);
-    }
-  }
-
-  /// Adds a list of bool attribute to the span by merging with existing attributes.
-  ///
-  /// Adding attributes at span creation is preferred to calling this method later,
-  /// as samplers can only consider information already present during span creation.
-  ///
-  /// @param attributes The attributes to add to this span
-  /// @return void
-  void addAttributeBoolList(String key, List<bool> value) {
-    if (!isEnded) {
-      _attributes = _attributes.copyWithBoolListAttribute(key, value);
-    }
-  }
-
-  /// Adds a int attribute to the span by merging with existing attributes.
-  ///
-  /// Adding attributes at span creation is preferred to calling this method later,
-  /// as samplers can only consider information already present during span creation.
-  ///
-  /// @param attributes The attributes to add to this span
-  /// @return void
-  void addAttributeInt(String key, int value) {
-    if (!isEnded) {
-      _attributes = _attributes.copyWithIntAttribute(key, value);
-    }
-  }
-
-  /// Adds a list of int attribute to the span by merging with existing attributes.
-  ///
-  /// Adding attributes at span creation is preferred to calling this method later,
-  /// as samplers can only consider information already present during span creation.
-  ///
-  /// @param attributes The attributes to add to this span
-  /// @return void
-  void addAttributeIntList(String key, List<int> value) {
-    if (!isEnded) {
-      _attributes = _attributes.copyWithIntListAttribute(key, value);
-    }
-  }
-
-  /// Adds a double attribute to the span by merging with existing attributes.
-  ///
-  /// Adding attributes at span creation is preferred to calling this method later,
-  /// as samplers can only consider information already present during span creation.
-  ///
-  /// @param attributes The attributes to add to this span
-  /// @return void
-  void addAttributeDouble(String key, double value) {
-    if (!isEnded) {
-      _attributes = _attributes.copyWithDoubleAttribute(key, value);
-    }
-  }
-
-  /// Adds a list of double attribute to the span by merging with existing attributes.
-  ///
-  /// Adding attributes at span creation is preferred to calling this method later,
-  /// as samplers can only consider information already present during span creation.
-  ///
-  /// @param attributes The attributes to add to this span
-  /// @return void
-  void addAttributeDoubleList(String key, List<double> value) {
-    if (!isEnded) {
-      _attributes = _attributes.copyWithDoubleListAttribute(key, value);
-    }
-  }
   /// Adds multiple attributes to the span at once by merging with existing attributes.
   /// This is more efficient than calling individual attribute setters when you need to add
   /// multiple attributes.

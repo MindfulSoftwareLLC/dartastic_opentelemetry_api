@@ -54,7 +54,6 @@ void main() {
       expect(attributes.toMap()[name]!.value, equals(value));
     });
 
-
     test('should store and retrieve string list attributes', () {
       final name = 'test.key';
       final value = ['test-value', 'foo', 'bar'];
@@ -104,7 +103,7 @@ void main() {
       attributes = OTelAPI.attributesFromMap({
         'string.key': 'a',
         'bool.key': false,
-        'int.key':  -3,
+        'int.key': -3,
         'double-key': 1.12233,
         'string.list': ['a', 'b', 'c'],
         'bool.list': [true, false],
@@ -123,26 +122,47 @@ void main() {
     });
 
     test('addAll should merge multiple attributes', () {
-      final stringAttribute = OTelAPI.attributeString('test.string.key', 'test-value');
+      final stringAttribute =
+          OTelAPI.attributeString('test.string.key', 'test-value');
       final intAttribute = OTelAPI.attributeInt('test.int.key', 42);
       final boolAttribute = OTelAPI.attributeBool('test.bool.key', true);
       final doubleAttribute = OTelAPI.attributeDouble('test.double.key', 42.0);
-      final stringListAttribute = OTelAPI.attributeStringList('string.list', ['a', 'b', 'c']);
+      final stringListAttribute =
+          OTelAPI.attributeStringList('string.list', ['a', 'b', 'c']);
       final intListAttribute = OTelAPI.attributeIntList('int.list', [1, 2, 3]);
-      final doubleListAttribute = OTelAPI.attributeDoubleList('double.list', [0.0, 1.1, 22.22]);
-      final boolListAttribute = OTelAPI.attributeBoolList('bool.list', [true, false, true]);
+      final doubleListAttribute =
+          OTelAPI.attributeDoubleList('double.list', [0.0, 1.1, 22.22]);
+      final boolListAttribute =
+          OTelAPI.attributeBoolList('bool.list', [true, false, true]);
 
-      final List<Attribute> attributeList = [stringAttribute, intAttribute,boolAttribute,doubleAttribute, stringListAttribute, intListAttribute, boolListAttribute, doubleListAttribute];
-      attributes = attributes.copyWithAttributes( OTelAPI.attributesFromList(attributeList));
+      final List<Attribute> attributeList = [
+        stringAttribute,
+        intAttribute,
+        boolAttribute,
+        doubleAttribute,
+        stringListAttribute,
+        intListAttribute,
+        boolListAttribute,
+        doubleListAttribute
+      ];
+      attributes = attributes
+          .copyWithAttributes(OTelAPI.attributesFromList(attributeList));
 
-      expect(attributes.getString(stringAttribute.key), equals(stringAttribute.value));
+      expect(attributes.getString(stringAttribute.key),
+          equals(stringAttribute.value));
       expect(attributes.getInt(intAttribute.key), equals(intAttribute.value));
-      expect(attributes.getBool(boolAttribute.key), equals(boolAttribute.value));
-      expect(attributes.getDouble(doubleAttribute.key), equals(doubleAttribute.value));
-      expect(attributes.getStringList(stringListAttribute.key), equals(stringListAttribute.value));
-      expect(attributes.getBoolList(boolListAttribute.key), equals(boolListAttribute.value));
-      expect(attributes.getIntList(intListAttribute.key), equals(intListAttribute.value));
-      expect(attributes.getDoubleList(doubleListAttribute.key), equals(doubleListAttribute.value));
+      expect(
+          attributes.getBool(boolAttribute.key), equals(boolAttribute.value));
+      expect(attributes.getDouble(doubleAttribute.key),
+          equals(doubleAttribute.value));
+      expect(attributes.getStringList(stringListAttribute.key),
+          equals(stringListAttribute.value));
+      expect(attributes.getBoolList(boolListAttribute.key),
+          equals(boolListAttribute.value));
+      expect(attributes.getIntList(intListAttribute.key),
+          equals(intListAttribute.value));
+      expect(attributes.getDoubleList(doubleListAttribute.key),
+          equals(doubleListAttribute.value));
     });
 
     test('should convert from Map<String, Object>', () {
@@ -161,22 +181,26 @@ void main() {
       expect(attrAsMap['int.key']!.value, equals(42));
       expect(attrAsMap['bool.key']!.value, equals(true));
       expect(attrAsMap['double.key']!.value, equals(42.5));
-      expect(attrAsMap['string.list']!.value,equals(['a', 'b', 'c']));
-      expect(attrAsMap['int.list']!.value,equals([1, 2, 3]));
+      expect(attrAsMap['string.list']!.value, equals(['a', 'b', 'c']));
+      expect(attrAsMap['int.list']!.value, equals([1, 2, 3]));
     });
 
     test('should convert from Map<String, Object> with an Attribute value', () {
-       final attrs =  OTelAPI.attributesFromMap({
-          'string.key': OTelAPI.attributeString('long-winded', 'long-string-value'),
-          'int.key': OTelAPI.attributeInt('long-winded-int', 3333),
-        });
-       expect(attrs.getString('long-winded'), equals('long-string-value'));
-       expect(attrs.getInt('long-winded-int'), equals(3333));
+      final attrs = OTelAPI.attributesFromMap({
+        'string.key':
+            OTelAPI.attributeString('long-winded', 'long-string-value'),
+        'int.key': OTelAPI.attributeInt('long-winded-int', 3333),
+      });
+      expect(attrs.getString('long-winded'), equals('long-string-value'));
+      expect(attrs.getInt('long-winded-int'), equals(3333));
     });
 
-    test('should convert from Map<String, Object> with an Object to string value', () {
-      final attrs =  OTelAPI.attributesFromMap({
-        'menu.select': InteractionType.menuSelect,//don't put a key as a value, this just tests toString
+    test(
+        'should convert from Map<String, Object> with an Object to string value',
+        () {
+      final attrs = OTelAPI.attributesFromMap({
+        'menu.select': InteractionType
+            .menuSelect, //don't put a key as a value, this just tests toString
       });
       expect(attrs.getString('menu.select'), equals('menu_select'));
     });
@@ -184,7 +208,10 @@ void main() {
     test('remove returns new Attributes without given key', () {
       final attrs = OTelAPI.attributes([
         OTelAPI.attributeString('foo', 'bar'),
-        OTelAPI.attributeInt('intfoo', 42, ),
+        OTelAPI.attributeInt(
+          'intfoo',
+          42,
+        ),
         OTelAPI.attributeBool('boolfoo', true),
         OTelAPI.attributeDouble('doublefoo', 1.01)
       ]);
@@ -206,7 +233,8 @@ void main() {
     });
 
     test('remove non-existent key returns same instance', () {
-      final attrs = OTelAPI.attributes([OTelAPI.attributeString('key', 'value')]);
+      final attrs =
+          OTelAPI.attributes([OTelAPI.attributeString('key', 'value')]);
       final result = attrs.copyWithout('missing');
       expect(identical(attrs, result), isTrue);
     });

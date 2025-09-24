@@ -23,47 +23,47 @@ void main() {
 
   // Create a simple event handler
   document.querySelector('#traceButton')?.addEventListener(
-    'click',
-    ((Event event) {
-      // Clear the output
-      outputDiv.textContent = '';
+        'click',
+        ((Event event) {
+          // Clear the output
+          outputDiv.textContent = '';
 
-      // Get a tracer
-      final tracer = OTelAPI.tracerProvider().getTracer('web-demo');
+          // Get a tracer
+          final tracer = OTelAPI.tracerProvider().getTracer('web-demo');
 
-      // Start a span
-      final span = tracer.startSpan('web-button-click');
+          // Start a span
+          final span = tracer.startSpan('web-button-click');
 
-      // Add some attributes to the span
-      span.attributes = OTelAPI.attributesFromMap({
-        'user.action': 'button_click',
-        'app.type': 'web_demo',
-        'timestamp': DateTime.now().toIso8601String(),
-      });
+          // Add some attributes to the span
+          span.attributes = OTelAPI.attributesFromMap({
+            'user.action': 'button_click',
+            'app.type': 'web_demo',
+            'timestamp': DateTime.now().toIso8601String(),
+          });
 
-      // Log an event
-      span.addEventNow('processing',
-          OTelAPI.attributesFromMap({'status': 'started'}));
+          // Log an event
+          span.addEventNow(
+              'processing', OTelAPI.attributesFromMap({'status': 'started'}));
 
-      // Simulate some work
-      Future<void>.delayed(const Duration(milliseconds: 500)).then((_) {
-        // Log another event
-        span.addEventNow('processing',
-            OTelAPI.attributesFromMap({'status': 'completed'}));
+          // Simulate some work
+          Future<void>.delayed(const Duration(milliseconds: 500)).then((_) {
+            // Log another event
+            span.addEventNow('processing',
+                OTelAPI.attributesFromMap({'status': 'completed'}));
 
-        // End the span
-        span.end();
+            // End the span
+            span.end();
 
-        // Output span information
-        appendParagraph(outputDiv, 'Span created: ${span.name}');
-        appendParagraph(outputDiv, 'Trace ID: ${span.spanContext.traceId}');
-        appendParagraph(outputDiv, 'Span ID: ${span.spanContext.spanId}');
-        appendParagraph(outputDiv, 'Start time: ${span.startTime}');
-        appendParagraph(outputDiv, 'End time: ${span.endTime}');
-        appendParagraph(outputDiv, 'Status: ${span.status}');
-      });
-    }).toJS,
-  );
+            // Output span information
+            appendParagraph(outputDiv, 'Span created: ${span.name}');
+            appendParagraph(outputDiv, 'Trace ID: ${span.spanContext.traceId}');
+            appendParagraph(outputDiv, 'Span ID: ${span.spanContext.spanId}');
+            appendParagraph(outputDiv, 'Start time: ${span.startTime}');
+            appendParagraph(outputDiv, 'End time: ${span.endTime}');
+            appendParagraph(outputDiv, 'Status: ${span.status}');
+          });
+        }).toJS,
+      );
 }
 
 /// Helper function to create and append a paragraph element

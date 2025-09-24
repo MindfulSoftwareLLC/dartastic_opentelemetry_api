@@ -93,6 +93,5 @@ void main() {
         OTelAPI.spanIdFrom('invalid-hex');
       }, throwsFormatException);
     });
-
   });
 }

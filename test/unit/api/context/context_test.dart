@@ -94,9 +94,7 @@ void main() {
         'key': OTelAPI.baggageEntry('value', null),
       });
 
-      final context = Context.current
-          .withSpan(span)
-          .withBaggage(baggage);
+      final context = Context.current.withSpan(span).withBaggage(baggage);
 
       expect(context.span, equals(span));
       expect(context.baggage, equals(baggage));
@@ -131,7 +129,6 @@ void main() {
       // Verify it didn't affect the current context
       expect(Context.current.span, equals(span));
     });
-
 
     test('uses root context by default', () {
       final context = Context.current;
@@ -229,9 +226,7 @@ void main() {
         'key': OTelAPI.baggageEntry('value', null),
       });
 
-      final context = Context.current
-          .withSpan(span)
-          .withBaggage(baggage);
+      final context = Context.current.withSpan(span).withBaggage(baggage);
 
       expect(context.span, equals(span));
       expect(context.baggage, equals(baggage));

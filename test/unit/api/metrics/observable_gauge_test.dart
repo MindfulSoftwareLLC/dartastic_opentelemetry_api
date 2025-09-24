@@ -21,7 +21,7 @@ void main() {
         serviceName: 'test-service',
         serviceVersion: '1.0.0',
       );
-      
+
       meter = OTelAPI.meterProvider().getMeter(name: 'test-meter');
       observableGauge = meter.createObservableGauge<double>(
         name: 'test-observable-gauge',
@@ -37,7 +37,8 @@ void main() {
       expect(observableGauge.unit, equals('celsius'));
       expect(observableGauge.description, equals('A test observable gauge'));
       expect(observableGauge.meter, equals(meter));
-      expect(observableGauge.enabled, isFalse); // API implementation is disabled by default
+      expect(observableGauge.enabled,
+          isFalse); // API implementation is disabled by default
     });
 
     test('creates observable gauge without callback', () {
@@ -53,7 +54,8 @@ void main() {
 
     test('observable gauge allows callback to be registered later', () {
       // Arrange
-      final gauge = meter.createObservableGauge<double>(name: 'late-callback-gauge');
+      final gauge =
+          meter.createObservableGauge<double>(name: 'late-callback-gauge');
 
       // Act
       gauge.addCallback(observableCallback);
@@ -76,21 +78,24 @@ void main() {
       // Just verifying it doesn't throw; API doesn't actually call the callback
     });
 
-    test('observable gauge allows callback to be registered and unregistered', () {
+    test('observable gauge allows callback to be registered and unregistered',
+        () {
       // Arrange
       final gauge = meter.createObservableGauge<double>(name: 'callback-gauge');
-      
+
       // Act
       final registration = gauge.addCallback(observableCallback);
-      
+
       // Assert - verify unregistration doesn't throw
       registration.unregister();
     });
 
     test('generic type constraint is respected', () {
       // Arrange
-      final intGauge = meter.createObservableGauge<int>(name: 'int-observable-gauge');
-      final doubleGauge = meter.createObservableGauge<double>(name: 'double-observable-gauge');
+      final intGauge =
+          meter.createObservableGauge<int>(name: 'int-observable-gauge');
+      final doubleGauge =
+          meter.createObservableGauge<double>(name: 'double-observable-gauge');
 
       // Act & Assert - Just verify these don't throw
       intGauge.addCallback((result) {

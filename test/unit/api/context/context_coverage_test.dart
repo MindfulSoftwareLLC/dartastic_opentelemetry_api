@@ -158,78 +158,82 @@ void main() {
     });
 
     test('Context.get returns null when value type does not match', () {
-    // Create a context with a string value stored under a string key
-    final stringKey = OTelAPI.contextKey<String>('test-key');
-    final context = Context.root.copyWith(stringKey, 'string-value');
-    
-    // Create an int key with the same name
-    final intKey = OTelAPI.contextKey<int>('test-key');
-    
-    // When we try to get the value as int, it should return null
-    // because the value is a string but we're requesting an int
-    final value = context.get<int>(intKey);
-    expect(value, isNull);
-    
-    // The original string value should still be accessible
-    expect(context.get<String>(stringKey), equals('string-value'));
+      // Create a context with a string value stored under a string key
+      final stringKey = OTelAPI.contextKey<String>('test-key');
+      final context = Context.root.copyWith(stringKey, 'string-value');
+
+      // Create an int key with the same name
+      final intKey = OTelAPI.contextKey<int>('test-key');
+
+      // When we try to get the value as int, it should return null
+      // because the value is a string but we're requesting an int
+      final value = context.get<int>(intKey);
+      expect(value, isNull);
+
+      // The original string value should still be accessible
+      expect(context.get<String>(stringKey), equals('string-value'));
     });
 
     test('Context.copyWithValue with a mismatched type adds a new key', () {
       // Create a context with an int key and int value
       final intKey = OTelAPI.contextKey<int>('int-key');
       final context = Context.root.copyWith(intKey, 123);
-      
+
       // This should work and return the int value
       expect(context.get<int>(intKey), equals(123));
-      
+
       // Add a mismatched value (string with key name 'int-key')
       final badContext = context.copyWithValue('int-key', 'not-an-int');
-      
+
       // We should be able to access the int value still
-      expect(badContext.get<int>(intKey), equals(123), reason: 'Should still have the int value');
+      expect(badContext.get<int>(intKey), equals(123),
+          reason: 'Should still have the int value');
 
       // Create a string key with the same name for retrieval
       final strKey = OTelAPI.contextKey<String>('int-key');
       // This will return null since our newly created key won't match the internal one
       expect(badContext.get<String>(strKey), isNull);
-      
+
       // To truly test this, we need to serialize and check the serialized content
       final serialized = badContext.serialize();
       // The serialized map should contain an entry for 'int-key' with string value
       bool foundStringValue = false;
       serialized.forEach((key, value) {
         // Look through the serialized map for our string value
-        if ((key == 'int-key' || key.startsWith('int-key-')) && 
-            value is Map && 
+        if ((key == 'int-key' || key.startsWith('int-key-')) &&
+            value is Map &&
             value['value'] is String) {
           foundStringValue = true;
           expect(value['value'], equals('not-an-int'));
         }
       });
-      
-      expect(foundStringValue, isTrue, reason: 'Should find the string value in serialized form');
+
+      expect(foundStringValue, isTrue,
+          reason: 'Should find the string value in serialized form');
     });
-    
-    test('Context allows multiple keys with the same name but different types', () {
+
+    test('Context allows multiple keys with the same name but different types',
+        () {
       // Create a context with a string value
       final context = Context.root.copyWithValue('mixed-key', 'string-value');
-      
+
       // Add an int value with the same key name
       final mixedContext = context.copyWithValue('mixed-key', 42);
-      
+
       // Add a boolean value with the same key name
       final finalContext = mixedContext.copyWithValue('mixed-key', true);
-      
+
       // Serialize to check the context contents
       final serialized = finalContext.serialize();
-      
+
       // Check if we can find all three value types in the serialized context
       bool foundStringValue = false;
       bool foundIntValue = false;
       bool foundBoolValue = false;
-      
+
       serialized.forEach((key, value) {
-        if ((key == 'mixed-key' || key.startsWith('mixed-key-')) && value is Map) {
+        if ((key == 'mixed-key' || key.startsWith('mixed-key-')) &&
+            value is Map) {
           final actualValue = value['value'];
           if (actualValue is String) {
             foundStringValue = true;
@@ -243,12 +247,12 @@ void main() {
           }
         }
       });
-      
+
       expect(foundStringValue, isTrue, reason: 'Should find a String value');
       expect(foundIntValue, isTrue, reason: 'Should find an int value');
       expect(foundBoolValue, isTrue, reason: 'Should find a bool value');
     });
-    
+
     test('Context equality and hashCode', () {
       // Create two contexts with the same values
       final key = OTelAPI.contextKey<String>('key');

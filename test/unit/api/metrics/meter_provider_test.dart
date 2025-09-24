@@ -59,8 +59,10 @@ void main() {
 
     test('creates separate meters with different versions', () {
       // Arrange & Act
-      final meter1 = meterProvider.getMeter(name: 'test-meter', version: '1.0.0');
-      final meter2 = meterProvider.getMeter(name: 'test-meter', version: '2.0.0');
+      final meter1 =
+          meterProvider.getMeter(name: 'test-meter', version: '1.0.0');
+      final meter2 =
+          meterProvider.getMeter(name: 'test-meter', version: '2.0.0');
 
       // Assert
       expect(identical(meter1, meter2), isFalse);
@@ -68,8 +70,10 @@ void main() {
 
     test('creates separate meters with different schema URLs', () {
       // Arrange & Act
-      final meter1 = meterProvider.getMeter(name: 'test-meter', schemaUrl: 'https://example.com/schema1');
-      final meter2 = meterProvider.getMeter(name: 'test-meter', schemaUrl: 'https://example.com/schema2');
+      final meter1 = meterProvider.getMeter(
+          name: 'test-meter', schemaUrl: 'https://example.com/schema1');
+      final meter2 = meterProvider.getMeter(
+          name: 'test-meter', schemaUrl: 'https://example.com/schema2');
 
       // Assert
       expect(identical(meter1, meter2), isFalse);
@@ -77,8 +81,12 @@ void main() {
 
     test('creates separate meters with different attributes', () {
       // Arrange & Act
-      final meter1 = meterProvider.getMeter(name: 'test-meter', attributes: OTelAPI.attributesFromMap({'key1': 'value1'}));
-      final meter2 = meterProvider.getMeter(name: 'test-meter', attributes: OTelAPI.attributesFromMap({'key2': 'value2'}));
+      final meter1 = meterProvider.getMeter(
+          name: 'test-meter',
+          attributes: OTelAPI.attributesFromMap({'key1': 'value1'}));
+      final meter2 = meterProvider.getMeter(
+          name: 'test-meter',
+          attributes: OTelAPI.attributesFromMap({'key2': 'value2'}));
 
       // Assert
       expect(identical(meter1, meter2), isFalse);
@@ -94,7 +102,8 @@ void main() {
       expect(meterProvider.enabled, isFalse);
 
       // Should throw when trying to get a meter after shutdown
-      expect(() => meterProvider.getMeter(name: 'test-meter'), throwsStateError);
+      expect(
+          () => meterProvider.getMeter(name: 'test-meter'), throwsStateError);
     });
 
     test('forceFlush returns true', () async {
@@ -155,23 +164,22 @@ void main() {
     });
 
     // Test meter caching behavior indirectly
-    test('multiple meters with identical parameters return the same instance', () {
+    test('multiple meters with identical parameters return the same instance',
+        () {
       final attrs1 = OTelAPI.attributesFromMap({'key': 'value'});
       final attrs2 = OTelAPI.attributesFromMap({'key': 'value'});
 
       final meter1 = meterProvider.getMeter(
-        name: 'same-meter',
-        version: '1.0',
-        schemaUrl: 'https://example.com',
-        attributes: attrs1
-      );
+          name: 'same-meter',
+          version: '1.0',
+          schemaUrl: 'https://example.com',
+          attributes: attrs1);
 
       final meter2 = meterProvider.getMeter(
-        name: 'same-meter',
-        version: '1.0',
-        schemaUrl: 'https://example.com',
-        attributes: attrs2
-      );
+          name: 'same-meter',
+          version: '1.0',
+          schemaUrl: 'https://example.com',
+          attributes: attrs2);
 
       // Identical attributes with the same content should result in the same meter
       expect(identical(meter1, meter2), isTrue);

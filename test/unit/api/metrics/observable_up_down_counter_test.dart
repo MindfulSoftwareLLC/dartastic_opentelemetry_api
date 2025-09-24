@@ -21,7 +21,7 @@ void main() {
         serviceName: 'test-service',
         serviceVersion: '1.0.0',
       );
-      
+
       meter = OTelAPI.meterProvider().getMeter(name: 'test-meter');
       observableUpDownCounter = meter.createObservableUpDownCounter<int>(
         name: 'test-observable-up-down-counter',
@@ -33,11 +33,14 @@ void main() {
 
     test('has correct properties', () {
       // Assert
-      expect(observableUpDownCounter.name, equals('test-observable-up-down-counter'));
+      expect(observableUpDownCounter.name,
+          equals('test-observable-up-down-counter'));
       expect(observableUpDownCounter.unit, equals('connections'));
-      expect(observableUpDownCounter.description, equals('A test observable up-down counter'));
+      expect(observableUpDownCounter.description,
+          equals('A test observable up-down counter'));
       expect(observableUpDownCounter.meter, equals(meter));
-      expect(observableUpDownCounter.enabled, isFalse); // API implementation is disabled by default
+      expect(observableUpDownCounter.enabled,
+          isFalse); // API implementation is disabled by default
     });
 
     test('creates observable up-down counter without callback', () {
@@ -51,9 +54,11 @@ void main() {
       expect(upDownCounter.name, equals('no-callback-up-down-counter'));
     });
 
-    test('observable up-down counter allows callback to be registered later', () {
+    test('observable up-down counter allows callback to be registered later',
+        () {
       // Arrange
-      final upDownCounter = meter.createObservableUpDownCounter<int>(name: 'late-callback-up-down-counter');
+      final upDownCounter = meter.createObservableUpDownCounter<int>(
+          name: 'late-callback-up-down-counter');
 
       // Act
       upDownCounter.addCallback(observableCallback);
@@ -76,21 +81,26 @@ void main() {
       // Just verifying it doesn't throw; API doesn't actually call the callback
     });
 
-    test('observable up-down counter allows callback to be registered and unregistered', () {
+    test(
+        'observable up-down counter allows callback to be registered and unregistered',
+        () {
       // Arrange
-      final upDownCounter = meter.createObservableUpDownCounter<int>(name: 'callback-up-down-counter');
-      
+      final upDownCounter = meter.createObservableUpDownCounter<int>(
+          name: 'callback-up-down-counter');
+
       // Act
       final registration = upDownCounter.addCallback(observableCallback);
-      
+
       // Assert - verify unregistration doesn't throw
       registration.unregister();
     });
 
     test('generic type constraint is respected', () {
       // Arrange
-      final intUpDownCounter = meter.createObservableUpDownCounter<int>(name: 'int-observable-up-down-counter');
-      final doubleUpDownCounter = meter.createObservableUpDownCounter<double>(name: 'double-observable-up-down-counter');
+      final intUpDownCounter = meter.createObservableUpDownCounter<int>(
+          name: 'int-observable-up-down-counter');
+      final doubleUpDownCounter = meter.createObservableUpDownCounter<double>(
+          name: 'double-observable-up-down-counter');
 
       // Act & Assert - Just verify these don't throw
       intUpDownCounter.addCallback((result) {

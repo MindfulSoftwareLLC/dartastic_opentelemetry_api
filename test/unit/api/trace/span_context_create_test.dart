@@ -25,10 +25,11 @@ void main() {
       OTelFactory.otelFactory = originalFactory;
     });
 
-    test('creates SpanContext with default values when parameters are omitted', () {
+    test('creates SpanContext with default values when parameters are omitted',
+        () {
       // Create a span context with minimal parameters
       final context = OTelAPI.spanContext();
-      
+
       // Should have generated default values
       expect(context.traceId.isValid, isTrue);
       expect(context.spanId.isValid, isTrue);
@@ -36,14 +37,14 @@ void main() {
       expect(context.isRemote, isFalse);
       expect(context.traceState, isNull);
     });
-    
+
     test('creates SpanContext with all specified parameters', () {
       final traceId = OTelAPI.traceId();
       final spanId = OTelAPI.spanId();
       final parentSpanId = OTelAPI.spanId();
       final traceFlags = OTelAPI.traceFlags(1); // Sampled
       final traceState = OTelAPI.traceState({'key': 'value'});
-      
+
       final context = OTelAPI.spanContext(
         traceId: traceId,
         spanId: spanId,
@@ -52,7 +53,7 @@ void main() {
         traceState: traceState,
         isRemote: true,
       );
-      
+
       // Should use the specified values
       expect(context.traceId, equals(traceId));
       expect(context.spanId, equals(spanId));
@@ -61,15 +62,15 @@ void main() {
       expect(context.traceState, equals(traceState));
       expect(context.isRemote, isTrue);
     });
-    
+
     test('creates invalid SpanContext', () {
       final invalidContext = OTelAPI.spanContextInvalid();
-      
+
       expect(invalidContext.isValid, isFalse);
       expect(invalidContext.traceId.isValid, isFalse);
       expect(invalidContext.spanId.isValid, isFalse);
     });
-    
+
     test('creates child SpanContext from parent', () {
       final parentContext = OTelAPI.spanContext(
         traceId: OTelAPI.traceId(),
@@ -77,20 +78,20 @@ void main() {
         traceFlags: OTelAPI.traceFlags(1), // Sampled
         traceState: OTelAPI.traceState({'key': 'value'}),
       );
-      
+
       final childContext = OTelAPI.spanContextFromParent(parentContext);
-      
+
       // Child should inherit trace ID and flags
       expect(childContext.traceId, equals(parentContext.traceId));
       expect(childContext.traceFlags, equals(parentContext.traceFlags));
       expect(childContext.traceState, equals(parentContext.traceState));
-      
+
       // Child should have new span ID
       expect(childContext.spanId, isNot(equals(parentContext.spanId)));
-      
+
       // Child should have parent's span ID as parent
       expect(childContext.parentSpanId, equals(parentContext.spanId));
-      
+
       // Child should not be remote
       expect(childContext.isRemote, isFalse);
     });

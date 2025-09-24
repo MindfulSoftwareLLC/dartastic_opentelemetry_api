@@ -15,7 +15,24 @@ void main() {
       );
     });
 
-    final traceIdBytes = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
+    final traceIdBytes = [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16
+    ];
     final spanIdBytes = [1, 2, 3, 4, 5, 6, 7, 8];
     late TraceId traceId;
     late SpanId spanId;
@@ -216,7 +233,10 @@ void main() {
       );
 
       expect(context1.hashCode, equals(context2.hashCode));
-      expect(context1.hashCode == OTelAPI.spanContext(traceId: OTelAPI.traceIdInvalid()).hashCode, isFalse);
+      expect(
+          context1.hashCode ==
+              OTelAPI.spanContext(traceId: OTelAPI.traceIdInvalid()).hashCode,
+          isFalse);
     });
   });
 }

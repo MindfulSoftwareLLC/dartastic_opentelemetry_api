@@ -143,11 +143,15 @@ void main() {
       expect(attributes.getInt('int-key'), equals(42));
       expect(attributes.getDouble('double-key'), equals(3.14));
       expect(attributes.getBool('bool-key'), equals(true));
-      expect(attributes.getString('date-key'), equals(dateTime.toUtc().toIso8601String()));
-      expect(attributes.getStringList('string-list-key'), equals(['value1', 'value2']));
+      expect(attributes.getString('date-key'),
+          equals(dateTime.toUtc().toIso8601String()));
+      expect(attributes.getStringList('string-list-key'),
+          equals(['value1', 'value2']));
       expect(attributes.getIntList('int-list-key'), equals([1, 2, 3]));
-      expect(attributes.getDoubleList('double-list-key'), equals([1.1, 2.2, 3.3]));
-      expect(attributes.getBoolList('bool-list-key'), equals([true, false, true]));
+      expect(
+          attributes.getDoubleList('double-list-key'), equals([1.1, 2.2, 3.3]));
+      expect(
+          attributes.getBoolList('bool-list-key'), equals([true, false, true]));
     });
 
     test('static attrsFromMap creates attributes from map', () {
@@ -191,13 +195,15 @@ void main() {
     });
 
     test('creates attribute with string list value', () {
-      final attribute = factory.attributeStringList('string-list-key', ['value1', 'value2']);
+      final attribute =
+          factory.attributeStringList('string-list-key', ['value1', 'value2']);
       expect(attribute.key, equals('string-list-key'));
       expect(attribute.value, equals(['value1', 'value2']));
     });
 
     test('creates attribute with boolean list value', () {
-      final attribute = factory.attributeBoolList('bool-list-key', [true, false]);
+      final attribute =
+          factory.attributeBoolList('bool-list-key', [true, false]);
       expect(attribute.key, equals('bool-list-key'));
       expect(attribute.value, equals([true, false]));
     });
@@ -209,7 +215,8 @@ void main() {
     });
 
     test('creates attribute with double list value', () {
-      final attribute = factory.attributeDoubleList('double-list-key', [1.1, 2.2, 3.3]);
+      final attribute =
+          factory.attributeDoubleList('double-list-key', [1.1, 2.2, 3.3]);
       expect(attribute.key, equals('double-list-key'));
       expect(attribute.value, equals([1.1, 2.2, 3.3]));
     });
@@ -251,7 +258,8 @@ void main() {
     });
 
     test('creates trace state', () {
-      final traceState = factory.traceState({'key1': 'value1', 'key2': 'value2'});
+      final traceState =
+          factory.traceState({'key1': 'value1', 'key2': 'value2'});
       expect(traceState, isA<TraceState>());
       expect(traceState.get('key1'), equals('value1'));
       expect(traceState.get('key2'), equals('value2'));
@@ -294,10 +302,13 @@ void main() {
       final childContext = factory.spanContextFromParent(parentContext);
 
       expect(childContext, isA<SpanContext>());
-      expect(childContext.traceId, equals(parentTraceId)); // Inherited from parent
+      expect(
+          childContext.traceId, equals(parentTraceId)); // Inherited from parent
       expect(childContext.spanId, isNot(equals(parentSpanId))); // New span ID
-      expect(childContext.parentSpanId, equals(parentSpanId)); // Parent's span ID
-      expect(childContext.traceFlags, equals(traceFlags)); // Inherited from parent
+      expect(
+          childContext.parentSpanId, equals(parentSpanId)); // Parent's span ID
+      expect(
+          childContext.traceFlags, equals(traceFlags)); // Inherited from parent
     });
 
     test('creates invalid span context', () {
@@ -343,8 +354,14 @@ void main() {
       expect(spanEvent, isA<SpanEvent>());
       expect(spanEvent.name, equals('test-event'));
       expect(spanEvent.attributes, equals(attributes));
-      expect(spanEvent.timestamp.isAfter(beforeTime) || spanEvent.timestamp.isAtSameMomentAs(beforeTime), isTrue);
-      expect(spanEvent.timestamp.isBefore(afterTime) || spanEvent.timestamp.isAtSameMomentAs(afterTime), isTrue);
+      expect(
+          spanEvent.timestamp.isAfter(beforeTime) ||
+              spanEvent.timestamp.isAtSameMomentAs(beforeTime),
+          isTrue);
+      expect(
+          spanEvent.timestamp.isBefore(afterTime) ||
+              spanEvent.timestamp.isAtSameMomentAs(afterTime),
+          isTrue);
     });
 
     test('creates counter instrument', () {
@@ -369,7 +386,8 @@ void main() {
 
       expect(upDownCounter, isA<APIUpDownCounter>());
       expect(upDownCounter.name, equals('test-up-down-counter'));
-      expect(upDownCounter.description, equals('Test up-down counter description'));
+      expect(upDownCounter.description,
+          equals('Test up-down counter description'));
       expect(upDownCounter.unit, equals('count'));
     });
 
@@ -412,7 +430,8 @@ void main() {
 
       expect(observableCounter, isA<APIObservableCounter>());
       expect(observableCounter.name, equals('test-observable-counter'));
-      expect(observableCounter.description, equals('Test observable counter description'));
+      expect(observableCounter.description,
+          equals('Test observable counter description'));
       expect(observableCounter.unit, equals('count'));
     });
 
@@ -427,7 +446,8 @@ void main() {
 
       expect(observableGauge, isA<APIObservableGauge>());
       expect(observableGauge.name, equals('test-observable-gauge'));
-      expect(observableGauge.description, equals('Test observable gauge description'));
+      expect(observableGauge.description,
+          equals('Test observable gauge description'));
       expect(observableGauge.unit, equals('ms'));
     });
 
@@ -441,8 +461,10 @@ void main() {
       );
 
       expect(observableUpDownCounter, isA<APIObservableUpDownCounter>());
-      expect(observableUpDownCounter.name, equals('test-observable-up-down-counter'));
-      expect(observableUpDownCounter.description, equals('Test observable up-down counter description'));
+      expect(observableUpDownCounter.name,
+          equals('test-observable-up-down-counter'));
+      expect(observableUpDownCounter.description,
+          equals('Test observable up-down counter description'));
       expect(observableUpDownCounter.unit, equals('count'));
     });
   });

@@ -15,7 +15,7 @@ void main() {
         serviceName: 'test-service',
         serviceVersion: '1.0.0',
       );
-      
+
       meter = OTelAPI.meterProvider().getMeter(name: 'test-meter');
     });
 
@@ -33,7 +33,8 @@ void main() {
       // Assert
       expect(counter, isNotNull);
       expect(counter.name, equals('test-counter'));
-      expect(counter.enabled, isFalse); // API implementation is disabled by default
+      expect(counter.enabled,
+          isFalse); // API implementation is disabled by default
       expect(counter.isCounter, isTrue);
       expect(counter.isUpDownCounter, isFalse);
       expect(counter.isGauge, isFalse);
@@ -50,12 +51,14 @@ void main() {
 
     test('creates up-down counter with valid name', () {
       // Act
-      final upDownCounter = meter.createUpDownCounter<int>(name: 'test-up-down-counter');
+      final upDownCounter =
+          meter.createUpDownCounter<int>(name: 'test-up-down-counter');
 
       // Assert
       expect(upDownCounter, isNotNull);
       expect(upDownCounter.name, equals('test-up-down-counter'));
-      expect(upDownCounter.enabled, isFalse); // API implementation is disabled by default
+      expect(upDownCounter.enabled,
+          isFalse); // API implementation is disabled by default
       expect(upDownCounter.isCounter, isFalse);
       expect(upDownCounter.isUpDownCounter, isTrue);
       expect(upDownCounter.isGauge, isFalse);
@@ -77,7 +80,8 @@ void main() {
       // Assert
       expect(histogram, isNotNull);
       expect(histogram.name, equals('test-histogram'));
-      expect(histogram.enabled, isFalse); // API implementation is disabled by default
+      expect(histogram.enabled,
+          isFalse); // API implementation is disabled by default
       expect(histogram.isCounter, isFalse);
       expect(histogram.isUpDownCounter, isFalse);
       expect(histogram.isGauge, isFalse);
@@ -99,7 +103,8 @@ void main() {
       // Assert
       expect(gauge, isNotNull);
       expect(gauge.name, equals('test-gauge'));
-      expect(gauge.enabled, isFalse); // API implementation is disabled by default
+      expect(
+          gauge.enabled, isFalse); // API implementation is disabled by default
       expect(gauge.isCounter, isFalse);
       expect(gauge.isUpDownCounter, isFalse);
       expect(gauge.isGauge, isTrue);
@@ -116,12 +121,14 @@ void main() {
 
     test('creates observable counter with valid name', () {
       // Act
-      final observableCounter = meter.createObservableCounter<int>(name: 'test-observable-counter');
+      final observableCounter =
+          meter.createObservableCounter<int>(name: 'test-observable-counter');
 
       // Assert
       expect(observableCounter, isNotNull);
       expect(observableCounter.name, equals('test-observable-counter'));
-      expect(observableCounter.enabled, isFalse); // API implementation is disabled by default
+      expect(observableCounter.enabled,
+          isFalse); // API implementation is disabled by default
     });
 
     test('throws when creating observable counter with empty name', () {
@@ -140,8 +147,10 @@ void main() {
 
       // Assert
       expect(observableUpDownCounter, isNotNull);
-      expect(observableUpDownCounter.name, equals('test-observable-up-down-counter'));
-      expect(observableUpDownCounter.enabled, isFalse); // API implementation is disabled by default
+      expect(observableUpDownCounter.name,
+          equals('test-observable-up-down-counter'));
+      expect(observableUpDownCounter.enabled,
+          isFalse); // API implementation is disabled by default
     });
 
     test('throws when creating observable up-down counter with empty name', () {
@@ -154,12 +163,14 @@ void main() {
 
     test('creates observable gauge with valid name', () {
       // Act
-      final observableGauge = meter.createObservableGauge<double>(name: 'test-observable-gauge');
+      final observableGauge =
+          meter.createObservableGauge<double>(name: 'test-observable-gauge');
 
       // Assert
       expect(observableGauge, isNotNull);
       expect(observableGauge.name, equals('test-observable-gauge'));
-      expect(observableGauge.enabled, isFalse); // API implementation is disabled by default
+      expect(observableGauge.enabled,
+          isFalse); // API implementation is disabled by default
     });
 
     test('throws when creating observable gauge with empty name', () {

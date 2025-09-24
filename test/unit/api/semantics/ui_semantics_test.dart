@@ -7,17 +7,25 @@ import 'package:test/test.dart';
 void main() {
   group('UI Semantics', () {
     test('AppLifecycleStates toString returns key', () {
-      expect(AppLifecycleStates.active.toString(), equals('device.app.lifecycle.active'));
-      expect(AppLifecycleStates.resumed.toString(), equals('device.app.lifecycle.resumed'));
-      expect(AppLifecycleStates.detached.toString(), equals('device.app.lifecycle.detached'));
-      expect(AppLifecycleStates.inactive.toString(), equals('device.app.lifecycle.inactive'));
-      expect(AppLifecycleStates.hidden.toString(), equals('device.app.lifecycle.hidden'));
-      expect(AppLifecycleStates.paused.toString(), equals('device.app.lifecycle.paused'));
+      expect(AppLifecycleStates.active.toString(),
+          equals('device.app.lifecycle.active'));
+      expect(AppLifecycleStates.resumed.toString(),
+          equals('device.app.lifecycle.resumed'));
+      expect(AppLifecycleStates.detached.toString(),
+          equals('device.app.lifecycle.detached'));
+      expect(AppLifecycleStates.inactive.toString(),
+          equals('device.app.lifecycle.inactive'));
+      expect(AppLifecycleStates.hidden.toString(),
+          equals('device.app.lifecycle.hidden'));
+      expect(AppLifecycleStates.paused.toString(),
+          equals('device.app.lifecycle.paused'));
     });
 
     test('AppLifecycleSemantics toString returns key', () {
-      expect(AppLifecycleSemantics.appLaunchId.toString(), equals('app.launch.id'));
-      expect(AppLifecycleSemantics.appLifecycleState.toString(), equals('app_lifecycle.state'));
+      expect(AppLifecycleSemantics.appLaunchId.toString(),
+          equals('app.launch.id'));
+      expect(AppLifecycleSemantics.appLifecycleState.toString(),
+          equals('app_lifecycle.state'));
     });
 
     test('AppStartType toString returns key', () {
@@ -41,8 +49,10 @@ void main() {
     });
 
     test('NavigationSemantics toString returns key', () {
-      expect(NavigationSemantics.navigationAction.toString(), equals('navigation.action'));
-      expect(NavigationSemantics.navigationTrigger.toString(), equals('navigation.trigger'));
+      expect(NavigationSemantics.navigationAction.toString(),
+          equals('navigation.action'));
+      expect(NavigationSemantics.navigationTrigger.toString(),
+          equals('navigation.trigger'));
     });
 
     test('InteractionType toString returns key', () {
@@ -51,12 +61,15 @@ void main() {
     });
 
     test('InteractionSemantics toString returns key', () {
-      expect(InteractionSemantics.userInteraction.toString(), equals('user_interaction'));
-      expect(InteractionSemantics.interactionType.toString(), equals('interaction.type'));
+      expect(InteractionSemantics.userInteraction.toString(),
+          equals('user_interaction'));
+      expect(InteractionSemantics.interactionType.toString(),
+          equals('interaction.type'));
     });
 
     test('PerformanceSemantics toString returns key', () {
-      expect(PerformanceSemantics.renderDuration.toString(), equals('render.duration'));
+      expect(PerformanceSemantics.renderDuration.toString(),
+          equals('render.duration'));
       expect(PerformanceSemantics.firstPaint.toString(), equals('first.paint'));
     });
 
@@ -66,13 +79,15 @@ void main() {
     });
 
     test('NetworkSemantics toString returns key', () {
-      expect(NetworkSemantics.networkConnectivity.toString(), equals('network.connectivity'));
+      expect(NetworkSemantics.networkConnectivity.toString(),
+          equals('network.connectivity'));
       expect(NetworkSemantics.networkType.toString(), equals('network.type'));
     });
 
     test('SessionViewSemantics toString returns key', () {
       expect(SessionViewSemantics.sessionId.toString(), equals('session.id'));
-      expect(SessionViewSemantics.rumSessionId.toString(), equals('session_id'));
+      expect(
+          SessionViewSemantics.rumSessionId.toString(), equals('session_id'));
     });
 
     test('UserSemantics toString returns key', () {

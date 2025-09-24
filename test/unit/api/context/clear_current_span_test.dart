@@ -35,10 +35,10 @@ void main() {
       // Create a key and set a value in the context
       final testKey = OTelAPI.contextKey<String>('test-key');
       final testValue = 'test-value';
-      
+
       // Set a value in the context
       Context.current = Context.current.copyWith(testKey, testValue);
-      
+
       // Create a tracer and span
       final tracer = OTelAPI.tracer('test-tracer');
       final span = tracer.startSpan('test-span');
@@ -63,10 +63,10 @@ void main() {
         'key1': OTelAPI.baggageEntry('value1', null),
         'key2': OTelAPI.baggageEntry('value2', null),
       });
-      
+
       // Set baggage in the context
       Context.current = Context.current.withBaggage(baggage);
-      
+
       // Create a tracer and span
       final tracer = OTelAPI.tracer('test-tracer');
       final span = tracer.startSpan('test-span');
@@ -104,17 +104,17 @@ void main() {
 
       // Verify the span is in the current context
       expect(Context.current.span, equals(span));
-      
+
       // End the span
       span.end();
-      
+
       // Span should still be in context (per spec)
       expect(Context.current.span, equals(span));
       expect(span.isRecording, isFalse); // But no longer recording
-      
+
       // Clear the current span
       final newContext = Context.clearCurrentSpan();
-      
+
       // Verify the span is removed from context
       expect(Context.current.span, isNull);
       expect(newContext.span, isNull);

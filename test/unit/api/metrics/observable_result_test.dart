@@ -52,7 +52,8 @@ void main() {
       expect(result.measurements.length, equals(1));
       expect(result.measurements[0].value, equals(99.9));
       expect(result.measurements[0].attributes, isNotNull);
-      expect(result.measurements[0].attributes!.getString('key1'), equals('value1'));
+      expect(result.measurements[0].attributes!.getString('key1'),
+          equals('value1'));
       expect(result.measurements[0].attributes!.getInt('key2'), equals(42));
     });
 
@@ -67,7 +68,9 @@ void main() {
 
       // Assert
       expect(measurements.length, equals(2));
-      expect(() => measurements.add(OTelFactory.otelFactory!.createMeasurement(3, null)),
+      expect(
+          () => measurements
+              .add(OTelFactory.otelFactory!.createMeasurement(3, null)),
           throwsUnsupportedError);
     });
 
@@ -96,7 +99,8 @@ void main() {
 
       expect(result.measurements[0].attributes, isNull);
       expect(result.measurements[1].attributes!.getBool('test'), isTrue);
-      expect(result.measurements[2].attributes!.getString('name'), equals('counter'));
+      expect(result.measurements[2].attributes!.getString('name'),
+          equals('counter'));
     });
   });
 }

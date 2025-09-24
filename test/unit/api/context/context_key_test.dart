@@ -5,7 +5,6 @@ import 'package:dartastic_opentelemetry_api/dartastic_opentelemetry_api.dart';
 import 'package:test/test.dart';
 
 void main() {
-
   setUp(() {
     OTelAPI.reset();
     OTelAPI.initialize();

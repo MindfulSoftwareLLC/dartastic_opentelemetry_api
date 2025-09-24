@@ -41,7 +41,8 @@ void main() {
 
       final attrs = events?.first.attributes?.toMap() ?? {};
       expect(attrs['exception.type']?.value, contains('Exception'));
-      expect(attrs['exception.message']?.value, equals('Exception: Test error'));
+      expect(
+          attrs['exception.message']?.value, equals('Exception: Test error'));
     });
 
     test('records exception with stack trace', () {
@@ -56,7 +57,8 @@ void main() {
 
       final attrs = events?.first.attributes?.toMap() ?? {};
       expect(attrs['exception.stacktrace']?.value, isNotNull);
-      expect(attrs['exception.stacktrace']?.value.toString(), contains('test/unit/api/trace/span_exception_test.dart'));
+      expect(attrs['exception.stacktrace']?.value.toString(),
+          contains('test/unit/api/trace/span_exception_test.dart'));
     });
 
     test('records exception with escaped flag', () {
@@ -80,7 +82,8 @@ void main() {
       final attrs = events?.first.attributes?.toMap() ?? {};
       expect(attrs['custom.attribute']?.value, equals('value'));
       expect(attrs['exception.type']?.value, contains('Exception'));
-      expect(attrs['exception.message']?.value, equals('Exception: Test error'));
+      expect(
+          attrs['exception.message']?.value, equals('Exception: Test error'));
     });
 
     test('additional attributes override default exception attributes', () {
@@ -114,9 +117,9 @@ void main() {
       final events = span.spanEvents;
       expect(events, hasLength(2));
       expect(events?[0].attributes?.toMap()['exception.message']?.value,
-             equals('Exception: Error 1'));
+          equals('Exception: Error 1'));
       expect(events?[1].attributes?.toMap()['exception.message']?.value,
-             equals('Exception: Error 2'));
+          equals('Exception: Error 2'));
     });
 
     test('handles error status with recordException', () {

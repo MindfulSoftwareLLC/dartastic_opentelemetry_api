@@ -22,6 +22,7 @@ void main() {
         callbackInvoked = true;
         result.observe(42);
       }
+
       final result = TestObservableResult<int>();
 
       // Act
@@ -38,6 +39,7 @@ void main() {
       void callback(APIObservableResult<double> result) {
         result.observe(42.5);
       }
+
       final result = TestObservableResult<double>();
 
       // Act
@@ -59,19 +61,13 @@ void main() {
 
       // Act - create instruments with the callback
       final counter = meter.createObservableCounter<int>(
-        name: 'test-counter',
-        callback: callback
-      );
+          name: 'test-counter', callback: callback);
 
       final upDownCounter = meter.createObservableUpDownCounter<int>(
-        name: 'test-up-down-counter',
-        callback: callback
-      );
+          name: 'test-up-down-counter', callback: callback);
 
       final gauge = meter.createObservableGauge<int>(
-        name: 'test-gauge',
-        callback: callback
-      );
+          name: 'test-gauge', callback: callback);
 
       // Assert - just verify these operations don't throw
       expect(counter, isNotNull);
@@ -117,7 +113,8 @@ class TestObservableResult<T extends num> implements APIObservableResult<T> {
 
   @override
   void observeWithMap(T value, Map<String, Object> attributeMap) {
-    final attributes = attributeMap.isEmpty ? null : attributeMap.toAttributes();
+    final attributes =
+        attributeMap.isEmpty ? null : attributeMap.toAttributes();
     observe(value, attributes);
   }
 }

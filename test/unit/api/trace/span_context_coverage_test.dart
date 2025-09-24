@@ -31,7 +31,8 @@ void main() {
       final spanId = OTelAPI.spanId();
       final parentSpanId = OTelAPI.spanId();
       final traceFlags = OTelAPI.traceFlags(1); // Sampled flag
-      final traceState = OTelAPI.traceState({'key1': 'value1', 'key2': 'value2'});
+      final traceState =
+          OTelAPI.traceState({'key1': 'value1', 'key2': 'value2'});
 
       final spanContext = OTelAPI.spanContext(
         traceId: traceId,

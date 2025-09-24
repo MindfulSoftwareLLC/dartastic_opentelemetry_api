@@ -99,22 +99,32 @@ void main() {
     group('toString', () {
       test('includes value and metadata', () {
         final entry = OTelAPI.baggageEntry('value1', 'meta1');
-        expect(entry.toString(), equals('BaggageEntry(value: value1, metadata: meta1)'));
+        expect(entry.toString(),
+            equals('BaggageEntry(value: value1, metadata: meta1)'));
       });
 
       test('handles null metadata correctly', () {
         final entry = OTelAPI.baggageEntry('value1', null);
-        expect(entry.toString(), equals('BaggageEntry(value: value1, metadata: null)'));
+        expect(entry.toString(),
+            equals('BaggageEntry(value: value1, metadata: null)'));
       });
 
       test('handles special characters in value', () {
-        final entry = OTelAPI.baggageEntry('value: with, special\nchars', 'meta1');
-        expect(entry.toString(), equals('BaggageEntry(value: value: with, special\nchars, metadata: meta1)'));
+        final entry =
+            OTelAPI.baggageEntry('value: with, special\nchars', 'meta1');
+        expect(
+            entry.toString(),
+            equals(
+                'BaggageEntry(value: value: with, special\nchars, metadata: meta1)'));
       });
 
       test('handles special characters in metadata', () {
-        final entry = OTelAPI.baggageEntry('value1', 'meta: with, special\nchars');
-        expect(entry.toString(), equals('BaggageEntry(value: value1, metadata: meta: with, special\nchars)'));
+        final entry =
+            OTelAPI.baggageEntry('value1', 'meta: with, special\nchars');
+        expect(
+            entry.toString(),
+            equals(
+                'BaggageEntry(value: value1, metadata: meta: with, special\nchars)'));
       });
 
       test('toString representation can be used to distinguish entries', () {
@@ -127,7 +137,8 @@ void main() {
 
         final strings = entries.map((e) => e.toString()).toSet();
         expect(strings.length, equals(entries.length),
-          reason: 'Each distinct entry should have a unique string representation');
+            reason:
+                'Each distinct entry should have a unique string representation');
       });
     });
 

@@ -16,7 +16,7 @@ void main() {
         serviceName: 'test-service',
         serviceVersion: '1.0.0',
       );
-      
+
       meter = OTelAPI.meterProvider().getMeter(name: 'test-meter');
       counter = meter.createCounter<int>(
         name: 'test-counter',
@@ -31,7 +31,8 @@ void main() {
       expect(counter.unit, equals('ms'));
       expect(counter.description, equals('A test counter'));
       expect(counter.meter, equals(meter));
-      expect(counter.enabled, isFalse); // API implementation is disabled by default
+      expect(counter.enabled,
+          isFalse); // API implementation is disabled by default
       expect(counter.isCounter, isTrue);
       expect(counter.isUpDownCounter, isFalse);
       expect(counter.isGauge, isFalse);
@@ -60,7 +61,8 @@ void main() {
       counter.addWithMap(42, attributeMap);
     });
 
-    test('addWithMap with empty map is equivalent to add with null attributes', () {
+    test('addWithMap with empty map is equivalent to add with null attributes',
+        () {
       // Act & Assert - No exception should be thrown
       counter.addWithMap(42, {});
     });

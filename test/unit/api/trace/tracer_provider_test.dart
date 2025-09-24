@@ -37,7 +37,8 @@ void main() {
       );
 
       expect(tracer, isNotNull);
-      expect(tracer.schemaUrl, equals('https://opentelemetry.io/schemas/1.4.0'));
+      expect(
+          tracer.schemaUrl, equals('https://opentelemetry.io/schemas/1.4.0'));
     });
 
     test('creates tracer with instrumentation scope attributes', () {
@@ -54,11 +55,14 @@ void main() {
       );
 
       expect(tracer, isNotNull);
-      expect(tracer.attributes?.toMap()['library.name']?.value, equals('test-lib'));
-      expect(tracer.attributes?.toMap()['library.version']?.value, equals('1.0.0'));
+      expect(tracer.attributes?.toMap()['library.name']?.value,
+          equals('test-lib'));
+      expect(tracer.attributes?.toMap()['library.version']?.value,
+          equals('1.0.0'));
     });
 
-    test('handles invalid name by returning working tracer with empty name', () {
+    test('handles invalid name by returning working tracer with empty name',
+        () {
       final provider = OTelAPI.tracerProvider();
 
       // Test with null name

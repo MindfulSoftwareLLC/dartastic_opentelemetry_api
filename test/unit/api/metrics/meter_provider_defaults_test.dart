@@ -15,7 +15,7 @@ void main() {
         serviceName: 'test-service',
         serviceVersion: '1.0.0',
       );
-      
+
       meterProvider = OTelAPI.meterProvider();
     });
 
@@ -25,39 +25,45 @@ void main() {
 
       // Assert
       expect(meter.name, equals('test-meter'));
-      expect(meter.version, equals('1.11.0.0')); // Default version should be applied
-      expect(meter.schemaUrl, equals('https://opentelemetry.io/schemas/1.11.0')); // Default schema should be applied
+      expect(meter.version,
+          equals('1.11.0.0')); // Default version should be applied
+      expect(
+          meter.schemaUrl,
+          equals(
+              'https://opentelemetry.io/schemas/1.11.0')); // Default schema should be applied
       expect(meter.attributes, isNull);
     });
 
     test('does not apply defaults when version is provided', () {
       // Act
-      final meter = meterProvider.getMeter(name: 'test-meter', version: 'custom-version');
+      final meter =
+          meterProvider.getMeter(name: 'test-meter', version: 'custom-version');
 
       // Assert
       expect(meter.name, equals('test-meter'));
-      expect(meter.version, equals('custom-version')); // Custom version preserved
+      expect(
+          meter.version, equals('custom-version')); // Custom version preserved
       expect(meter.schemaUrl, isNull); // No default schema
       expect(meter.attributes, isNull);
     });
 
     test('does not apply defaults when schemaUrl is provided', () {
       // Act
-      final meter = meterProvider.getMeter(name: 'test-meter', schemaUrl: 'https://example.com/schema');
+      final meter = meterProvider.getMeter(
+          name: 'test-meter', schemaUrl: 'https://example.com/schema');
 
       // Assert
       expect(meter.name, equals('test-meter'));
       expect(meter.version, isNull); // No default version
-      expect(meter.schemaUrl, equals('https://example.com/schema')); // Custom schema preserved
+      expect(meter.schemaUrl,
+          equals('https://example.com/schema')); // Custom schema preserved
       expect(meter.attributes, isNull);
     });
 
     test('does not apply defaults when attributes are provided', () {
       // Act
       final meter = meterProvider.getMeter(
-        name: 'test-meter',
-        attributes: {'key': 'value'}.toAttributes()
-      );
+          name: 'test-meter', attributes: {'key': 'value'}.toAttributes());
 
       // Assert
       expect(meter.name, equals('test-meter'));
@@ -67,22 +73,23 @@ void main() {
       expect(meter.attributes!.getString('key'), equals('value'));
     });
 
-    test('does not apply defaults when any combination of parameters is provided', () {
+    test(
+        'does not apply defaults when any combination of parameters is provided',
+        () {
       // Act
       final meter = meterProvider.getMeter(
-        name: 'test-meter',
-        version: 'custom-version',
-        attributes: {'key': 'value'}.toAttributes()
-      );
+          name: 'test-meter',
+          version: 'custom-version',
+          attributes: {'key': 'value'}.toAttributes());
 
       // Assert
       expect(meter.name, equals('test-meter'));
-      expect(meter.version, equals('custom-version')); // Custom version preserved
+      expect(
+          meter.version, equals('custom-version')); // Custom version preserved
       expect(meter.schemaUrl, isNull); // No default schema
       expect(meter.attributes, isNotNull);
       expect(meter.attributes!.getString('key'), equals('value'));
     });
-
 
     test('meterProvider returns existing named provider', () {
       final name = 'test-meter-provider';

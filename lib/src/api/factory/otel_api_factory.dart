@@ -228,7 +228,11 @@ class OTelAPIFactory extends OTelFactory {
   }
 
   @override
-  InstrumentationScope instrumentationScope({required String name, String version = '1.0.0', String? schemaUrl, Attributes? attributes}) {
+  InstrumentationScope instrumentationScope(
+      {required String name,
+      String version = '1.0.0',
+      String? schemaUrl,
+      Attributes? attributes}) {
     return InstrumentationScopeCreate.create(
       name: name,
       version: version,

@@ -16,13 +16,25 @@ void main() {
         serviceName: 'test-service',
         serviceVersion: '1.0.0',
       );
-      
+
       meter = OTelAPI.meterProvider().getMeter(name: 'test-meter');
       histogram = meter.createHistogram<double>(
         name: 'test-histogram',
         unit: 'ms',
         description: 'A test histogram',
-        boundaries: [0.0, 5.0, 10.0, 25.0, 50.0, 75.0, 100.0, 250.0, 500.0, 750.0, 1000.0],
+        boundaries: [
+          0.0,
+          5.0,
+          10.0,
+          25.0,
+          50.0,
+          75.0,
+          100.0,
+          250.0,
+          500.0,
+          750.0,
+          1000.0
+        ],
       );
     });
 
@@ -32,7 +44,8 @@ void main() {
       expect(histogram.unit, equals('ms'));
       expect(histogram.description, equals('A test histogram'));
       expect(histogram.meter, equals(meter));
-      expect(histogram.enabled, isFalse); // API implementation is disabled by default
+      expect(histogram.enabled,
+          isFalse); // API implementation is disabled by default
       expect(histogram.isCounter, isFalse);
       expect(histogram.isUpDownCounter, isFalse);
       expect(histogram.isGauge, isFalse);
@@ -59,7 +72,9 @@ void main() {
       histogram.recordWithMap(42.5, attributeMap);
     });
 
-    test('recordWithMap with empty map is equivalent to record with null attributes', () {
+    test(
+        'recordWithMap with empty map is equivalent to record with null attributes',
+        () {
       // Act & Assert - No exception should be thrown
       histogram.recordWithMap(42.5, {});
     });
@@ -67,7 +82,8 @@ void main() {
     test('generic type constraint is respected', () {
       // Arrange
       final intHistogram = meter.createHistogram<int>(name: 'int-histogram');
-      final doubleHistogram = meter.createHistogram<double>(name: 'double-histogram');
+      final doubleHistogram =
+          meter.createHistogram<double>(name: 'double-histogram');
 
       // Act & Assert
       intHistogram.record(42);
@@ -79,7 +95,8 @@ void main() {
     test('histogram works with different numeric types', () {
       // Act & Assert
       final intHistogram = meter.createHistogram<int>(name: 'int-histogram');
-      final doubleHistogram = meter.createHistogram<double>(name: 'double-histogram');
+      final doubleHistogram =
+          meter.createHistogram<double>(name: 'double-histogram');
 
       // These should work without exceptions
       intHistogram.record(42);
@@ -92,9 +109,7 @@ void main() {
 
       // Act
       final customHistogram = meter.createHistogram<double>(
-        name: 'custom-boundary-histogram',
-        boundaries: customBoundaries
-      );
+          name: 'custom-boundary-histogram', boundaries: customBoundaries);
 
       // Assert (no real way to verify boundaries are used in the API implementation)
       // Just verify it doesn't throw
@@ -103,7 +118,8 @@ void main() {
 
     test('histogram is created with no boundaries specified', () {
       // Act
-      final defaultHistogram = meter.createHistogram<double>(name: 'default-boundary-histogram');
+      final defaultHistogram =
+          meter.createHistogram<double>(name: 'default-boundary-histogram');
 
       // Assert (just verify it doesn't throw)
       defaultHistogram.record(50.0);

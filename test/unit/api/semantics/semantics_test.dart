@@ -44,7 +44,8 @@ void main() {
 
       expect(list, contains(semantic1));
       expect(list, contains(semantic2));
-      expect(list.map((s) => s.key).toList(), equals(['test.key1', 'test.key2']));
+      expect(
+          list.map((s) => s.key).toList(), equals(['test.key1', 'test.key2']));
     });
   });
 }

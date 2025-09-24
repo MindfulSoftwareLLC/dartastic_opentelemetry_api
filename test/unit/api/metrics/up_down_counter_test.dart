@@ -16,7 +16,7 @@ void main() {
         serviceName: 'test-service',
         serviceVersion: '1.0.0',
       );
-      
+
       meter = OTelAPI.meterProvider().getMeter(name: 'test-meter');
       upDownCounter = meter.createUpDownCounter<int>(
         name: 'test-up-down-counter',
@@ -31,7 +31,8 @@ void main() {
       expect(upDownCounter.unit, equals('bytes'));
       expect(upDownCounter.description, equals('A test up-down counter'));
       expect(upDownCounter.meter, equals(meter));
-      expect(upDownCounter.enabled, isFalse); // API implementation is disabled by default
+      expect(upDownCounter.enabled,
+          isFalse); // API implementation is disabled by default
       expect(upDownCounter.isCounter, isFalse);
       expect(upDownCounter.isUpDownCounter, isTrue);
       expect(upDownCounter.isGauge, isFalse);
@@ -61,7 +62,8 @@ void main() {
       upDownCounter.addWithMap(-10, attributeMap);
     });
 
-    test('addWithMap with empty map is equivalent to add with null attributes', () {
+    test('addWithMap with empty map is equivalent to add with null attributes',
+        () {
       // Act & Assert - No exception should be thrown
       upDownCounter.addWithMap(42, {});
       upDownCounter.addWithMap(-10, {});
@@ -69,8 +71,10 @@ void main() {
 
     test('generic type constraint is respected', () {
       // Arrange
-      final intUpDownCounter = meter.createUpDownCounter<int>(name: 'int-up-down-counter');
-      final doubleUpDownCounter = meter.createUpDownCounter<double>(name: 'double-up-down-counter');
+      final intUpDownCounter =
+          meter.createUpDownCounter<int>(name: 'int-up-down-counter');
+      final doubleUpDownCounter =
+          meter.createUpDownCounter<double>(name: 'double-up-down-counter');
 
       // Act & Assert
       intUpDownCounter.add(42);
@@ -83,8 +87,10 @@ void main() {
 
     test('up-down counter works with different numeric types', () {
       // Act & Assert
-      final intUpDownCounter = meter.createUpDownCounter<int>(name: 'int-up-down-counter');
-      final doubleUpDownCounter = meter.createUpDownCounter<double>(name: 'double-up-down-counter');
+      final intUpDownCounter =
+          meter.createUpDownCounter<int>(name: 'int-up-down-counter');
+      final doubleUpDownCounter =
+          meter.createUpDownCounter<double>(name: 'double-up-down-counter');
 
       // These should work without exceptions
       intUpDownCounter.add(42);

@@ -37,7 +37,7 @@ void main() {
 
     test('handles null values explicitly set', () {
       final key = OTelAPI.contextKey<Object?>('nullable-key');
-      final context =OTelAPI.context().copyWith(key, null);
+      final context = OTelAPI.context().copyWith(key, null);
 
       expect(context.get(key), isNull);
     });
@@ -45,7 +45,7 @@ void main() {
     test('maintains type safety with complex objects', () {
       final key = OTelAPI.contextKey<ComplexValue>('complex-key');
       final value = ComplexValue('test', 42);
-      final context =OTelAPI.context().copyWith(key, value);
+      final context = OTelAPI.context().copyWith(key, value);
 
       final retrieved = context.get(key);
       expect(retrieved, isA<ComplexValue>());
@@ -57,7 +57,7 @@ void main() {
       final stringKey = OTelAPI.contextKey<String>('shared-key');
       final intKey = OTelAPI.contextKey<int>('shared-key');
 
-      final context =OTelAPI.context()
+      final context = OTelAPI.context()
           .copyWith(stringKey, 'string-value')
           .copyWith(intKey, 42);
 
@@ -69,9 +69,9 @@ void main() {
       final stringKey = OTelAPI.contextKey<String>('shared-key');
       final stringKey2 = OTelAPI.contextKey<String>('shared-key');
 
-        final context =OTelAPI.context()
-            .copyWith(stringKey, 'string-value')
-            .copyWith(stringKey2, 'string-value2');
+      final context = OTelAPI.context()
+          .copyWith(stringKey, 'string-value')
+          .copyWith(stringKey2, 'string-value2');
       expect(context.get(stringKey), equals('string-value'));
       expect(context.get(stringKey2), equals('string-value2'));
     });
@@ -80,20 +80,19 @@ void main() {
       final stringKey = OTelAPI.contextKey<String>('shared-key');
       final intKey = OTelAPI.contextKey<int>('shared-key');
 
-      final context =OTelAPI.context()
+      final context = OTelAPI.context()
           .copyWith(stringKey, 'string-value')
           .copyWith(intKey, 42);
       expect(context.get(stringKey), equals('string-value'));
       expect(context.get<int>(intKey), equals(42));
     });
 
-
     test('preserves order of values', () {
       final key1 = OTelAPI.contextKey<String>('key1');
       final key2 = OTelAPI.contextKey<int>('key2');
       final key3 = OTelAPI.contextKey<bool>('key3');
 
-      final context =OTelAPI.context()
+      final context = OTelAPI.context()
           .copyWith(key1, 'value1')
           .copyWith(key2, 2)
           .copyWith(key3, true);
@@ -108,7 +107,7 @@ void main() {
 
     test('handles removing values', () {
       final key = OTelAPI.contextKey<String>('removable-key');
-      final context =OTelAPI.context().copyWith(key, 'value');
+      final context = OTelAPI.context().copyWith(key, 'value');
       final modifiedContext = context.copyWith(key, null);
 
       expect(context.get(key), equals('value'));
@@ -117,7 +116,7 @@ void main() {
 
     test('maintains immutability when removing values', () {
       final key = OTelAPI.contextKey<String>('test-key');
-      final originalContext =OTelAPI.context().copyWith(key, 'value');
+      final originalContext = OTelAPI.context().copyWith(key, 'value');
       final modifiedContext = originalContext.copyWith(key, null);
 
       expect(originalContext.get(key), equals('value'));
@@ -128,7 +127,7 @@ void main() {
       final key1 = OTelAPI.contextKey<String>('key1');
       final key2 = OTelAPI.contextKey<int>('key2');
 
-      final contextA =OTelAPI.context().copyWith(key1, 'value1');
+      final contextA = OTelAPI.context().copyWith(key1, 'value1');
       final contextB = contextA.copyWith(key2, 2);
       final contextC = contextB.copyWith(key1, null);
       final contextD = contextC.copyWith(key1, 'new-value');
@@ -142,7 +141,7 @@ void main() {
       final stringKey = OTelAPI.contextKey<String?>('key');
       final intKey = OTelAPI.contextKey<int>('key');
 
-      final context1 =OTelAPI.context().copyWith(stringKey, 'value');
+      final context1 = OTelAPI.context().copyWith(stringKey, 'value');
       final context2 = context1.copyWith(intKey, 42);
       final context3 = context2.copyWith(stringKey, null);
 

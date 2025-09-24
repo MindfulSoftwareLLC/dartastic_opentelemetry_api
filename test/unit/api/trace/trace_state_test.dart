@@ -65,9 +65,10 @@ void main() {
 
     test('parses header and skips invalid entries', () {
       // Invalid key and value formats, and invalid format entries
-      final headerValue = 'INVALID=value1,vendora=value1,invalid@=value2,vendorb=,vendorc=value3';
+      final headerValue =
+          'INVALID=value1,vendora=value1,invalid@=value2,vendorb=,vendorc=value3';
       final traceState = TraceState.fromString(headerValue);
-      
+
       expect(traceState.get('INVALID'), isNull); // Invalid key (uppercase)
       expect(traceState.get('vendora'), equals('value1')); // Valid
       expect(traceState.get('invalid@'), isNull); // Invalid key (special char)
@@ -81,7 +82,7 @@ void main() {
       for (var i = 0; i < 40; i++) {
         entries['vendor$i'] = 'value$i';
       }
-      
+
       final traceState = TraceState.fromMap(entries);
       expect(traceState.entries.length <= 32, isTrue);
     });
@@ -108,19 +109,21 @@ void main() {
 
     test('rejects invalid key and value', () {
       final traceState = OTelAPI.traceState({'vendora': 'value1'});
-      
+
       // Invalid key (uppercase)
       expect(() => traceState.put('INVALID', 'value2'), throwsArgumentError);
-      
+
       // Invalid key (special char)
       expect(() => traceState.put('invalid@', 'value2'), throwsArgumentError);
-      
+
       // Invalid value (contains invalid characters)
-      expect(() => traceState.put('vendorb', 'value\u0000'), throwsArgumentError);
-      
+      expect(
+          () => traceState.put('vendorb', 'value\u0000'), throwsArgumentError);
+
       // Invalid value (too long)
       final tooLongValue = 'x' * 257;
-      expect(() => traceState.put('vendorb', tooLongValue), throwsArgumentError);
+      expect(
+          () => traceState.put('vendorb', tooLongValue), throwsArgumentError);
     });
 
     test('updates existing value', () {
@@ -146,14 +149,12 @@ void main() {
     test('removing non-existent key returns same state', () {
       final traceState = OTelAPI.traceState({'vendora': 'value1'});
       final updatedState = traceState.remove('nonexistent');
-      
+
       expect(identical(traceState, updatedState), isTrue);
     });
 
     test('handles OpenTelemetry vendor-specific format', () {
-      final traceState = OTelAPI.traceState({
-        'ot': 'p:8;r:62'
-      });
+      final traceState = OTelAPI.traceState({'ot': 'p:8;r:62'});
 
       expect(traceState.get('ot'), equals('p:8;r:62'));
     });
@@ -169,10 +170,12 @@ void main() {
 
       expect(traceState.get('newkey'), isNull);
       expect(updatedState.get('newkey'), equals('newvalue'));
-      
+
       // Verify entries map is immutable
-      expect(() => traceState.entries['newkey'] = 'newvalue', throwsUnsupportedError);
-      expect(() => traceState.asMap()['newkey'] = 'newvalue', throwsUnsupportedError);
+      expect(() => traceState.entries['newkey'] = 'newvalue',
+          throwsUnsupportedError);
+      expect(() => traceState.asMap()['newkey'] = 'newvalue',
+          throwsUnsupportedError);
     });
 
     test('handles empty entries correctly', () {
@@ -183,33 +186,36 @@ void main() {
       expect(updatedState.isEmpty, isFalse);
       expect(updatedState.get('key'), equals('value'));
     });
-    
+
     test('converts to string correctly', () {
-      final traceState = OTelAPI.traceState({
-        'vendora': 'value1',
-        'vendorb': 'value2'
-      });
-      
+      final traceState =
+          OTelAPI.traceState({'vendora': 'value1', 'vendorb': 'value2'});
+
       final str = traceState.toString();
       expect(str.contains('vendora=value1'), isTrue);
       expect(str.contains('vendorb=value2'), isTrue);
       expect(str.contains(','), isTrue);
     });
-    
+
     test('equals compares TraceState correctly', () {
-      final state1 = TraceState.fromMap({'vendora': 'value1', 'vendorb': 'value2'});
-      final state2 = TraceState.fromMap({'vendora': 'value1', 'vendorb': 'value2'});
-      final state3 = TraceState.fromMap({'vendora': 'value1', 'vendorc': 'value3'});
-      
+      final state1 =
+          TraceState.fromMap({'vendora': 'value1', 'vendorb': 'value2'});
+      final state2 =
+          TraceState.fromMap({'vendora': 'value1', 'vendorb': 'value2'});
+      final state3 =
+          TraceState.fromMap({'vendora': 'value1', 'vendorc': 'value3'});
+
       expect(state1 == state2, isTrue);
       expect(state1 == state3, isFalse);
       expect(state1 == TraceState.empty(), isFalse);
     });
-    
+
     test('hashCode is consistent', () {
-      final state1 = TraceState.fromMap({'vendora': 'value1', 'vendorb': 'value2'});
-      final state2 = TraceState.fromMap({'vendora': 'value1', 'vendorb': 'value2'});
-      
+      final state1 =
+          TraceState.fromMap({'vendora': 'value1', 'vendorb': 'value2'});
+      final state2 =
+          TraceState.fromMap({'vendora': 'value1', 'vendorb': 'value2'});
+
       expect(state1.hashCode, equals(state2.hashCode));
       expect(state1.hashCode == TraceState.empty().hashCode, isFalse);
     });

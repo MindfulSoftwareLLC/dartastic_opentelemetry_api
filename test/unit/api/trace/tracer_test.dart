@@ -30,7 +30,8 @@ void main() {
 
       expect(tracer.name, equals('test-tracer'));
       expect(tracer.version, equals('1.11.0.0'));
-      expect(tracer.schemaUrl, equals('https://opentelemetry.io/schemas/1.11.0'));
+      expect(
+          tracer.schemaUrl, equals('https://opentelemetry.io/schemas/1.11.0'));
     });
 
     test('creates span with name only', () {
@@ -44,7 +45,7 @@ void main() {
 
     test('creates span with all options', () {
       final tracer = OTelAPI.tracer('test-tracer');
-      
+
       // Create a parent span to get a valid SpanContext
       final parentSpan = tracer.startSpan('parent-span');
       final parentContext = parentSpan.spanContext;
@@ -154,11 +155,13 @@ void main() {
 
       tracer.withSpan(span, () {
         executed = true;
-        expect(Context.current.span, equals(span)); // Should be active inside the callback
+        expect(Context.current.span,
+            equals(span)); // Should be active inside the callback
       });
 
       expect(executed, isTrue);
-      expect(Context.current.span, isNot(equals(span))); // Should no longer be active after the callback
+      expect(Context.current.span,
+          isNot(equals(span))); // Should no longer be active after the callback
     });
 
     test('executing async code with span in context', () async {
@@ -169,7 +172,8 @@ void main() {
 
       await tracer.withSpanAsync(span, () async {
         executed = true;
-        expect(Context.current.span, equals(span)); // Should be active inside the callback
+        expect(Context.current.span,
+            equals(span)); // Should be active inside the callback
 
         // Make sure it stays active during an await
         await Future<void>.delayed(const Duration(milliseconds: 10));
@@ -177,7 +181,8 @@ void main() {
       });
 
       expect(executed, isTrue);
-      expect(Context.current.span, isNot(equals(span))); // Should no longer be active after the callback
+      expect(Context.current.span,
+          isNot(equals(span))); // Should no longer be active after the callback
     });
 
     test('startSpan starts and activates a span', () {
@@ -191,12 +196,13 @@ void main() {
 
       // End the span
       span.end();
-      
+
       // Clear the span from context (since ending a span doesn't deactivate it per spec)
       Context.clearCurrentSpan();
 
       // Now check if it's still the current span
-      expect(Context.current.span, isNot(equals(span))); // Should no longer be active
+      expect(Context.current.span,
+          isNot(equals(span))); // Should no longer be active
     });
 
     test('startSpan attaches to existing active span', () {
@@ -204,7 +210,7 @@ void main() {
 
       // Create and activate a parent span
       final parentSpan = tracer.startSpan('parent-span');
-      
+
       // The parent span should be active now
       expect(Context.current.span, equals(parentSpan));
       final parentTraceId = parentSpan.spanContext.traceId;
@@ -214,7 +220,8 @@ void main() {
 
       // Check the child span has the parent's context
       expect(childSpan.spanContext.traceId, equals(parentTraceId));
-      expect(childSpan.spanContext.parentSpanId, equals(parentSpan.spanContext.spanId));
+      expect(childSpan.spanContext.parentSpanId,
+          equals(parentSpan.spanContext.spanId));
 
       // End both spans
       childSpan.end();

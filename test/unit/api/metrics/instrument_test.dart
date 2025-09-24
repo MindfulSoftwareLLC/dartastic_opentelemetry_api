@@ -70,7 +70,8 @@ void main() {
     test('specific instrument types extend APIInstrument', () {
       // Act
       final counter = meter.createCounter<int>(name: 'test-counter');
-      final upDownCounter = meter.createUpDownCounter<int>(name: 'test-up-down-counter');
+      final upDownCounter =
+          meter.createUpDownCounter<int>(name: 'test-up-down-counter');
       final histogram = meter.createHistogram<double>(name: 'test-histogram');
       final gauge = meter.createGauge<double>(name: 'test-gauge');
 

@@ -56,7 +56,9 @@ void main() {
       expect(measurement1 == measurement3, isFalse);
     });
 
-    test('handles measurements with same value but different attributes as not equal', () {
+    test(
+        'handles measurements with same value but different attributes as not equal',
+        () {
       // Arrange
       final attributes1 = {'key1': 'value1'}.toAttributes();
       final attributes2 = {'key2': 'value2'}.toAttributes();
@@ -100,7 +102,8 @@ void main() {
       final measurement1 = OTelAPI.createMeasurement<int>(42, attributes);
       final measurement2 = OTelAPI.createMeasurement<int>(42, attributes);
       final measurement3 = OTelAPI.createMeasurement<int>(43, attributes);
-      final measurement4 = OTelAPI.createMeasurement<int>(42, {'key2': 'value2'}.toAttributes());
+      final measurement4 =
+          OTelAPI.createMeasurement<int>(42, {'key2': 'value2'}.toAttributes());
 
       // Assert
       expect(measurement1.hashCode, equals(measurement2.hashCode));
@@ -112,11 +115,11 @@ void main() {
       // Act
       final intMeasurement = OTelAPI.createMeasurement<int>(42);
       final doubleMeasurement = OTelAPI.createMeasurement<double>(42.5);
-      
+
       // Assert
       expect(intMeasurement.value, isA<int>());
       expect(intMeasurement.value, equals(42));
-      
+
       expect(doubleMeasurement.value, isA<double>());
       expect(doubleMeasurement.value, equals(42.5));
     });

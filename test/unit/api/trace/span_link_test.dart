@@ -43,9 +43,11 @@ void main() {
       );
 
       expect(linkedSpan.spanLinks, hasLength(2));
-      expect(linkedSpan.spanLinks?.first.spanContext, equals(span1.spanContext));
+      expect(
+          linkedSpan.spanLinks?.first.spanContext, equals(span1.spanContext));
       expect(linkedSpan.spanLinks?.last.spanContext, equals(span2.spanContext));
-      expect(linkedSpan.spanLinks?.first.attributes.getString('key'), equals('value'));
+      expect(linkedSpan.spanLinks?.first.attributes.getString('key'),
+          equals('value'));
     });
 
     test('adds links after span creation', () {
@@ -57,7 +59,8 @@ void main() {
 
       expect(mainSpan.spanLinks, hasLength(1));
       expect(mainSpan.spanLinks?.first.spanContext, equals(span1.spanContext));
-      expect(mainSpan.spanLinks?.first.attributes.getString('key'), equals('value'));
+      expect(mainSpan.spanLinks?.first.attributes.getString('key'),
+          equals('value'));
     });
 
     test('preserves link order', () {
@@ -88,7 +91,8 @@ void main() {
 
       expect(span.spanLinks, hasLength(1));
       expect(span.spanLinks?.first.spanContext, equals(invalidContext));
-      expect(span.spanLinks?.first.attributes.getString('key'), equals('value'));
+      expect(
+          span.spanLinks?.first.attributes.getString('key'), equals('value'));
     });
 
     test('isRecording behavior', () {
@@ -103,7 +107,8 @@ void main() {
       span.addEvent(OTelAPI.spanEvent('test-event'));
       span.setStatus(SpanStatusCode.Error);
       expect(span.spanEvents, isNull);
-      expect(span.status, equals(SpanStatusCode.Ok)); // Status should remain unchanged
+      expect(span.status,
+          equals(SpanStatusCode.Ok)); // Status should remain unchanged
     });
 
     test('status setting rules', () {

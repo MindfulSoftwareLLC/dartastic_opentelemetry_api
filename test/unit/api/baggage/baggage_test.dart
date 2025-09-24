@@ -8,7 +8,7 @@ void main() {
   setUp(() {
     // Reset state
     OTelAPI.reset();
-    
+
     // Initialize API for tests
     OTelAPI.initialize(
       endpoint: 'http://localhost:4317',
@@ -26,12 +26,12 @@ void main() {
     test('creates baggage with entries', () {
       final entry1 = OTelAPI.baggageEntry('value1', 'metadata1');
       final entry2 = OTelAPI.baggageEntry('value2', 'metadata2');
-      
+
       final baggage = OTelAPI.baggage({
         'key1': entry1,
         'key2': entry2,
       });
-      
+
       expect(baggage.getEntry('key1')?.value, equals('value1'));
       expect(baggage.getEntry('key1')?.metadata, equals('metadata1'));
       expect(baggage.getEntry('key2')?.value, equals('value2'));
@@ -41,7 +41,7 @@ void main() {
     test('retrieves values with bracket operator', () {
       final entry = OTelAPI.baggageEntry('value1', 'metadata1');
       final baggage = OTelAPI.baggage({'key1': entry});
-      
+
       expect(baggage['key1'], equals('value1'));
       expect(baggage['nonexistent'], isNull);
     });
@@ -49,12 +49,12 @@ void main() {
     test('gets all values', () {
       final entry1 = OTelAPI.baggageEntry('value1', 'metadata1');
       final entry2 = OTelAPI.baggageEntry('value2', 'metadata2');
-      
+
       final baggage = OTelAPI.baggage({
         'key1': entry1,
         'key2': entry2,
       });
-      
+
       final values = baggage.getAllValues();
       expect(values, containsAll(['value1', 'value2']));
       expect(values.length, equals(2));
@@ -63,7 +63,7 @@ void main() {
     test('adds entry with copyWith', () {
       final baggage1 = OTelAPI.baggage();
       final baggage2 = baggage1.copyWith('key1', 'value1', 'metadata1');
-      
+
       expect(baggage1.getEntry('key1'), isNull); // Original unchanged
       expect(baggage2.getEntry('key1')?.value, equals('value1'));
       expect(baggage2.getEntry('key1')?.metadata, equals('metadata1'));
@@ -73,8 +73,9 @@ void main() {
       final entry = OTelAPI.baggageEntry('value1', 'metadata1');
       final baggage1 = OTelAPI.baggage({'key1': entry});
       final baggage2 = baggage1.copyWith('key1', 'value2', 'metadata2');
-      
-      expect(baggage1.getEntry('key1')?.value, equals('value1')); // Original unchanged
+
+      expect(baggage1.getEntry('key1')?.value,
+          equals('value1')); // Original unchanged
       expect(baggage1.getEntry('key1')?.metadata, equals('metadata1'));
       expect(baggage2.getEntry('key1')?.value, equals('value2'));
       expect(baggage2.getEntry('key1')?.metadata, equals('metadata2'));
@@ -84,8 +85,9 @@ void main() {
       final entry = OTelAPI.baggageEntry('value1', 'metadata1');
       final baggage1 = OTelAPI.baggage({'key1': entry});
       final baggage2 = baggage1.copyWithout('key1');
-      
-      expect(baggage1.getEntry('key1')?.value, equals('value1')); // Original unchanged
+
+      expect(baggage1.getEntry('key1')?.value,
+          equals('value1')); // Original unchanged
       expect(baggage2.getEntry('key1'), isNull);
     });
 
@@ -93,7 +95,7 @@ void main() {
       final entry = OTelAPI.baggageEntry('value1', 'metadata1');
       final baggage1 = OTelAPI.baggage({'key1': entry});
       final baggage2 = baggage1.copyWithout('nonexistent');
-      
+
       // Should be equal (though not necessarily identical due to factory methods)
       expect(baggage2.getAllEntries(), equals(baggage1.getAllEntries()));
     });
@@ -102,19 +104,19 @@ void main() {
       final entry1 = OTelAPI.baggageEntry('value1', 'metadata1');
       final entry2 = OTelAPI.baggageEntry('value2', 'metadata2');
       final entry3 = OTelAPI.baggageEntry('value3', 'metadata3');
-      
+
       final baggage1 = OTelAPI.baggage({
         'key1': entry1,
         'key2': entry2,
       });
-      
+
       final baggage2 = OTelAPI.baggage({
         'key2': entry3, // Will override
         'key3': entry3,
       });
-      
+
       final combined = baggage1.copyWithBaggage(baggage2);
-      
+
       expect(combined.getEntry('key1')?.value, equals('value1'));
       expect(combined.getEntry('key2')?.value, equals('value3')); // Overridden
       expect(combined.getEntry('key3')?.value, equals('value3'));
@@ -123,14 +125,14 @@ void main() {
     test('converts to JSON', () {
       final entry1 = OTelAPI.baggageEntry('value1', 'metadata1');
       final entry2 = OTelAPI.baggageEntry('value2', null);
-      
+
       final baggage = OTelAPI.baggage({
         'key1': entry1,
         'key2': entry2,
       });
-      
+
       final json = baggage.toJson();
-      
+
       expect(json['key1']['value'], equals('value1'));
       expect(json['key1']['metadata'], equals('metadata1'));
       expect(json['key2']['value'], equals('value2'));
@@ -147,14 +149,14 @@ void main() {
         'invalid4': {'value': '', 'metadata': 'metadata'}, // Empty value
         'invalid5': {'value': 'value5', 'metadata': 42}, // Non-string metadata
       };
-      
+
       final baggage = Baggage.fromJson(json);
-      
+
       expect(baggage.getEntry('key1')?.value, equals('value1'));
       expect(baggage.getEntry('key1')?.metadata, equals('metadata1'));
       expect(baggage.getEntry('key2')?.value, equals('value2'));
       expect(baggage.getEntry('key2')?.metadata, isNull);
-      
+
       // Invalid entries should be skipped
       expect(baggage.getEntry('invalid1'), isNull);
       expect(baggage.getEntry('invalid2'), isNull);
@@ -166,21 +168,21 @@ void main() {
     test('equals and hashCode work correctly', () {
       final entry1 = OTelAPI.baggageEntry('value1', 'metadata1');
       final entry2 = OTelAPI.baggageEntry('value2', 'metadata2');
-      
+
       final baggage1 = OTelAPI.baggage({
         'key1': entry1,
         'key2': entry2,
       });
-      
+
       final baggage2 = OTelAPI.baggage({
         'key1': entry1,
         'key2': entry2,
       });
-      
+
       final baggage3 = OTelAPI.baggage({
         'key1': entry1,
       });
-      
+
       expect(baggage1, equals(baggage2));
       expect(baggage1.hashCode, equals(baggage2.hashCode));
       expect(baggage1, isNot(equals(baggage3)));
@@ -190,7 +192,7 @@ void main() {
     test('toString returns readable representation', () {
       final entry = OTelAPI.baggageEntry('value1', 'metadata1');
       final baggage = OTelAPI.baggage({'key1': entry});
-      
+
       expect(baggage.toString(), contains('key1'));
       expect(baggage.toString(), contains('value1'));
     });
@@ -211,19 +213,21 @@ void main() {
 
     test('fromJson throws when OTelFactory not initialized', () {
       OTelAPI.reset();
-      
+
       expect(() {
-        Baggage.fromJson({'key': {'value': 'value'}});
+        Baggage.fromJson({
+          'key': {'value': 'value'}
+        });
       }, throwsStateError);
     });
 
     test('copyWith throws when OTelFactory not initialized', () {
       // Create baggage with initialized factory
       final baggage = OTelAPI.baggage();
-      
+
       // Reset to clear factory
       OTelAPI.reset();
-      
+
       expect(() {
         baggage.copyWith('key', 'value');
       }, throwsStateError);
@@ -233,15 +237,14 @@ void main() {
       // Create baggage with initialized factory
       final entry = OTelAPI.baggageEntry('value', 'metadata');
       final baggage = OTelAPI.baggage({'key': entry});
-      
+
       // Reset to clear factory
       OTelAPI.reset();
-      
+
       expect(() {
         baggage.copyWithout('key');
       }, throwsStateError);
     });
-
 
     test('baggage creation and manipulation', () {
       // Create entries
