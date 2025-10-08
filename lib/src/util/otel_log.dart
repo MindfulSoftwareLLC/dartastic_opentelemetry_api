@@ -42,16 +42,15 @@ class OTelLog {
   /// The current log level for filtering messages.
   ///
   /// Messages with a level lower than the current level are not logged.
-  /// Defaults to LogLevel.error.
-  static LogLevel currentLevel = LogLevel.error;
+  /// Defaults to LogLevel.info.
+  static LogLevel currentLevel = LogLevel.info;
 
-  /// To turn on logging at the current level, set this
-  /// to `print` (Dart) or `debugPrint` (Flutter) or any other LogFunction.
   /// Logging function for general messages.
   ///
-  /// To enable logging, set this to a function like print() or debugPrint().
-  /// When null, logging is disabled.
-  static LogFunction? logFunction;
+  /// Defaults to print() for automatic logging.
+  /// Set to null to disable logging, or set to debugPrint() in Flutter,
+  /// or any other LogFunction implementation.
+  static LogFunction? logFunction = print;
 
   /// To turn on logging for spans, set this
   /// to `print` (Dart) or `debugPrint` (Flutter) or any other LogFunction.

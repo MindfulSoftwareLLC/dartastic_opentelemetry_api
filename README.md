@@ -70,7 +70,7 @@ Add the package to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  dartastic_opentelemetry_api: ^0.8.0
+  dartastic_opentelemetry_api: ^0.8.8
 ```
 
 Then run:
@@ -103,7 +103,7 @@ If you need a no-op OpenTelemetry implementation (unusual but compliant with the
 
 ```yaml
 dependencies:
-  dartastic_opentelemetry_api: ^0.8.0
+  dartastic_opentelemetry_api: ^0.8.8
 ```
 
 ## Usage
