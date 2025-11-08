@@ -34,12 +34,12 @@ class APILoggerProvider {
         _enabled = enabled,
         _isShutdown = isShutdown;
 
-  /// Gets the endpoint URL used by this tracer provider.
+  /// Gets the endpoint URL used by this logger provider.
   ///
   /// This is the URL where telemetry data will be sent.
   String get endpoint => _endpoint;
 
-  /// Sets the endpoint URL used by this tracer provider.
+  /// Sets the endpoint URL used by this logger provider.
   ///
   /// This is the URL where telemetry data will be sent.
   set endpoint(String value) {
@@ -56,7 +56,7 @@ class APILoggerProvider {
       throw StateError('LogProvider has been shut down');
     }
 
-    // Validate the tracer name; if invalid (empty), log a warning and use empty string.
+    // Validate the logger name; if invalid (empty), log a warning and use empty string.
     final validatedName = name.isEmpty ? '' : name;
     if (validatedName.isEmpty) {
       OTelLog.warn(
@@ -83,66 +83,66 @@ class APILoggerProvider {
     if (_loggerCache.containsKey(key)) {
       return _loggerCache[key]!;
     } else {
-      final tracer = LoggerCreate.create(
+      final logger = LoggerCreate.create(
         name: validatedName,
         version: effectiveVersion,
         schemaUrl: effectiveSchemaUrl,
         attributes: attributes,
       );
-      _loggerCache[key] = tracer;
-      return tracer;
+      _loggerCache[key] = logger;
+      return logger;
     }
   }
 
-  /// Gets the service name used by this tracer provider.
+  /// Gets the service name used by this logger provider.
   ///
   /// The service name is a required resource attribute that uniquely identifies the service.
   String get serviceName => _serviceName;
 
-  /// Sets the service name used by this tracer provider.
+  /// Sets the service name used by this logger provider.
   ///
   /// The service name is a required resource attribute that uniquely identifies the service.
   set serviceName(String value) {
     _serviceName = value;
   }
 
-  /// Gets the service version used by this tracer provider.
+  /// Gets the service version used by this logger provider.
   ///
   /// The service version is an optional resource attribute that specifies the version of the service.
   String? get serviceVersion => _serviceVersion;
 
-  /// Sets the service version used by this tracer provider.
+  /// Sets the service version used by this logger provider.
   ///
   /// The service version is an optional resource attribute that specifies the version of the service.
   set serviceVersion(String? value) {
     _serviceVersion = value;
   }
 
-  /// Returns whether this tracer provider is enabled.
+  /// Returns whether this logger provider is enabled.
   ///
-  /// When disabled, tracers will not create spans or send telemetry data.
+  /// When disabled, loggers will not create spans or send telemetry data.
   bool get enabled => _enabled;
 
-  /// Sets whether this tracer provider is enabled.
+  /// Sets whether this logger provider is enabled.
   ///
-  /// When disabled, tracers will not create spans or send telemetry data.
+  /// When disabled, loggers will not create spans or send telemetry data.
   set enabled(bool value) {
     _enabled = value;
   }
 
-  /// Returns whether this tracer provider has been shut down.
+  /// Returns whether this logger provider has been shut down.
   ///
-  /// A shut down provider will not create new tracers or spans.
+  /// A shut down provider will not create new loggers or spans.
   bool get isShutdown => _isShutdown;
 
-  /// Sets whether this tracer provider has been shut down.
+  /// Sets whether this logger provider has been shut down.
   ///
   /// This should only be set internally during the shutdown process.
   set isShutdown(bool value) {
     _isShutdown = value;
   }
 
-  /// Shuts down the TracerProvider.
+  /// Shuts down the loggerProvider.
   /// After shutdown:
   /// - New spans will not be accepted
   /// - All spans in progress should be ended
@@ -154,10 +154,10 @@ class APILoggerProvider {
     }
 
     try {
-      // Mark as shut down immediately to prevent new tracers/spans
+      // Mark as shut down immediately to prevent new loggers/spans
       _isShutdown = true;
 
-      // Clear the tracer cache
+      // Clear the logger cache
       _loggerCache.clear();
 
       // Disable the provider

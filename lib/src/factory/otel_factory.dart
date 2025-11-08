@@ -170,7 +170,7 @@ abstract class OTelFactory {
   }
 
   /// This is intended to be used by subclasses in their override
-  /// of [logProvider] and in created named [APITracerProvider]s.
+  /// of [loggerProvider] and in created named [APILoggerProvider]s.
   APILoggerProvider? getNamedLogProvider(String name) {
     return _logProviders?[name];
   }

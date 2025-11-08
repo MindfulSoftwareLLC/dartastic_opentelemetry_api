@@ -164,9 +164,9 @@ class OTelAPI {
     }
   }
 
-  /// Gets a TracerProvider.  If name is null, this returns
-  /// the global default [APITracerProvider], if not it returns a
-  /// TracerProvider for the name.  If the TracerProvider does not exist,
+  /// Gets a LoggerProvider.  If name is null, this returns
+  /// the global default [APILoggerProvider], if not it returns a
+  /// LoggerProvider for the name.  If the LoggerProvider does not exist,
   /// it is created.
   static APILoggerProvider loggerProvider([String? name]) {
     _getAndCacheOtelFactory();
