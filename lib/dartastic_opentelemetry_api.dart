@@ -65,3 +65,6 @@ export 'src/api/trace/tracer_provider.dart';
 export 'src/factory/otel_factory.dart';
 // Util
 export 'src/util/otel_log.dart';
+// Log
+export 'src/api/logs/logger.dart';
+export 'src/api/logs/logger_provider.dart';

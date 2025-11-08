@@ -24,6 +24,7 @@ import '../api/common/attribute.dart';
 import '../api/common/attributes.dart';
 import '../api/context/context.dart';
 import '../api/context/context_key.dart';
+import '../api/logs/logger_provider.dart';
 import '../api/metrics/observable_callback.dart';
 import '../api/metrics/observable_counter.dart';
 import '../api/metrics/observable_gauge.dart';
@@ -52,9 +53,11 @@ abstract class OTelFactory {
   String _apiServiceName;
   String _apiServiceVersion;
   APITracerProvider? _globalDefaultTracerProvider;
+  APILoggerProvider? _globalDefaultLogProvider;
   APIMeterProvider? _globalDefaultMeterProvider;
   Map<String, APITracerProvider>? _tracerProviders;
   Map<String, APIMeterProvider>? _meterProviders;
+  Map<String, APILoggerProvider>? _logProviders;
 
   /// Used to reproduce the concrete factory
   /// across process boundaries, i.e. isolates
@@ -137,6 +140,15 @@ abstract class OTelFactory {
         serviceVersion: _apiServiceVersion);
   }
 
+  /// Returns the global default log provider
+  APILoggerProvider globalDefaultLogProvider() {
+    return _globalDefaultLogProvider ??= loggerProvider(
+      endpoint: _apiEndpoint,
+      serviceName: _apiServiceName,
+      serviceVersion: _apiServiceVersion,
+    );
+  }
+
   /// Returns the global default meter provider
   APIMeterProvider globalDefaultMeterProvider() {
     return _globalDefaultMeterProvider ??= meterProvider(
@@ -155,6 +167,12 @@ abstract class OTelFactory {
   /// of [meterProvider] and in created named [APIMeterProvider]s.
   APIMeterProvider? getNamedMeterProvider(String name) {
     return _meterProviders?[name];
+  }
+
+  /// This is intended to be used by subclasses in their override
+  /// of [logProvider] and in created named [APITracerProvider]s.
+  APILoggerProvider? getNamedLogProvider(String name) {
+    return _logProviders?[name];
   }
 
   /// Creates a new TracerProvider referenced by [name] .  If name is null, this returns
@@ -178,6 +196,19 @@ abstract class OTelFactory {
       {String? endpoint, String? serviceName, String? serviceVersion}) {
     _meterProviders ??= {};
     return _meterProviders![name] ??= meterProvider(
+        endpoint: endpoint ?? _apiEndpoint,
+        serviceName: serviceName ?? _apiServiceName,
+        serviceVersion: serviceVersion ?? _apiServiceVersion);
+  }
+
+  /// Creates a new LogProvider referenced by [name] .  If name is null, this returns
+  /// the global default [APILogProvider], if not it returns a
+  /// LogProvider for the name.  If the LogProvider does not exist,
+  /// it is created.
+  APILoggerProvider addLogProvider(String name,
+      {String? endpoint, String? serviceName, String? serviceVersion}) {
+    _logProviders ??= {};
+    return _logProviders![name] ??= loggerProvider(
         endpoint: endpoint ?? _apiEndpoint,
         serviceName: serviceName ?? _apiServiceName,
         serviceVersion: serviceVersion ?? _apiServiceVersion);
@@ -225,6 +256,10 @@ abstract class OTelFactory {
 
   /// Creates a [APIMeterProvider]
   APIMeterProvider meterProvider(
+      {required String endpoint, String serviceName, String serviceVersion});
+
+  /// Creates a [APILogProvider]
+  APILoggerProvider loggerProvider(
       {required String endpoint, String serviceName, String serviceVersion});
 
   /// Creates a new `Context` with optional [Baggage].

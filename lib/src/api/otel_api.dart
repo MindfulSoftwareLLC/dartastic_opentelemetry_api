@@ -164,6 +164,25 @@ class OTelAPI {
     }
   }
 
+  /// Gets a TracerProvider.  If name is null, this returns
+  /// the global default [APITracerProvider], if not it returns a
+  /// TracerProvider for the name.  If the TracerProvider does not exist,
+  /// it is created.
+  static APILoggerProvider loggerProvider([String? name]) {
+    _getAndCacheOtelFactory();
+    if (name != null && name.isEmpty) {
+      throw ArgumentError(
+          'Name must not be empty. To retrieve the global default tracer provider, omit the name parameter.');
+    }
+    if (name == null) {
+      return _otelFactory!.globalDefaultLogProvider();
+    } else {
+      APILoggerProvider? lp = _otelFactory!.getNamedLogProvider(name);
+      lp ??= _otelFactory!.addLogProvider(name);
+      return lp;
+    }
+  }
+
   /// Adds or replaces a named tracer provider
   static APITracerProvider addTracerProvider(String name,
       {String? endpoint, String? serviceName, String? serviceVersion}) {
