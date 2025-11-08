@@ -4,6 +4,18 @@ import 'logger.dart';
 
 part 'logger_provider_create.dart';
 
+/// APILoggerProvider is the entry point of the OpenTelemetry logger API.
+/// The API prefix indicates that it's part of the API and not the SDK
+/// and generally should not be used since an API without an SDK is a noop.
+/// Use the LoggerProvider from the SDK instead.
+/// It provides access to [APILogger]s which are used to log operations.
+/// You cannot create a LoggerProvider directly;
+/// you must use [OTelAPI] or more likely [OTel], for example to get the default tracer:
+/// ```dart
+/// var loggerProvider = OTel.loggerProvider();
+/// ```
+/// See [OTel] for creating tracers in addition to the default.
+/// Use [OTelAPI] to run in no-op mode, as required by the specification.
 class APILoggerProvider {
   String _endpoint;
 

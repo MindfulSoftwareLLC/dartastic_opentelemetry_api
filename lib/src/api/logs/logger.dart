@@ -5,6 +5,10 @@ import '../context/context.dart';
 
 part 'logger_create.dart';
 
+/// Logger is responsible for creating [LogRecords]s.
+/// The API prefix indicates that it's part of the API and not the SDK
+/// and generally should not be used since an API without an SDK is a noop.
+/// Use the Logger from the SDK instead.
 class APILogger {
   /// Gets the name of the logger, usually of a library, package or module
   final String name;
@@ -34,6 +38,9 @@ class APILogger {
   /// This should be checked before performing expensive operations to create spans.
   bool get enabled => false;
 
+  /// Emit a LogRecord.
+  ///
+  /// More info https://opentelemetry.io/docs/specs/otel/logs/api/#emit-a-logrecord
   void emit({
     Attributes? attributes,
     Context? context,
