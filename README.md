@@ -220,6 +220,16 @@ void main() {
 }
 ```
 
+### Working with logging
+```dart
+import 'package:dartastic_opentelemetry_api/dartastic_opentelemetry_api.dart';
+
+final loggerProvider = OTelAPI.loggerProvider();
+final logger = loggerProvider.getLogger('dart-otel-api-example-service');
+logger.emit(body: "some log here!", attributes: equalToTheAbove, context: Context.current);
+```
+
+
 See the `/example` folder for more complete examples.
 
 ## API Overview

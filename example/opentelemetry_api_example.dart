@@ -63,4 +63,8 @@ void main() {
       OTelAPI.attributes([OTelAPI.attributeString('event-foo', 'bar')]));
   rootSpan.end(
       spanStatus: SpanStatusCode.Ok); //Capitalized Ok to match the OTel spec
+
+  final defaultGlobalAPINOOPLoggerProvider = OTelAPI.loggerProvider();
+  final logger = defaultGlobalAPINOOPLoggerProvider.getLogger('dart-otel-api-example-service');
+  logger.emit(body: "some log here!", attributes: equalToTheAbove, context: Context.current);
 }
