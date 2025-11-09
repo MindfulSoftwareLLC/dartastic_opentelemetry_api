@@ -24,7 +24,7 @@ class APILogger {
   /// Creates a new [APILogger].
   /// You cannot create a Logger directly; you must use [LoggerProvider]:
   /// ```dart
-  /// var meter = OTel.loggerProvider() or more likely, OTel.loggerProvider().getLog("my-library");
+  /// var meter = OTel.loggerProvider() or more likely, OTel.loggerProvider().getLogger("my-library");
   /// ```
   APILogger._({
     required this.name,
