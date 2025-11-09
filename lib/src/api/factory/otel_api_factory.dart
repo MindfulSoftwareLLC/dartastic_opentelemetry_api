@@ -119,7 +119,7 @@ class OTelAPIFactory extends OTelFactory {
   APILoggerProvider loggerProvider({
     required String endpoint,
     String serviceName = OTelAPI.defaultServiceName,
-    String serviceVersion = OTelAPI.defaultServiceVersion,
+    String? serviceVersion = OTelAPI.defaultServiceVersion,
   }) {
     return LogProviderCreate.create(
       endpoint: endpoint,
