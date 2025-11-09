@@ -68,4 +68,4 @@ export 'src/util/otel_log.dart';
 // Log
 export 'src/api/logs/logger.dart';
 export 'src/api/logs/logger_provider.dart';
-export 'src/api/logs/severity.dart';
+export 'src/api/logs/log_record.dart';

@@ -1,7 +1,6 @@
-import 'package:dartastic_opentelemetry_api/src/api/logs/severity.dart';
-
 import '../common/attributes.dart';
 import '../context/context.dart';
+import 'log_record.dart';
 
 part 'logger_create.dart';
 
@@ -45,7 +44,7 @@ class APILogger {
     Context? context,
     dynamic body,
     DateTime? observedTimestamp,
-    Severity? severityNumber,
+    SeverityNumber? severityNumber,
     String? severityText,
     DateTime? timeStamp,
   }) {

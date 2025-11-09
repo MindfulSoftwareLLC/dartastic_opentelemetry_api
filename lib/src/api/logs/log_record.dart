@@ -1,4 +1,4 @@
-enum Severity {
+enum SeverityNumber {
   unspecified,
   trace,
   trace2,
