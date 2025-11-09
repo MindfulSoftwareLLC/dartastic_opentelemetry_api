@@ -40,13 +40,14 @@ class APILogger {
   ///
   /// More info https://opentelemetry.io/docs/specs/otel/logs/api/#emit-a-logrecord
   void emit({
-    Attributes? attributes,
-    Context? context,
-    dynamic body,
+    DateTime? timeStamp,
     DateTime? observedTimestamp,
+    Context? context,
     SeverityNumber? severityNumber,
     String? severityText,
-    DateTime? timeStamp,
+    dynamic body,
+    Attributes? attributes,
+    String? eventName,
   }) {
     // Base implementation is a no-op
   }
