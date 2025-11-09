@@ -34,8 +34,7 @@ class APILogger {
     this.attributes,
   });
 
-  /// Returns true if the logger is enabled and will create sampling spans.
-  /// This should be checked before performing expensive operations to create spans.
+  /// Returns true if the logger is enabled.
   bool get enabled => false;
 
   /// Emit a LogRecord.
