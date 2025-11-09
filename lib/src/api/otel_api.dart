@@ -2,7 +2,9 @@
 // Copyright 2025, Michael Bushe, All rights reserved.
 
 import 'dart:typed_data';
+
 import 'package:meta/meta.dart';
+
 import '../../dartastic_opentelemetry_api.dart';
 
 /// The [OTelAPI] is the no-op API implementation of OTel, as required by the
@@ -203,11 +205,28 @@ class OTelAPI {
         serviceVersion: serviceVersion);
   }
 
+  /// Adds or replaces a named logger provider
+  static APILoggerProvider addLoggerProvider(String name,
+      {String? endpoint, String? serviceName, String? serviceVersion}) {
+    _getAndCacheOtelFactory();
+    return _otelFactory!.addLogProvider(name,
+        endpoint: endpoint,
+        serviceName: serviceName,
+        serviceVersion: serviceVersion);
+  }
+
   /// Get the default or named tracer from the global TracerProvider
   static APITracer tracer(String name) {
     return OTelFactory.otelFactory!
         .globalDefaultTracerProvider()
         .getTracer(name);
+  }
+
+  /// Get the default or named tracer from the global TracerProvider
+  static APILogger logger(String name) {
+    return OTelFactory.otelFactory!
+        .globalDefaultLogProvider()
+        .getLogger(name);
   }
 
   /// Creates a TraceId from the provided bytes.
