@@ -1,5 +1,7 @@
-import '../../../dartastic_opentelemetry_api.dart' show OTelAPI, OTelLog;
+import '../../util/otel_log.dart';
 import '../common/attributes.dart';
+import '../common/signal_instance_key.dart';
+import '../otel_api.dart';
 import 'logger.dart';
 
 part 'logger_provider_create.dart';
@@ -33,7 +35,7 @@ class APILoggerProvider {
   /// Whether this meter provider has been shut down.
   bool _isShutdown;
 
-  final Map<_LogKey, APILogger> _loggerCache = {};
+  final Map<SignalInstanceKey, APILogger> _loggerCache = {};
 
   APILoggerProvider._({
     required String endpoint,
@@ -87,7 +89,7 @@ class APILoggerProvider {
     }
 
     // Create a cache key based on the provided parameters.
-    final key = _LogKey(
+    final key = SignalInstanceKey(
       validatedName,
       effectiveVersion,
       effectiveSchemaUrl,
@@ -182,32 +184,5 @@ class APILoggerProvider {
       OTelLog.error('Error during LogProvider shutdown: $e');
       return false;
     }
-  }
-}
-
-class _LogKey {
-  final String name;
-  final String? version;
-  final String? schemaUrl;
-  final Attributes? attributes;
-
-  _LogKey(this.name, this.version, this.schemaUrl, this.attributes);
-
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-    if (other is! _LogKey) return false;
-    return name == other.name &&
-        version == other.version &&
-        schemaUrl == other.schemaUrl &&
-        attributes == other.attributes;
-  }
-
-  @override
-  int get hashCode {
-    return name.hashCode ^
-        (version?.hashCode ?? 0) ^
-        (schemaUrl?.hashCode ?? 0) ^
-        (attributes?.hashCode ?? 0);
   }
 }
