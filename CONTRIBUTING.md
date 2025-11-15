@@ -55,6 +55,14 @@ There are many ways to contribute to this project:
    ```bash
    dart format .
    ```
+6. Run tests (uses a real otel collector that the script downloads):
+   ```bash
+   ./tool/test.sh
+   ```
+5. Run coverage and ensure coverage of new code and that overall coverage goes up:
+   ```bash
+   ./tool/coverage.sh
+   ```
 6. Commit your changes with a descriptive commit message:
    ```bash
    git commit -m "Add feature: description of your changes"

@@ -3,6 +3,7 @@
 [![Pub Version](https://img.shields.io/pub/v/dartastic_opentelemetry_api.svg)](https://pub.dev/packages/dartastic_opentelemetry_api)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![OpenTelemetry API Specification](https://img.shields.io/badge/OpenTelemetry%20API-Specification-blueviolet)](https://opentelemetry.io/docs/specs/otel/)
+[![Coverage Report](https://img.shields.io/badge/coverage-report-brightgreen.svg)](https://mindfulsoftwarellc.github.io/dartastic_opentelemetry_api/)
 
 A Dart implementation of the [OpenTelemetry](https://opentelemetry.io/) API that strictly adheres to the 
 OpenTelemetry (OTel) specification. This package provides a vendor-neutral, implementation-agnostic API for telemetry 
