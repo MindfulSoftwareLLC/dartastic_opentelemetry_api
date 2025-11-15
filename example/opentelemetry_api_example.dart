@@ -72,7 +72,7 @@ void main() {
 
   logger.emit(
     eventName: 'user_login',
-    severityNumber: SeverityNumber.INFO,
+    severityNumber: Severity.INFO,
     body: 'User successfully logged in.',
     attributes: Attributes.of({
       'user.id': 42,
@@ -98,14 +98,14 @@ void main() {
 
   logger.emit(
     eventName: 'order_update',
-    severityNumber: SeverityNumber.INFO,
+    severityNumber: Severity.INFO,
     body: 'Order update completed.',
     attributes: attrs,
   );
 
   logger.emit(
     eventName: 'batch_job_summary',
-    severityNumber: SeverityNumber.INFO,
+    severityNumber: Severity.INFO,
     body: [
       {'job': 'resize_images', 'status': 'ok'},
       {'job': 'generate_thumbnails', 'status': 'ok'},
