@@ -28,6 +28,10 @@ export 'src/api/context/propagation/text_map_propagator.dart';
 export 'src/api/factory/otel_api_factory.dart';
 // Id
 export 'src/api/id/id_generator.dart';
+// Log
+export 'src/api/logs/logger.dart';
+export 'src/api/logs/logger_provider.dart';
+export 'src/api/logs/log_record.dart';
 //Metrics
 export 'src/api/metrics/counter.dart';
 export 'src/api/metrics/gauge.dart';
@@ -65,7 +69,3 @@ export 'src/api/trace/tracer_provider.dart';
 export 'src/factory/otel_factory.dart';
 // Util
 export 'src/util/otel_log.dart';
-// Log
-export 'src/api/logs/logger.dart';
-export 'src/api/logs/logger_provider.dart';
-export 'src/api/logs/log_record.dart';

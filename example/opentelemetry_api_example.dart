@@ -66,5 +66,5 @@ void main() {
 
   final defaultGlobalAPINOOPLoggerProvider = OTelAPI.loggerProvider();
   final logger = defaultGlobalAPINOOPLoggerProvider.getLogger('dart-otel-api-example-service');
-  logger.emit(body: "some log here!", attributes: equalToTheAbove, context: Context.current);
+  logger.emit(body: "some log here!", attributes: equalToTheAbove);
 }

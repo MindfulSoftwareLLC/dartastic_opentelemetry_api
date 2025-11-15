@@ -10,9 +10,10 @@ part 'logger_provider_create.dart';
 /// Use the LoggerProvider from the SDK instead.
 /// It provides access to [APILogger]s which are used to log operations.
 /// You cannot create a LoggerProvider directly;
-/// you must use [OTelAPI] or more likely [OTel], for example to get the default tracer:
+/// you must use [OTelAPI] or more likely [OTel], for example to get the default logger:
 /// ```dart
-/// var loggerProvider = OTel.loggerProvider();
+/// final loggerProvider = OTel.loggerProvider();
+/// final logger = loggerProvider.getLogger('');
 /// ```
 /// See [OTel] for creating tracers in addition to the default.
 /// Use [OTelAPI] to run in no-op mode, as required by the specification.
@@ -85,6 +86,7 @@ class APILoggerProvider {
       effectiveSchemaUrl = OTelAPI.defaultSchemaUrl;
     }
 
+    // Create a cache key based on the provided parameters.
     final key = _LogKey(
       validatedName,
       effectiveVersion,

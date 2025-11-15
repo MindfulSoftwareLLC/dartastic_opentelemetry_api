@@ -52,7 +52,7 @@ for an example.
 - ✅ **Supported signal types**:
   - Traces
   - Metric 
-  - Coming soon - Logs
+  - Logs
 - ✅ **Fully typed API** with strong Dart type safety
 - ✅ **Cross-platform compatibility** - works across all Dart environments (Servers, Mobile, Web, Desktop)
 - ✅ **No-op implementation** for safely including in any application
