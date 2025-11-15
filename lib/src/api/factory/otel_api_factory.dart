@@ -115,6 +115,11 @@ class OTelAPIFactory extends OTelFactory {
         serviceVersion: serviceVersion);
   }
 
+  /// Creates a new instance of [APILoggerProvider] with the specified parameters.
+  ///
+  /// [endpoint] The endpoint URL for the OpenTelemetry backend
+  /// [serviceName] The name of the service being logged
+  /// [serviceVersion] The version of the service being logged
   @override
   APILoggerProvider loggerProvider({
     required String endpoint,
