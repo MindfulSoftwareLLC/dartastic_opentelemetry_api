@@ -1,6 +1,6 @@
 import '../common/attributes.dart';
 import '../context/context.dart';
-import 'log_record.dart';
+import 'severity.dart';
 
 part 'logger_create.dart';
 
@@ -24,7 +24,7 @@ class APILogger {
   /// Creates a new [APILogger].
   /// You cannot create a Logger directly; you must use [LoggerProvider]:
   /// ```dart
-  /// var meter = OTel.loggerProvider() or more likely, OTel.loggerProvider().getLogger("my-library");
+  /// final logProvider = OTel.loggerProvider() or more likely, OTel.loggerProvider().getLogger("my-library");
   /// ```
   APILogger._({
     required this.name,
@@ -34,6 +34,7 @@ class APILogger {
   });
 
   /// Returns true if the logger is enabled.
+  /// Refer https://opentelemetry.io/docs/specs/otel/logs/api/#enabled
   bool get enabled => false;
 
   /// Emit a LogRecord.
@@ -43,7 +44,7 @@ class APILogger {
     DateTime? timeStamp,
     DateTime? observedTimestamp,
     Context? context,
-    SeverityNumber? severityNumber,
+    Severity? severityNumber,
     String? severityText,
     dynamic body,
     Attributes? attributes,
