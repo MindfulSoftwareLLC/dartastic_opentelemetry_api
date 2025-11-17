@@ -42,6 +42,8 @@ void main() {
   final Baggage baggage = OTelAPI.baggageForMap({'userId': 'yoda'});
   //set the current context to one with the new baggage
   Context.current = OTelAPI.context(baggage: baggage);
+
+  //Trace Signal
   final defaultGlobalAPINOOPTracerProvider = OTelAPI.tracerProvider();
   final tracer = defaultGlobalAPINOOPTracerProvider
       .getTracer('dart-otel-api-example-service');
@@ -64,6 +66,7 @@ void main() {
   rootSpan.end(
       spanStatus: SpanStatusCode.Ok); //Capitalized Ok to match the OTel spec
 
+  //Log Signal
   final defaultGlobalAPINOOPLoggerProvider = OTelAPI.loggerProvider();
   final logger = defaultGlobalAPINOOPLoggerProvider
       .getLogger('dart-otel-api-example-service');

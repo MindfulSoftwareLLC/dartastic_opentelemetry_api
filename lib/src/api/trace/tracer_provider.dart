@@ -5,6 +5,7 @@
 
 import '../../../dartastic_opentelemetry_api.dart' show OTelAPI, OTelLog;
 import '../common/attributes.dart';
+import '../common/signal_instance_key.dart';
 import '../context/context.dart';
 import 'tracer.dart';
 
@@ -30,7 +31,7 @@ class APITracerProvider {
   bool _isShutdown;
 
   // Cache for created tracers, keyed by _TracerKey.
-  final Map<_TracerKey, APITracer> _tracerCache = {};
+  final Map<SignalInstanceKey, APITracer> _tracerCache = {};
 
   /// Creates a new [APITracerProvider].
   APITracerProvider._({
@@ -87,8 +88,8 @@ class APITracerProvider {
     }
 
     // Create a cache key based on the provided parameters.
-    final key = _TracerKey(
-        validatedName, effectiveVersion, effectiveSchemaUrl, attributes);
+    final key = SignalInstanceKey(
+        validatedName, effectiveVersion, effectiveSchemaUrl, attributes, Signal.traces);
 
     if (_tracerCache.containsKey(key)) {
       return _tracerCache[key]!;
@@ -182,33 +183,5 @@ class APITracerProvider {
       OTelLog.error('Error during TracerProvider shutdown: $e');
       return false;
     }
-  }
-}
-
-/// Private key class used for caching Tracer instances within TracerProvider.
-class _TracerKey {
-  final String name;
-  final String? version;
-  final String? schemaUrl;
-  final Attributes? attributes;
-
-  _TracerKey(this.name, this.version, this.schemaUrl, this.attributes);
-
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-    if (other is! _TracerKey) return false;
-    return name == other.name &&
-        version == other.version &&
-        schemaUrl == other.schemaUrl &&
-        attributes == other.attributes;
-  }
-
-  @override
-  int get hashCode {
-    return name.hashCode ^
-        (version?.hashCode ?? 0) ^
-        (schemaUrl?.hashCode ?? 0) ^
-        (attributes?.hashCode ?? 0);
   }
 }

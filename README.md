@@ -124,6 +124,7 @@ i.e. `OTelAPI.attributeString('foo', 'bar')`, `OTelAPI.attributeIntList('baz', [
 ## Usage Examples
 
 ### Basic Tracing Example
+This is a NOOP when using OTelAPI, use the OTel from SDK to actually real traces.
 
 ```dart
 import 'package:dartastic_opentelemetry_api/dartastic_opentelemetry_api.dart';
@@ -220,13 +221,25 @@ void main() {
 }
 ```
 
-### Working with logging
+### Working with logging 
+This is a NOOP when using OTelAPI, use the OTel SDK to actually real logs.
 ```dart
 import 'package:dartastic_opentelemetry_api/dartastic_opentelemetry_api.dart';
 
 final loggerProvider = OTelAPI.loggerProvider();
-final logger = loggerProvider.getLogger('dart-otel-api-example-service');
-logger.emit(body: "some log here!", attributes: equalToTheAbove, context: Context.current);
+final logger = loggerProvider.getLogger('dart-otel-api-faux-db-service');
+final attrs = {
+  'db.operation': 'update',
+  'db.table': 'orders',
+  'db.rows_affected': 3,
+}.toAttributes();
+
+logger.emit(
+  eventName: 'order_update',
+  severityNumber: Severity.INFO,
+  body: 'Order update completed.',
+  attributes: attrs,
+);
 ```
 
 

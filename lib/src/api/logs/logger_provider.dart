@@ -94,6 +94,7 @@ class APILoggerProvider {
       effectiveVersion,
       effectiveSchemaUrl,
       attributes,
+      Signal.logs
     );
 
     if (_loggerCache.containsKey(key)) {

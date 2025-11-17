@@ -5,6 +5,7 @@
 
 import '../../../dartastic_opentelemetry_api.dart' show OTelAPI, OTelLog;
 import '../common/attributes.dart';
+import '../common/signal_instance_key.dart';
 import 'meter.dart';
 
 part 'meter_provider_create.dart';
@@ -38,7 +39,7 @@ class APIMeterProvider {
   bool _isShutdown;
 
   // Cache for created meters, keyed by _MeterKey.
-  final Map<_MeterKey, APIMeter> _meterCache = {};
+  final Map<SignalInstanceKey, APIMeter> _meterCache = {};
 
   /// Creates a new [APIMeterProvider].
   /// You cannot create a MeterProvider directly; you must use [OTelFactory]:
@@ -87,7 +88,7 @@ class APIMeterProvider {
     }
 
     // Create a cache key based on the provided parameters.
-    final key = _MeterKey(validatedName, version, schemaUrl, attributes);
+    final key = SignalInstanceKey(validatedName, version, schemaUrl, attributes, Signal.metrics);
 
     if (_meterCache.containsKey(key)) {
       return _meterCache[key]!;
@@ -180,33 +181,5 @@ class APIMeterProvider {
       OTelLog.error('Error during MeterProvider forceFlush: $e');
       return false;
     }
-  }
-}
-
-/// Private key class used for caching Meter instances within MeterProvider.
-class _MeterKey {
-  final String name;
-  final String? version;
-  final String? schemaUrl;
-  final Attributes? attributes;
-
-  _MeterKey(this.name, this.version, this.schemaUrl, this.attributes);
-
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-    if (other is! _MeterKey) return false;
-    return name == other.name &&
-        version == other.version &&
-        schemaUrl == other.schemaUrl &&
-        attributes == other.attributes;
-  }
-
-  @override
-  int get hashCode {
-    return name.hashCode ^
-        (version?.hashCode ?? 0) ^
-        (schemaUrl?.hashCode ?? 0) ^
-        (attributes?.hashCode ?? 0);
   }
 }
