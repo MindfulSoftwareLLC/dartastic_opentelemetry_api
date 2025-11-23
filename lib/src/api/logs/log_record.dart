@@ -1,6 +1,7 @@
 import '../common/attributes.dart';
 import '../context/context.dart';
 import 'severity.dart';
+import 'package:fixnum/fixnum.dart';
 
 /// Required parameter for LogRecord. According to the spec
 /// in https://opentelemetry.io/docs/specs/otel/logs/api/#emit-a-logrecord
@@ -16,9 +17,9 @@ import 'severity.dart';
 /// Attributes (optional)
 /// Event Name (optional)
 abstract class LogRecord {
-  DateTime? get timestamp;
+  Int64? get timestamp;
 
-  DateTime? get observedTimestamp;
+  Int64? get observedTimestamp;
 
   Context? get context;
 
