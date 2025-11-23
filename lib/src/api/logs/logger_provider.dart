@@ -14,8 +14,8 @@ part 'logger_provider_create.dart';
 /// You cannot create a LoggerProvider directly;
 /// you must use [OTelAPI] or more likely [OTel], for example to get the default logger:
 /// ```dart
-/// final loggerProvider = OTel.loggerProvider();
-/// final logger = loggerProvider.getLogger('');
+/// final loggerProvider = OTelAPI.loggerProvider();
+/// final logger = loggerProvider.getLogger('my-service-logger');
 /// ```
 /// See [OTel] for creating tracers in addition to the default.
 /// Use [OTelAPI] to run in no-op mode, as required by the specification.
