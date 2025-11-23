@@ -89,13 +89,8 @@ class APILoggerProvider {
     }
 
     // Create a cache key based on the provided parameters.
-    final key = SignalInstanceKey(
-      validatedName,
-      effectiveVersion,
-      effectiveSchemaUrl,
-      attributes,
-      Signal.logs
-    );
+    final key = SignalInstanceKey(validatedName, effectiveVersion,
+        effectiveSchemaUrl, attributes, Signal.logs);
 
     if (_loggerCache.containsKey(key)) {
       return _loggerCache[key]!;
@@ -170,20 +165,15 @@ class APILoggerProvider {
       return true; // Already shut down
     }
 
-    try {
-      // Mark as shut down immediately to prevent new loggers/spans
-      _isShutdown = true;
+    // Mark as shut down immediately to prevent new loggers/spans
+    _isShutdown = true;
 
-      // Clear the logger cache
-      _loggerCache.clear();
+    // Clear the logger cache
+    _loggerCache.clear();
 
-      // Disable the provider
-      _enabled = false;
+    // Disable the provider
+    _enabled = false;
 
-      return true;
-    } catch (e) {
-      OTelLog.error('Error during LogProvider shutdown: $e');
-      return false;
-    }
+    return true;
   }
 }
