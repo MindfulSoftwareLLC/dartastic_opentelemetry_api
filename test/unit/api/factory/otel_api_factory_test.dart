@@ -87,6 +87,18 @@ void main() {
       expect(provider.serviceVersion, equals('1.0.0'));
     });
 
+    test('creates logger provider', () {
+      final provider = factory.loggerProvider(
+        endpoint: 'http://localhost:4317',
+        serviceName: 'test-service',
+        serviceVersion: '1.0.0',
+      );
+
+      expect(provider, isA<APILoggerProvider>());
+      expect(provider.serviceName, equals('test-service'));
+      expect(provider.serviceVersion, equals('1.0.0'));
+    });
+
     test('creates meter provider', () {
       final provider = factory.meterProvider(
         endpoint: 'http://localhost:4317',

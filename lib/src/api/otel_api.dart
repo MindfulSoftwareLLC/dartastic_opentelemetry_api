@@ -2,7 +2,9 @@
 // Copyright 2025, Michael Bushe, All rights reserved.
 
 import 'dart:typed_data';
+
 import 'package:meta/meta.dart';
+
 import '../../dartastic_opentelemetry_api.dart';
 
 /// The [OTelAPI] is the no-op API implementation of OTel, as required by the
@@ -164,6 +166,25 @@ class OTelAPI {
     }
   }
 
+  /// Gets a LoggerProvider.  If name is null, this returns
+  /// the global default [APILoggerProvider], if not it returns a
+  /// LoggerProvider for the name.  If the LoggerProvider does not exist,
+  /// it is created.
+  static APILoggerProvider loggerProvider([String? name]) {
+    _getAndCacheOtelFactory();
+    if (name != null && name.isEmpty) {
+      throw ArgumentError(
+          'Name must not be empty. To retrieve the global default tracer provider, omit the name parameter.');
+    }
+    if (name == null) {
+      return _otelFactory!.globalDefaultLogProvider();
+    } else {
+      APILoggerProvider? lp = _otelFactory!.getNamedLogProvider(name);
+      lp ??= _otelFactory!.addLogProvider(name);
+      return lp;
+    }
+  }
+
   /// Adds or replaces a named tracer provider
   static APITracerProvider addTracerProvider(String name,
       {String? endpoint, String? serviceName, String? serviceVersion}) {
@@ -184,11 +205,28 @@ class OTelAPI {
         serviceVersion: serviceVersion);
   }
 
+  /// Adds or replaces a named logger provider
+  static APILoggerProvider addLoggerProvider(String name,
+      {String? endpoint, String? serviceName, String? serviceVersion}) {
+    _getAndCacheOtelFactory();
+    return _otelFactory!.addLogProvider(name,
+        endpoint: endpoint,
+        serviceName: serviceName,
+        serviceVersion: serviceVersion);
+  }
+
   /// Get the default or named tracer from the global TracerProvider
   static APITracer tracer(String name) {
     return OTelFactory.otelFactory!
         .globalDefaultTracerProvider()
         .getTracer(name);
+  }
+
+  /// Get the default or named tracer from the global TracerProvider
+  static APILogger logger(String name) {
+    return OTelFactory.otelFactory!
+        .globalDefaultLogProvider()
+        .getLogger(name);
   }
 
   /// Creates a TraceId from the provided bytes.

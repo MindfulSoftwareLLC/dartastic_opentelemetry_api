@@ -7,6 +7,7 @@ import 'package:dartastic_opentelemetry_api/dartastic_opentelemetry_api.dart'
     show OTelAPI, Timestamp;
 import 'package:dartastic_opentelemetry_api/src/api/baggage/baggage.dart';
 import 'package:dartastic_opentelemetry_api/src/api/common/instrumentation_scope.dart';
+import 'package:dartastic_opentelemetry_api/src/api/logs/logger_provider.dart';
 import 'package:dartastic_opentelemetry_api/src/api/metrics/counter.dart';
 import 'package:dartastic_opentelemetry_api/src/api/metrics/gauge.dart';
 import 'package:dartastic_opentelemetry_api/src/api/metrics/histogram.dart';
@@ -112,6 +113,24 @@ class OTelAPIFactory extends OTelFactory {
         endpoint: endpoint,
         serviceName: serviceName,
         serviceVersion: serviceVersion);
+  }
+
+  /// Creates a new instance of [APILoggerProvider] with the specified parameters.
+  ///
+  /// [endpoint] The endpoint URL for the OpenTelemetry backend
+  /// [serviceName] The name of the service being logged
+  /// [serviceVersion] The version of the service being logged
+  @override
+  APILoggerProvider loggerProvider({
+    required String endpoint,
+    String serviceName = OTelAPI.defaultServiceName,
+    String? serviceVersion = OTelAPI.defaultServiceVersion,
+  }) {
+    return LogProviderCreate.create(
+      endpoint: endpoint,
+      serviceName: serviceName,
+      serviceVersion: serviceVersion,
+    );
   }
 
   @override

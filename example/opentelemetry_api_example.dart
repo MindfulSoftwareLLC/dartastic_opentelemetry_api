@@ -42,6 +42,8 @@ void main() {
   final Baggage baggage = OTelAPI.baggageForMap({'userId': 'yoda'});
   //set the current context to one with the new baggage
   Context.current = OTelAPI.context(baggage: baggage);
+
+  //Trace Signal
   final defaultGlobalAPINOOPTracerProvider = OTelAPI.tracerProvider();
   final tracer = defaultGlobalAPINOOPTracerProvider
       .getTracer('dart-otel-api-example-service');
@@ -63,4 +65,70 @@ void main() {
       OTelAPI.attributes([OTelAPI.attributeString('event-foo', 'bar')]));
   rootSpan.end(
       spanStatus: SpanStatusCode.Ok); //Capitalized Ok to match the OTel spec
+
+  //Log Signal
+  final defaultGlobalAPINOOPLoggerProvider = OTelAPI.loggerProvider();
+  final logger = defaultGlobalAPINOOPLoggerProvider
+      .getLogger('dart-otel-api-example-service');
+
+  logger.emit(eventName: 'heartbeat', body: 'Service is healthy.');
+
+  logger.emit(
+    eventName: 'user_login',
+    severityNumber: Severity.INFO,
+    body: 'User successfully logged in.',
+    attributes: Attributes.of({
+      'user.id': 42,
+      'auth.method': 'password',
+    }),
+  );
+
+  logger.emit(
+    eventName: 'cache_miss',
+    severityText: 'WARN',
+    body: 'Cache miss for requested key.',
+    attributes: Attributes.of({
+      'cache.key': 'profile_42',
+      'cache.region': 'us-east-1',
+    }),
+  );
+
+  final attrs = {
+    'db.operation': 'update',
+    'db.table': 'orders',
+    'db.rows_affected': 3,
+  }.toAttributes();
+
+  logger.emit(
+    eventName: 'order_update',
+    severityNumber: Severity.INFO,
+    body: 'Order update completed.',
+    attributes: attrs,
+  );
+
+  logger.emit(
+    eventName: 'batch_job_summary',
+    severityNumber: Severity.INFO,
+    body: [
+      {'job': 'resize_images', 'status': 'ok'},
+      {'job': 'generate_thumbnails', 'status': 'ok'},
+      {'job': 'sync_metadata', 'status': 'failed'},
+    ],
+    attributes: Attributes.of({
+      'batch.id': 'batch-2025-11-15-01',
+      'jobs.total': 3,
+    }),
+  );
+
+  logger.emit(
+    eventName: 'payment_failure',
+    severityText: 'ERROR',
+    body: 'Payment could not be processed.',
+    attributes: Attributes.of({
+      'payment.user_id': 101,
+      'payment.method': 'credit_card',
+      'payment.gateway': 'stripe',
+      'retry.count': 2,
+    }),
+  );
 }
