@@ -1,0 +1,116 @@
+#!/bin/bash
+# Pre-push hook: fail push if analyzer has warnings/errors, tests fail, or coverage < 92%
+
+MIN_COVERAGE=92
+
+# Check if dart is available on PATH
+if ! command -v dart &> /dev/null; then
+    echo "Error: dart not found on PATH"
+    echo "Please ensure Dart/Flutter is installed and on your PATH"
+    exit 1
+fi
+
+# Change to the repository root
+cd "$(git rev-parse --show-toplevel)"
+
+echo "========================================"
+echo "Running analyzer before push..."
+echo "========================================"
+
+# Run analyzer with fatal-infos (warnings and infos cause failure)
+dart analyze --fatal-infos
+
+if [ $? -ne 0 ]; then
+    echo ""
+    echo "========================================"
+    echo "ERROR: Analyzer found issues! Push aborted."
+    echo "Please fix all analyzer warnings/errors before pushing."
+    echo "========================================"
+    exit 1
+fi
+
+echo ""
+echo "========================================"
+echo "Analyzer passed. Running tests with coverage..."
+echo "========================================"
+
+# Ensure the coverage directory exists
+mkdir -p coverage
+
+# Run tests with coverage
+dart test --coverage="coverage"
+
+if [ $? -ne 0 ]; then
+    echo ""
+    echo "========================================"
+    echo "ERROR: Tests failed! Push aborted."
+    echo "Please fix the failing tests before pushing."
+    echo "========================================"
+    exit 1
+fi
+
+echo ""
+echo "========================================"
+echo "Tests passed. Checking coverage..."
+echo "========================================"
+
+# Format coverage data
+dart run coverage:format_coverage \
+  --lcov \
+  --in=coverage \
+  --out=coverage/lcov.info \
+  --package=. \
+  --report-on=lib \
+  --base-directory=. \
+  --check-ignore
+
+# Check if lcov is available
+if ! command -v lcov &> /dev/null; then
+    echo "Warning: lcov not installed, skipping coverage percentage check"
+    echo "Install lcov to enable coverage threshold enforcement"
+    echo ""
+    echo "========================================"
+    echo "All checks passed. Proceeding with push."
+    echo "========================================"
+    exit 0
+fi
+
+# Extract coverage percentage
+COVERAGE_OUTPUT=$(lcov --summary coverage/lcov.info 2>&1)
+COVERAGE_PCT=$(echo "$COVERAGE_OUTPUT" | grep -oP 'lines\.*: \K[0-9]+\.[0-9]+' | head -1)
+
+# If grep -P doesn't work (macOS), try alternative
+if [ -z "$COVERAGE_PCT" ]; then
+    COVERAGE_PCT=$(echo "$COVERAGE_OUTPUT" | grep "lines" | sed 's/.*: //' | sed 's/%.*//' | tr -d ' ')
+fi
+
+echo "Coverage: ${COVERAGE_PCT}%"
+echo "Minimum required: ${MIN_COVERAGE}%"
+
+# Compare coverage (using bc for float comparison)
+if command -v bc &> /dev/null; then
+    COVERAGE_OK=$(echo "$COVERAGE_PCT >= $MIN_COVERAGE" | bc -l)
+else
+    # Fallback: truncate to integer comparison
+    COVERAGE_INT=${COVERAGE_PCT%.*}
+    if [ "$COVERAGE_INT" -ge "$MIN_COVERAGE" ]; then
+        COVERAGE_OK=1
+    else
+        COVERAGE_OK=0
+    fi
+fi
+
+if [ "$COVERAGE_OK" != "1" ]; then
+    echo ""
+    echo "========================================"
+    echo "ERROR: Coverage ${COVERAGE_PCT}% is below minimum ${MIN_COVERAGE}%! Push aborted."
+    echo "Please add more tests to increase coverage."
+    echo "========================================"
+    exit 1
+fi
+
+echo ""
+echo "========================================"
+echo "All checks passed. Proceeding with push."
+echo "========================================"
+exit 0

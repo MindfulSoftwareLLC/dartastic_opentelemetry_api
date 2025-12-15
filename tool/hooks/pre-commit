@@ -1,0 +1,31 @@
+#!/bin/bash
+# Pre-commit hook: format Dart files and restage them
+
+# Check if dart is available on PATH
+if ! command -v dart &> /dev/null; then
+    echo "Error: dart not found on PATH"
+    echo "Please ensure Dart/Flutter is installed and on your PATH"
+    exit 1
+fi
+
+echo "Running dart format on staged files..."
+
+# Get list of staged Dart files
+STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep '\.dart$')
+
+if [ -z "$STAGED_FILES" ]; then
+    echo "No Dart files staged for commit."
+    exit 0
+fi
+
+# Format each staged file and restage
+for FILE in $STAGED_FILES; do
+    if [ -f "$FILE" ]; then
+        echo "Formatting: $FILE"
+        dart format "$FILE"
+        git add "$FILE"
+    fi
+done
+
+echo "Dart formatting complete. Files restaged."
+exit 0

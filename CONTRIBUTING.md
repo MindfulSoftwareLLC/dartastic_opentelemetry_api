@@ -35,6 +35,13 @@ There are many ways to contribute to this project:
    ```bash
    dart pub get
    ```
+5. Set up git hooks (required):
+   ```bash
+   ./tool/setup-hooks.sh
+   ```
+   This installs:
+   - **pre-commit**: Automatically formats Dart files and restages them
+   - **pre-push**: Blocks push if analyzer warnings exist, tests fail, or coverage drops below 92%
 
 ### Development Workflow
 
