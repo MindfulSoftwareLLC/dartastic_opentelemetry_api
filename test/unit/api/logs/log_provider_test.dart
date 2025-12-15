@@ -37,7 +37,8 @@ void main() {
       );
 
       expect(logger, isNotNull);
-      expect(logger.schemaUrl, equals('https://opentelemetry.io/schemas/1.4.0'));
+      expect(
+          logger.schemaUrl, equals('https://opentelemetry.io/schemas/1.4.0'));
     });
 
     test('creates logger with instrumentation scope attributes', () {
@@ -54,11 +55,14 @@ void main() {
       );
 
       expect(logger, isNotNull);
-      expect(logger.attributes?.toMap()['library.name']?.value, equals('test-lib'));
-      expect(logger.attributes?.toMap()['library.version']?.value, equals('1.0.0'));
+      expect(logger.attributes?.toMap()['library.name']?.value,
+          equals('test-lib'));
+      expect(logger.attributes?.toMap()['library.version']?.value,
+          equals('1.0.0'));
     });
 
-    test('handles invalid name by returning working logger with empty name', () {
+    test('handles invalid name by returning working logger with empty name',
+        () {
       final provider = OTelAPI.loggerProvider();
 
       // Test with null name
@@ -228,7 +232,9 @@ void main() {
       expect(logger.schemaUrl, equals(OTelAPI.defaultSchemaUrl));
     });
 
-    test('getLogger does not apply defaults when any optional parameter provided', () {
+    test(
+        'getLogger does not apply defaults when any optional parameter provided',
+        () {
       final provider = OTelAPI.loggerProvider();
 
       final logger = provider.getLogger('test-lib', version: '2.0.0');

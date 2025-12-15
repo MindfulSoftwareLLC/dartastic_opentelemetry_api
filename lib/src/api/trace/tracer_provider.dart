@@ -88,8 +88,8 @@ class APITracerProvider {
     }
 
     // Create a cache key based on the provided parameters.
-    final key = SignalInstanceKey(
-        validatedName, effectiveVersion, effectiveSchemaUrl, attributes, Signal.traces);
+    final key = SignalInstanceKey(validatedName, effectiveVersion,
+        effectiveSchemaUrl, attributes, Signal.traces);
 
     if (_tracerCache.containsKey(key)) {
       return _tracerCache[key]!;
