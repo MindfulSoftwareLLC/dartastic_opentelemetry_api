@@ -1,0 +1,48 @@
+#!/bin/bash
+# Pre-commit hook: format ALL Dart files and restage any that were staged
+
+# Check if dart is available on PATH
+if ! command -v dart &> /dev/null; then
+    echo "Error: dart not found on PATH"
+    echo "Please ensure Dart/Flutter is installed and on your PATH"
+    exit 1
+fi
+
+# Change to the repository root
+cd "$(git rev-parse --show-toplevel)"
+
+echo "Checking dart format on entire codebase..."
+
+# Format all Dart files in lib, test, and example
+dart format lib test example 2>/dev/null
+
+# Check if any files were changed by formatting
+CHANGED_FILES=$(git diff --name-only | grep '\.dart$')
+
+if [ -n "$CHANGED_FILES" ]; then
+    echo ""
+    echo "The following files were reformatted:"
+    echo "$CHANGED_FILES"
+    echo ""
+
+    # Check which of the changed files were staged, and restage them
+    STAGED_FILES=$(git diff --cached --name-only | grep '\.dart$')
+
+    for FILE in $CHANGED_FILES; do
+        # If this file was staged, restage it
+        if echo "$STAGED_FILES" | grep -q "^$FILE$"; then
+            echo "Restaging: $FILE"
+            git add "$FILE"
+        else
+            # File wasn't staged but was reformatted - stage it too
+            echo "Adding reformatted file: $FILE"
+            git add "$FILE"
+        fi
+    done
+
+    echo ""
+    echo "Reformatted files have been staged."
+fi
+
+echo "Dart formatting check complete."
+exit 0

@@ -3,11 +3,13 @@
 
 import 'package:meta/meta.dart';
 
+import '../../util/time.dart';
+
 /// Utility class for working with OpenTelemetry timestamps.
 @immutable
 class Timestamp {
   /// Returns the current timestamp in nanoseconds since epoch.
-  static int now() => DateTime.now().microsecondsSinceEpoch * 1000;
+  static int now() => nowAsNanos().toInt();
 
   /// Converts a [DateTime] to nanoseconds since epoch.
   static int fromDateTime(DateTime dateTime) =>

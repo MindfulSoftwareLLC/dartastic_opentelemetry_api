@@ -368,5 +368,99 @@ void main() {
       // Now otelFactory should be null
       expect(OTelFactory.otelFactory, isNull);
     });
+
+    test('apiEndpoint setter updates endpoint', () {
+      final factory = OTelFactory.otelFactory!;
+
+      // Serialize to verify initial value
+      var serialized = factory.serialize();
+      expect(serialized['apiEndpoint'], equals('http://localhost:4317'));
+
+      // Update endpoint
+      factory.apiEndpoint = 'http://new-endpoint:4318';
+
+      // Serialize again to verify update
+      serialized = factory.serialize();
+      expect(serialized['apiEndpoint'], equals('http://new-endpoint:4318'));
+    });
+
+    test('apiServiceName setter updates service name', () {
+      final factory = OTelFactory.otelFactory!;
+
+      // Serialize to verify initial value
+      var serialized = factory.serialize();
+      expect(serialized['apiServiceName'], equals('test-service'));
+
+      // Update service name
+      factory.apiServiceName = 'new-service';
+
+      // Serialize again to verify update
+      serialized = factory.serialize();
+      expect(serialized['apiServiceName'], equals('new-service'));
+    });
+
+    test('apiServiceVersion setter updates service version', () {
+      final factory = OTelFactory.otelFactory!;
+
+      // Serialize to verify initial value
+      var serialized = factory.serialize();
+      expect(serialized['apiServiceVersion'], equals('1.0.0'));
+
+      // Update service version
+      factory.apiServiceVersion = '2.0.0';
+
+      // Serialize again to verify update
+      serialized = factory.serialize();
+      expect(serialized['apiServiceVersion'], equals('2.0.0'));
+    });
+
+    test('globalDefaultLogProvider returns the same instance', () {
+      final factory = OTelFactory.otelFactory!;
+      final provider1 = factory.globalDefaultLogProvider();
+      final provider2 = factory.globalDefaultLogProvider();
+
+      expect(provider1, isNotNull);
+      expect(provider2, isNotNull);
+      expect(identical(provider1, provider2), isTrue);
+    });
+
+    test('getNamedLogProvider returns null for non-existent provider', () {
+      final factory = OTelFactory.otelFactory!;
+      final provider = factory.getNamedLogProvider('non-existent');
+
+      expect(provider, isNull);
+    });
+
+    test('addLogProvider creates and caches a provider', () {
+      final factory = OTelFactory.otelFactory!;
+      final provider = factory.addLogProvider('custom-log-provider');
+
+      expect(provider, isNotNull);
+      expect(
+          factory.getNamedLogProvider('custom-log-provider'), equals(provider));
+    });
+
+    test('addLogProvider with custom configuration', () {
+      final factory = OTelFactory.otelFactory!;
+      final provider = factory.addLogProvider(
+        'custom-log-provider',
+        endpoint: 'http://custom:4317',
+        serviceName: 'custom-service',
+        serviceVersion: '2.0.0',
+      );
+
+      expect(provider, isNotNull);
+      expect(
+          factory.getNamedLogProvider('custom-log-provider'), equals(provider));
+    });
+
+    test('addLogProvider returns existing provider when called with same name',
+        () {
+      final factory = OTelFactory.otelFactory!;
+      final provider1 = factory.addLogProvider('log-provider');
+      final provider2 = factory.addLogProvider('log-provider');
+
+      expect(identical(provider1, provider2), isTrue);
+    });
   });
 }

@@ -224,9 +224,7 @@ class OTelAPI {
 
   /// Get the default or named tracer from the global TracerProvider
   static APILogger logger(String name) {
-    return OTelFactory.otelFactory!
-        .globalDefaultLogProvider()
-        .getLogger(name);
+    return OTelFactory.otelFactory!.globalDefaultLogProvider().getLogger(name);
   }
 
   /// Creates a TraceId from the provided bytes.

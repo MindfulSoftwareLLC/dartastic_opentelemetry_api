@@ -1,6 +1,8 @@
 # Dartastic OpenTelemetry API for Dart
 
 [![Pub Version](https://img.shields.io/pub/v/dartastic_opentelemetry_api.svg)](https://pub.dev/packages/dartastic_opentelemetry_api)
+[![CI](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/actions/workflows/dart.yml/badge.svg)](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/actions/workflows/dart.yml)
+[![codecov](https://codecov.io/gh/MindfulSoftwareLLC/dartastic_opentelemetry_api/graph/badge.svg)](https://codecov.io/gh/MindfulSoftwareLLC/dartastic_opentelemetry_api)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![OpenTelemetry API Specification](https://img.shields.io/badge/OpenTelemetry%20API-Specification-blueviolet)](https://opentelemetry.io/docs/specs/otel/)
 

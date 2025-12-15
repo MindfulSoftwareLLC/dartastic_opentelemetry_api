@@ -20,4 +20,4 @@ Add any other context or screenshots about the question here.
  - Dart SDK version: [e.g. 3.2.1]
  - Platform: [e.g. VM, Web, Flutter]
  - OS: [e.g. iOS, Android, Windows]
- - Package version: [e.g. 0.8.0]
+ - Package version: [e.g. 0.9.0]

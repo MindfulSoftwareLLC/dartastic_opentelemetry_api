@@ -103,5 +103,113 @@ void main() {
       // are reflected in the existing tracer
       expect(tracer, isNotNull);
     });
+
+    test('endpoint getter returns current endpoint', () {
+      final provider = OTelAPI.tracerProvider();
+      expect(provider.endpoint, equals('http://localhost:4317'));
+    });
+
+    test('endpoint setter updates endpoint', () {
+      final provider = OTelAPI.tracerProvider();
+      provider.endpoint = 'http://new-endpoint:4318';
+      expect(provider.endpoint, equals('http://new-endpoint:4318'));
+    });
+
+    test('serviceName getter returns current service name', () {
+      final provider = OTelAPI.tracerProvider();
+      expect(provider.serviceName, equals('test-service'));
+    });
+
+    test('serviceName setter updates service name', () {
+      final provider = OTelAPI.tracerProvider();
+      provider.serviceName = 'new-service';
+      expect(provider.serviceName, equals('new-service'));
+    });
+
+    test('serviceVersion getter returns current service version', () {
+      final provider = OTelAPI.tracerProvider();
+      expect(provider.serviceVersion, equals('1.0.0'));
+    });
+
+    test('serviceVersion setter updates service version', () {
+      final provider = OTelAPI.tracerProvider();
+      provider.serviceVersion = '2.0.0';
+      expect(provider.serviceVersion, equals('2.0.0'));
+    });
+
+    test('serviceVersion setter accepts null', () {
+      final provider = OTelAPI.tracerProvider();
+      provider.serviceVersion = null;
+      expect(provider.serviceVersion, isNull);
+    });
+
+    test('enabled getter returns current enabled state', () {
+      final provider = OTelAPI.tracerProvider();
+      expect(provider.enabled, isTrue);
+    });
+
+    test('enabled setter updates enabled state', () {
+      final provider = OTelAPI.tracerProvider();
+      provider.enabled = false;
+      expect(provider.enabled, isFalse);
+    });
+
+    test('isShutdown returns false initially', () {
+      final provider = OTelAPI.tracerProvider();
+      expect(provider.isShutdown, isFalse);
+    });
+
+    test('isShutdown setter updates shutdown state', () {
+      final provider = OTelAPI.tracerProvider();
+      provider.isShutdown = true;
+      expect(provider.isShutdown, isTrue);
+    });
+
+    test('getTracer throws StateError after shutdown', () {
+      final provider = OTelAPI.tracerProvider();
+      provider.isShutdown = true;
+
+      expect(
+        () => provider.getTracer('test-lib'),
+        throwsA(isA<StateError>()),
+      );
+    });
+
+    test('shutdown returns true and marks provider as shutdown', () async {
+      final provider = OTelAPI.tracerProvider();
+      expect(provider.isShutdown, isFalse);
+
+      final result = await provider.shutdown();
+
+      expect(result, isTrue);
+      expect(provider.isShutdown, isTrue);
+      expect(provider.enabled, isFalse);
+    });
+
+    test('shutdown returns true when already shutdown', () async {
+      final provider = OTelAPI.tracerProvider();
+      await provider.shutdown();
+
+      // Second shutdown should also return true
+      final result = await provider.shutdown();
+      expect(result, isTrue);
+    });
+
+    test('shutdown clears tracer cache', () async {
+      final provider = OTelAPI.tracerProvider();
+
+      // Create a tracer first
+      final tracer1 = provider.getTracer('test-lib', version: '1.0.0');
+      expect(tracer1, isNotNull);
+
+      // Shutdown the provider
+      await provider.shutdown();
+
+      // After shutdown, getting tracer should throw
+      expect(
+        () => provider.getTracer('test-lib', version: '1.0.0'),
+        throwsA(isA<StateError>()),
+      );
+    });
   });
 }

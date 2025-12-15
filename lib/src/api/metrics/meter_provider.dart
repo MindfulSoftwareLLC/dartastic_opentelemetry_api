@@ -88,7 +88,8 @@ class APIMeterProvider {
     }
 
     // Create a cache key based on the provided parameters.
-    final key = SignalInstanceKey(validatedName, version, schemaUrl, attributes, Signal.metrics);
+    final key = SignalInstanceKey(
+        validatedName, version, schemaUrl, attributes, Signal.metrics);
 
     if (_meterCache.containsKey(key)) {
       return _meterCache[key]!;

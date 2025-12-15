@@ -36,17 +36,13 @@ enum Severity {
   int compareTo(Severity other) =>
       severityNumber.compareTo(other.severityNumber);
 
-  bool operator <(Severity other) =>
-      severityNumber < other.severityNumber;
+  bool operator <(Severity other) => severityNumber < other.severityNumber;
 
-  bool operator <=(Severity other) =>
-      severityNumber <= other.severityNumber;
+  bool operator <=(Severity other) => severityNumber <= other.severityNumber;
 
-  bool operator >(Severity other) =>
-      severityNumber > other.severityNumber;
+  bool operator >(Severity other) => severityNumber > other.severityNumber;
 
-  bool operator >=(Severity other) =>
-      severityNumber >= other.severityNumber;
+  bool operator >=(Severity other) => severityNumber >= other.severityNumber;
 }
 
 enum SeverityLevel {

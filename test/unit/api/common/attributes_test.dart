@@ -238,5 +238,319 @@ void main() {
       final result = attrs.copyWithout('missing');
       expect(identical(attrs, result), isTrue);
     });
+
+    test('copyWith empty list returns same instance', () {
+      final attrs =
+          OTelAPI.attributes([OTelAPI.attributeString('key', 'value')]);
+      final result = attrs.copyWith([]);
+      expect(identical(attrs, result), isTrue);
+    });
+
+    test('toJson returns correct map representation', () {
+      final attrs = OTelAPI.attributesFromMap({
+        'string.key': 'value',
+        'int.key': 42,
+        'bool.key': true,
+        'double.key': 3.14,
+      });
+
+      final json = attrs.toJson();
+
+      expect(json['string.key'], equals('value'));
+      expect(json['int.key'], equals(42));
+      expect(json['bool.key'], equals(true));
+      expect(json['double.key'], equals(3.14));
+    });
+
+    test('toString returns JSON formatted string', () {
+      final attrs = OTelAPI.attributes([
+        OTelAPI.attributeString('key', 'value'),
+      ]);
+
+      final str = attrs.toString();
+
+      expect(str, contains('key'));
+      expect(str, contains('value'));
+    });
+
+    test('equality works for identical attributes', () {
+      final attrs1 = OTelAPI.attributesFromMap({
+        'key1': 'value1',
+        'key2': 42,
+      });
+      final attrs2 = OTelAPI.attributesFromMap({
+        'key1': 'value1',
+        'key2': 42,
+      });
+
+      expect(attrs1 == attrs2, isTrue);
+      expect(attrs1.hashCode, equals(attrs2.hashCode));
+    });
+
+    test('equality returns false for different attributes', () {
+      final attrs1 = OTelAPI.attributesFromMap({'key': 'value1'});
+      final attrs2 = OTelAPI.attributesFromMap({'key': 'value2'});
+
+      expect(attrs1 == attrs2, isFalse);
+    });
+
+    test('equality returns true for same instance', () {
+      final attrs = OTelAPI.attributesFromMap({'key': 'value'});
+      expect(attrs == attrs, isTrue);
+    });
+
+    test('equality returns false for non-Attributes object', () {
+      final attrs = OTelAPI.attributesFromMap({'key': 'value'});
+      // Use Object type to avoid analyzer warning about unrelated types
+      final Object notAttributes = 'not an Attributes';
+      expect(attrs == notAttributes, isFalse);
+    });
+
+    test('keys returns list of all attribute keys', () {
+      final attrs = OTelAPI.attributesFromMap({
+        'key1': 'value1',
+        'key2': 42,
+        'key3': true,
+      });
+
+      final keys = attrs.keys;
+
+      expect(keys, contains('key1'));
+      expect(keys, contains('key2'));
+      expect(keys, contains('key3'));
+      expect(keys.length, equals(3));
+    });
+
+    test('toList returns list of all attributes', () {
+      final attrs = OTelAPI.attributesFromMap({
+        'key1': 'value1',
+        'key2': 42,
+      });
+
+      final list = attrs.toList();
+
+      expect(list.length, equals(2));
+      expect(list.any((a) => a.key == 'key1'), isTrue);
+      expect(list.any((a) => a.key == 'key2'), isTrue);
+    });
+
+    test('isEmpty returns true for empty attributes', () {
+      final attrs = OTelAPI.attributes();
+      expect(attrs.isEmpty, isTrue);
+    });
+
+    test('isEmpty returns false for non-empty attributes', () {
+      final attrs = OTelAPI.attributes([
+        OTelAPI.attributeString('key', 'value'),
+      ]);
+      expect(attrs.isEmpty, isFalse);
+    });
+
+    test('_getTyped throws StateError for wrong type', () {
+      final attrs = OTelAPI.attributes([
+        OTelAPI.attributeString('key', 'value'),
+      ]);
+
+      expect(
+        () => attrs.getInt('key'),
+        throwsA(isA<StateError>()),
+      );
+    });
+
+    test('get methods return null for missing key', () {
+      final attrs = OTelAPI.attributes();
+
+      expect(attrs.getString('missing'), isNull);
+      expect(attrs.getBool('missing'), isNull);
+      expect(attrs.getInt('missing'), isNull);
+      expect(attrs.getDouble('missing'), isNull);
+      expect(attrs.getStringList('missing'), isNull);
+      expect(attrs.getBoolList('missing'), isNull);
+      expect(attrs.getIntList('missing'), isNull);
+      expect(attrs.getDoubleList('missing'), isNull);
+    });
+  });
+
+  group('Attributes.fromJson', () {
+    setUp(() {
+      OTelAPI.reset();
+      OTelAPI.initialize(
+        endpoint: 'http://localhost:4317',
+        serviceName: 'test-service',
+        serviceVersion: '1.0.0',
+      );
+    });
+
+    test('fromJson parses string values', () {
+      final json = {'key': 'value'};
+      final attrs = Attributes.fromJson(json);
+
+      expect(attrs.getString('key'), equals('value'));
+    });
+
+    test('fromJson parses bool values', () {
+      final json = {'key': true};
+      final attrs = Attributes.fromJson(json);
+
+      expect(attrs.getBool('key'), equals(true));
+    });
+
+    test('fromJson parses int values', () {
+      final json = {'key': 42};
+      final attrs = Attributes.fromJson(json);
+
+      expect(attrs.getInt('key'), equals(42));
+    });
+
+    test('fromJson parses double values', () {
+      final json = {'key': 3.14};
+      final attrs = Attributes.fromJson(json);
+
+      expect(attrs.getDouble('key'), equals(3.14));
+    });
+
+    test('fromJson parses typed string list', () {
+      final json = <String, dynamic>{
+        'key': <String>['a', 'b', 'c']
+      };
+      final attrs = Attributes.fromJson(json);
+
+      expect(attrs.getStringList('key'), equals(['a', 'b', 'c']));
+    });
+
+    test('fromJson parses typed bool list', () {
+      final json = <String, dynamic>{
+        'key': <bool>[true, false, true]
+      };
+      final attrs = Attributes.fromJson(json);
+
+      expect(attrs.getBoolList('key'), equals([true, false, true]));
+    });
+
+    test('fromJson parses typed int list', () {
+      final json = <String, dynamic>{
+        'key': <int>[1, 2, 3]
+      };
+      final attrs = Attributes.fromJson(json);
+
+      expect(attrs.getIntList('key'), equals([1, 2, 3]));
+    });
+
+    test('fromJson parses typed double list', () {
+      final json = <String, dynamic>{
+        'key': <double>[1.1, 2.2, 3.3]
+      };
+      final attrs = Attributes.fromJson(json);
+
+      expect(attrs.getDoubleList('key'), equals([1.1, 2.2, 3.3]));
+    });
+
+    test('fromJson converts untyped string list', () {
+      final json = <String, dynamic>{
+        'key': ['a', 'b', 'c']
+      };
+      final attrs = Attributes.fromJson(json);
+
+      expect(attrs.getStringList('key'), equals(['a', 'b', 'c']));
+    });
+
+    test('fromJson converts untyped bool list', () {
+      final json = <String, dynamic>{
+        'key': [true, false]
+      };
+      final attrs = Attributes.fromJson(json);
+
+      expect(attrs.getBoolList('key'), equals([true, false]));
+    });
+
+    test('fromJson converts untyped int list', () {
+      final json = <String, dynamic>{
+        'key': [1, 2, 3]
+      };
+      final attrs = Attributes.fromJson(json);
+
+      expect(attrs.getIntList('key'), equals([1, 2, 3]));
+    });
+
+    test('fromJson converts mixed int/double list to double list', () {
+      final json = <String, dynamic>{
+        'key': [1, 2.5, 3]
+      };
+      final attrs = Attributes.fromJson(json);
+
+      expect(attrs.getDoubleList('key'), equals([1.0, 2.5, 3.0]));
+    });
+
+    test('fromJson ignores empty list with warning', () {
+      final json = <String, dynamic>{'key': <dynamic>[]};
+      final attrs = Attributes.fromJson(json);
+
+      // Empty lists are ignored per OTel spec
+      expect(attrs.isEmpty, isTrue);
+    });
+
+    test('fromJson ignores unsupported list types with warning', () {
+      final json = <String, dynamic>{
+        'key': [
+          {'nested': 'object'}
+        ]
+      };
+      final attrs = Attributes.fromJson(json);
+
+      // Unsupported types are ignored
+      expect(attrs.isEmpty, isTrue);
+    });
+
+    test('fromJson ignores unsupported value types with warning', () {
+      final json = <String, dynamic>{
+        'key': {'nested': 'object'}
+      };
+      final attrs = Attributes.fromJson(json);
+
+      // Unsupported types are ignored
+      expect(attrs.isEmpty, isTrue);
+    });
+  });
+
+  group('Attributes.of', () {
+    setUp(() {
+      OTelAPI.reset();
+      OTelAPI.initialize(
+        endpoint: 'http://localhost:4317',
+        serviceName: 'test-service',
+        serviceVersion: '1.0.0',
+      );
+    });
+
+    test('Attributes.of creates attributes from map', () {
+      final attrs = Attributes.of({'key': 'value', 'num': 42});
+
+      expect(attrs.getString('key'), equals('value'));
+      expect(attrs.getInt('num'), equals(42));
+    });
+  });
+
+  group('AttributesExtension', () {
+    test('toAttributes works before OTelAPI initialization', () {
+      OTelAPI.reset();
+      // Don't initialize - test that toAttributes still works
+      final map = <String, Object>{'key': 'value'};
+      final attrs = map.toAttributes();
+
+      expect(attrs.getString('key'), equals('value'));
+    });
+
+    test('toAttributes works after OTelAPI initialization', () {
+      OTelAPI.reset();
+      OTelAPI.initialize(
+        endpoint: 'http://localhost:4317',
+        serviceName: 'test-service',
+        serviceVersion: '1.0.0',
+      );
+      final map = <String, Object>{'key': 'value'};
+      final attrs = map.toAttributes();
+
+      expect(attrs.getString('key'), equals('value'));
+    });
   });
 }
