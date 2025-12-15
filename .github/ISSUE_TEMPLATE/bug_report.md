@@ -31,7 +31,7 @@ If applicable, add a minimal code example to help explain your problem.
  - Dart SDK version: [e.g. 3.2.1]
  - Platform: [e.g. VM, Web, Flutter]
  - OS: [e.g. iOS, Android, Windows]
- - Package version: [e.g. 0.8.0]
+ - Package version: [e.g. 0.9.0]
 
 **Additional context**
 Add any other context about the problem here.

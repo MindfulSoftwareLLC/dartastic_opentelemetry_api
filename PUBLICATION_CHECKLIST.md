@@ -31,8 +31,8 @@ This document outlines the steps to follow when publishing a new version of the 
 1. **Prepare Release**
    - [ ] Update version in `pubspec.yaml`
    - [ ] Update CHANGELOG.md with release date and changes
-   - [ ] Create a git tag for the version (e.g., `git tag v0.8.0`)
-   - [ ] Push the tag to the repository (`git push origin v0.8.0`)
+   - [ ] Create a git tag for the version (e.g., `git tag v0.9.0`)
+   - [ ] Push the tag to the repository (`git push origin v0.9.0`)
 
 2. **Publish to pub.dev**
    - [ ] Run final `dart pub publish --dry-run` check

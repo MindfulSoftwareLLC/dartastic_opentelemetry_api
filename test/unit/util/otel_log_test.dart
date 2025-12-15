@@ -160,11 +160,7 @@ void main() {
   });
 
   group('OTelLog logs by default without explicit setup', () {
-    late List<String> capturedPrintOutput;
-
-    setUp(() {
-      capturedPrintOutput = [];
-    });
+    setUp(() {});
 
     tearDown(() {
       // Only clean up the specialized log functions
@@ -178,7 +174,8 @@ void main() {
       // Given: Fresh OTelLog class with no configuration
       // Then: logFunction should be print by default
       expect(OTelLog.logFunction, equals(print),
-          reason: 'logFunction should default to print for out-of-the-box logging');
+          reason:
+              'logFunction should default to print for out-of-the-box logging');
     });
 
     test('currentLevel defaults to info', () {
@@ -191,7 +188,7 @@ void main() {
     test('error logs without setting logFunction', () {
       // Given: OTelLog with default settings (logFunction should be print)
       final capturedOutput = <String>[];
-      
+
       // When: an error message is logged in a zone that captures print
       runZoned(() {
         OTelLog.error('Test error message');
@@ -211,7 +208,7 @@ void main() {
     test('warn logs without setting logFunction', () {
       // Given: OTelLog with default settings
       final capturedOutput = <String>[];
-      
+
       // When: a warn message is logged in a zone that captures print
       runZoned(() {
         OTelLog.warn('Test warning message');
@@ -231,7 +228,7 @@ void main() {
     test('info logs without setting logFunction', () {
       // Given: OTelLog with default settings
       final capturedOutput = <String>[];
-      
+
       // When: an info message is logged in a zone that captures print
       runZoned(() {
         OTelLog.info('Test info message');
@@ -288,6 +285,213 @@ void main() {
       expect(OTelLog.isInfo(), isFalse);
       expect(OTelLog.isWarn(), isFalse);
       expect(OTelLog.isError(), isFalse);
+    });
+
+    test('isTrace returns true when currentLevel is trace', () {
+      OTelLog.currentLevel = LogLevel.trace;
+      expect(OTelLog.isTrace(), isTrue);
+    });
+
+    test('isTrace returns false when currentLevel is below trace', () {
+      OTelLog.currentLevel = LogLevel.debug;
+      expect(OTelLog.isTrace(), isFalse);
+    });
+
+    test('isDebug returns true when currentLevel is debug or higher', () {
+      OTelLog.currentLevel = LogLevel.debug;
+      expect(OTelLog.isDebug(), isTrue);
+
+      OTelLog.currentLevel = LogLevel.trace;
+      expect(OTelLog.isDebug(), isTrue);
+    });
+
+    test('isDebug returns false when currentLevel is below debug', () {
+      OTelLog.currentLevel = LogLevel.info;
+      expect(OTelLog.isDebug(), isFalse);
+    });
+
+    test('isFatal returns true when currentLevel is fatal or higher', () {
+      OTelLog.currentLevel = LogLevel.fatal;
+      expect(OTelLog.isFatal(), isTrue);
+
+      OTelLog.currentLevel = LogLevel.info;
+      expect(OTelLog.isFatal(), isTrue);
+    });
+
+    test('isFatal returns false when logFunction is null', () {
+      OTelLog.logFunction = null;
+      OTelLog.currentLevel = LogLevel.fatal;
+      expect(OTelLog.isFatal(), isFalse);
+    });
+  });
+
+  group('OTelLog signal logging tests', () {
+    late List<String> spanMessages;
+    late List<String> metricMessages;
+    late List<String> exportMessages;
+
+    setUp(() {
+      spanMessages = [];
+      metricMessages = [];
+      exportMessages = [];
+      OTelLog.spanLogFunction = (msg) => spanMessages.add(msg);
+      OTelLog.metricLogFunction = (msg) => metricMessages.add(msg);
+      OTelLog.exportLogFunction = (msg) => exportMessages.add(msg);
+    });
+
+    tearDown(() {
+      OTelLog.spanLogFunction = null;
+      OTelLog.metricLogFunction = null;
+      OTelLog.exportLogFunction = null;
+      OTelLog.logFunction = print;
+      OTelLog.currentLevel = LogLevel.info;
+    });
+
+    test('logSpan logs when spanLogFunction is set', () {
+      OTelLog.logSpan('Test span message');
+
+      expect(spanMessages.length, equals(1));
+      expect(spanMessages[0], contains('[span]'));
+      expect(spanMessages[0], contains('Test span message'));
+    });
+
+    test('logSpan does not log when spanLogFunction is null', () {
+      OTelLog.spanLogFunction = null;
+      OTelLog.logSpan('Test span message');
+
+      expect(spanMessages.length, equals(0));
+    });
+
+    test('logMetric logs when metricLogFunction is set', () {
+      OTelLog.logMetric('Test metric message');
+
+      expect(metricMessages.length, equals(1));
+      expect(metricMessages[0], contains('[metric]'));
+      expect(metricMessages[0], contains('Test metric message'));
+    });
+
+    test('logMetric does not log when metricLogFunction is null', () {
+      OTelLog.metricLogFunction = null;
+      OTelLog.logMetric('Test metric message');
+
+      expect(metricMessages.length, equals(0));
+    });
+
+    test('logExport logs when exportLogFunction is set', () {
+      OTelLog.logExport('Test export message');
+
+      expect(exportMessages.length, equals(1));
+      expect(exportMessages[0], contains('[export]'));
+      expect(exportMessages[0], contains('Test export message'));
+    });
+
+    test('logExport does not log when exportLogFunction is null', () {
+      OTelLog.exportLogFunction = null;
+      OTelLog.logExport('Test export message');
+
+      expect(exportMessages.length, equals(0));
+    });
+
+    test('isLogSpans returns true when spanLogFunction is set', () {
+      expect(OTelLog.isLogSpans(), isTrue);
+    });
+
+    test('isLogSpans returns false when spanLogFunction is null', () {
+      OTelLog.spanLogFunction = null;
+      expect(OTelLog.isLogSpans(), isFalse);
+    });
+
+    test('isLogMetrics returns true when metricLogFunction is set', () {
+      expect(OTelLog.isLogMetrics(), isTrue);
+    });
+
+    test('isLogMetrics returns false when metricLogFunction is null', () {
+      OTelLog.metricLogFunction = null;
+      expect(OTelLog.isLogMetrics(), isFalse);
+    });
+
+    test('isLogExport returns true when exportLogFunction is set', () {
+      expect(OTelLog.isLogExport(), isTrue);
+    });
+
+    test('isLogExport returns false when exportLogFunction is null', () {
+      OTelLog.exportLogFunction = null;
+      expect(OTelLog.isLogExport(), isFalse);
+    });
+  });
+
+  group('OTelLog enable logging level methods', () {
+    tearDown(() {
+      OTelLog.logFunction = print;
+      OTelLog.currentLevel = LogLevel.info;
+    });
+
+    test('enableTraceLogging sets currentLevel to trace', () {
+      OTelLog.enableTraceLogging();
+      expect(OTelLog.currentLevel, equals(LogLevel.trace));
+    });
+
+    test('enableInfoLogging sets currentLevel to info', () {
+      OTelLog.currentLevel = LogLevel.error; // Start at different level
+      OTelLog.enableInfoLogging();
+      expect(OTelLog.currentLevel, equals(LogLevel.info));
+    });
+
+    test('enableWarnLogging sets currentLevel to warn', () {
+      OTelLog.enableWarnLogging();
+      expect(OTelLog.currentLevel, equals(LogLevel.warn));
+    });
+
+    test('enableFatalLogging sets currentLevel to fatal', () {
+      OTelLog.enableFatalLogging();
+      expect(OTelLog.currentLevel, equals(LogLevel.fatal));
+    });
+
+    test('trace messages log when trace level is enabled', () {
+      final messages = <String>[];
+      OTelLog.logFunction = (msg) => messages.add(msg);
+      OTelLog.enableTraceLogging();
+
+      OTelLog.trace('Test trace message');
+
+      expect(messages.length, equals(1));
+      expect(messages[0], contains('TRACE'));
+      expect(messages[0], contains('Test trace message'));
+    });
+
+    test('only fatal messages log when fatal level is enabled', () {
+      final messages = <String>[];
+      OTelLog.logFunction = (msg) => messages.add(msg);
+      OTelLog.enableFatalLogging();
+
+      OTelLog.trace('trace');
+      OTelLog.debug('debug');
+      OTelLog.info('info');
+      OTelLog.warn('warn');
+      OTelLog.error('error');
+      OTelLog.fatal('fatal');
+
+      expect(messages.length, equals(1));
+      expect(messages[0], contains('FATAL'));
+    });
+  });
+
+  group('LogLevel enum', () {
+    test('LogLevel values have correct numeric levels', () {
+      expect(LogLevel.fatal.level, equals(0));
+      expect(LogLevel.error.level, equals(1));
+      expect(LogLevel.warn.level, equals(2));
+      expect(LogLevel.info.level, equals(3));
+      expect(LogLevel.debug.level, equals(4));
+      expect(LogLevel.trace.level, equals(6));
+    });
+
+    test('higher level values are more verbose', () {
+      expect(LogLevel.trace.level, greaterThan(LogLevel.debug.level));
+      expect(LogLevel.debug.level, greaterThan(LogLevel.info.level));
+      expect(LogLevel.info.level, greaterThan(LogLevel.warn.level));
+      expect(LogLevel.warn.level, greaterThan(LogLevel.error.level));
+      expect(LogLevel.error.level, greaterThan(LogLevel.fatal.level));
     });
   });
 }

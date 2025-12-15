@@ -1,8 +1,6 @@
 import 'attributes.dart';
 
-enum Signal {
-  traces, metrics, logs
-}
+enum Signal { traces, metrics, logs }
 
 class SignalInstanceKey {
   final String name;
@@ -11,7 +9,8 @@ class SignalInstanceKey {
   final Attributes? attributes;
   final Signal signal;
 
-  SignalInstanceKey(this.name, this.version, this.schemaUrl, this.attributes, this.signal);
+  SignalInstanceKey(
+      this.name, this.version, this.schemaUrl, this.attributes, this.signal);
 
   @override
   bool operator ==(Object other) {
@@ -27,9 +26,9 @@ class SignalInstanceKey {
   @override
   int get hashCode {
     return name.hashCode ^
-    (signal.hashCode ?? 0) ^
-    (version?.hashCode ?? 0) ^
-    (schemaUrl?.hashCode ?? 0) ^
-    (attributes?.hashCode ?? 0);
+        (signal.hashCode) ^
+        (version?.hashCode ?? 0) ^
+        (schemaUrl?.hashCode ?? 0) ^
+        (attributes?.hashCode ?? 0);
   }
 }

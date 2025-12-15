@@ -9,3 +9,4 @@
 /coverage/
 /analyze.txt
 /test.txt
+/.claude/settings.local.json

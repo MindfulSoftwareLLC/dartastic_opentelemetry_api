@@ -238,5 +238,127 @@ void main() {
               OTelAPI.spanContext(traceId: OTelAPI.traceIdInvalid()).hashCode,
           isFalse);
     });
+
+    test('withTraceFlags creates new context with updated flags', () {
+      final originalContext = OTelAPI.spanContext(
+        traceId: traceId,
+        spanId: spanId,
+        traceFlags: TraceFlags.none,
+        traceState: TraceState.fromMap({'vendor': 'value'}),
+        isRemote: true,
+      );
+
+      final updatedContext = originalContext.withTraceFlags(TraceFlags.sampled);
+
+      // Verify new context has updated flags
+      expect(updatedContext.traceFlags, equals(TraceFlags.sampled));
+      // Verify other fields are preserved
+      expect(updatedContext.traceId, equals(traceId));
+      expect(updatedContext.spanId, equals(spanId));
+      expect(updatedContext.traceState!.get('vendor'), equals('value'));
+      expect(updatedContext.isRemote, isTrue);
+      // Original context should be unchanged
+      expect(originalContext.traceFlags, equals(TraceFlags.none));
+    });
+
+    test('withTraceState creates new context with updated state', () {
+      final originalContext = OTelAPI.spanContext(
+        traceId: traceId,
+        spanId: spanId,
+        traceFlags: TraceFlags.sampled,
+        traceState: TraceState.empty(),
+        isRemote: false,
+      );
+
+      final newState = TraceState.fromMap({'newVendor': 'newValue'});
+      final updatedContext = originalContext.withTraceState(newState);
+
+      // Verify new context has updated state
+      expect(updatedContext.traceState!.get('newVendor'), equals('newValue'));
+      // Verify other fields are preserved
+      expect(updatedContext.traceId, equals(traceId));
+      expect(updatedContext.spanId, equals(spanId));
+      expect(updatedContext.traceFlags, equals(TraceFlags.sampled));
+      expect(updatedContext.isRemote, isFalse);
+      // Original context should be unchanged
+      expect(originalContext.traceState!.isEmpty, isTrue);
+    });
+
+    test('withTraceFlags preserves parentSpanId', () {
+      final parentId = OTelAPI.spanIdFromBytes([9, 8, 7, 6, 5, 4, 3, 2]);
+      final originalContext = OTelAPI.spanContext(
+        traceId: traceId,
+        spanId: spanId,
+        parentSpanId: parentId,
+        traceFlags: TraceFlags.none,
+        traceState: TraceState.empty(),
+        isRemote: false,
+      );
+
+      final updatedContext = originalContext.withTraceFlags(TraceFlags.sampled);
+
+      expect(updatedContext.parentSpanId, equals(parentId));
+    });
+
+    test('withTraceState preserves parentSpanId', () {
+      final parentId = OTelAPI.spanIdFromBytes([9, 8, 7, 6, 5, 4, 3, 2]);
+      final originalContext = OTelAPI.spanContext(
+        traceId: traceId,
+        spanId: spanId,
+        parentSpanId: parentId,
+        traceFlags: TraceFlags.sampled,
+        traceState: TraceState.empty(),
+        isRemote: true,
+      );
+
+      final newState = TraceState.fromMap({'key': 'value'});
+      final updatedContext = originalContext.withTraceState(newState);
+
+      expect(updatedContext.parentSpanId, equals(parentId));
+    });
+
+    test('spanContext generates random traceId when not provided', () {
+      final spanContext1 = OTelAPI.spanContext(
+        spanId: spanId,
+        traceFlags: TraceFlags.sampled,
+      );
+      final spanContext2 = OTelAPI.spanContext(
+        spanId: spanId,
+        traceFlags: TraceFlags.sampled,
+      );
+
+      // Both should have valid trace IDs
+      expect(spanContext1.traceId.isValid, isTrue);
+      expect(spanContext2.traceId.isValid, isTrue);
+      // They should be different (random)
+      expect(spanContext1.traceId, isNot(equals(spanContext2.traceId)));
+    });
+
+    test('spanContext generates random spanId when not provided', () {
+      final spanContext1 = OTelAPI.spanContext(
+        traceId: traceId,
+        traceFlags: TraceFlags.sampled,
+      );
+      final spanContext2 = OTelAPI.spanContext(
+        traceId: traceId,
+        traceFlags: TraceFlags.sampled,
+      );
+
+      // Both should have valid span IDs
+      expect(spanContext1.spanId.isValid, isTrue);
+      expect(spanContext2.spanId.isValid, isTrue);
+      // They should be different (random)
+      expect(spanContext1.spanId, isNot(equals(spanContext2.spanId)));
+    });
+
+    test('spanContext generates both traceId and spanId when not provided', () {
+      final spanContext = OTelAPI.spanContext(
+        traceFlags: TraceFlags.sampled,
+      );
+
+      expect(spanContext.traceId.isValid, isTrue);
+      expect(spanContext.spanId.isValid, isTrue);
+      expect(spanContext.isValid, isTrue);
+    });
   });
 }
