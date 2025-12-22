@@ -72,7 +72,7 @@ Add the package to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  dartastic_opentelemetry_api: ^0.8.8
+  dartastic_opentelemetry_api: ^1.0.0-alpha
 ```
 
 Then run:
@@ -88,13 +88,13 @@ This API is rarely used without an SDK. For a fully functional OpenTelemetry imp
 - **Dart Backend Applications**: Use the [Dartastic OTel SDK](https://pub.dev/packages/dartastic_opentelemetry).
   ```yaml
   dependencies:
-    dartastic_opentelemetry: ^1.0.0
+    dartastic_opentelemetry: ^1.0.0-alpha
   ```
 
 - **Flutter Applications**: Use the [Flutterific OTel SDK](https://pub.dev/packages/flutterrific_opentelemetry).
   ```yaml
   dependencies:
-    flutterrific_opentelemetry: ^1.0.0
+    flutterrific_opentelemetry: ^1.0.0-alpha
   ```
 
 Each layer exports all the relevant classes to the next layer so you only have to include one library in your pubspec.yaml.
@@ -105,7 +105,7 @@ If you need a no-op OpenTelemetry implementation (unusual but compliant with the
 
 ```yaml
 dependencies:
-  dartastic_opentelemetry_api: ^0.8.8
+  dartastic_opentelemetry_api: ^1.0.0-alpha
 ```
 
 ## Usage
