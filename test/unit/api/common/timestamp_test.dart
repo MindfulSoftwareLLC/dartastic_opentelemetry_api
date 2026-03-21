@@ -1,15 +1,16 @@
 // Licensed under the Apache License, Version 2.0
 // Copyright 2025, Michael Bushe, All rights reserved.
 
-import 'package:test/test.dart';
 import 'package:dartastic_opentelemetry_api/src/api/common/timestamp.dart';
+import 'package:fixnum/fixnum.dart';
+import 'package:test/test.dart';
 
 void main() {
   group('Timestamp', () {
     test('now returns nanoseconds since epoch', () {
-      final before = DateTime.now().microsecondsSinceEpoch * 1000;
+      final before = Int64(DateTime.now().microsecondsSinceEpoch) * 1000;
       final timestamp = Timestamp.now();
-      final after = DateTime.now().microsecondsSinceEpoch * 1000;
+      final after = Int64(DateTime.now().microsecondsSinceEpoch) * 1000;
 
       expect(timestamp, greaterThanOrEqualTo(before));
       expect(timestamp, lessThanOrEqualTo(after));
@@ -19,11 +20,11 @@ void main() {
       final dateTime = DateTime.fromMicrosecondsSinceEpoch(1000000);
       final nanos = Timestamp.fromDateTime(dateTime);
 
-      expect(nanos, equals(1000000 * 1000));
+      expect(nanos, equals(Int64(1000000) * 1000));
     });
 
     test('toDateTime converts nanoseconds to DateTime', () {
-      final nanos = 1000000000; // 1 second in nanos
+      final nanos = Int64(1000000000); // 1 second in nanos
       final dateTime = Timestamp.toDateTime(nanos);
 
       expect(dateTime.microsecondsSinceEpoch, equals(1000000));
