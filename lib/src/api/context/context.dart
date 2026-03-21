@@ -36,14 +36,14 @@ class Context {
 
   /// The root context with no values
   static Context get root {
-    return _rootContext ??= _getAndCacheOTelFactory().context();
+    return _rootContext ??= _getAndCacheOtelFactory().context();
   }
 
   /// Gets and caches the OTelFactory instance.
   ///
   /// Retrieves the global OTelFactory instance and caches it for future use.
   /// Throws a StateError if OpenTelemetry has not been initialized.
-  static OTelFactory _getAndCacheOTelFactory() {
+  static OTelFactory _getAndCacheOtelFactory() {
     if (_otelFactory != null) {
       return _otelFactory!;
     }
@@ -56,6 +56,9 @@ class Context {
   /// Gets the current Context from the current Zone, or the global Context if none exists.
   ///
   /// The search order is: current Zone, global current Context, root Context.
+  ///
+  /// In asynchronous Dart code, the Zone-based context is preferred as it
+  /// propagates correctly across asynchronous boundaries.
   static Context get current {
     return Zone.current[_zoneKey] as Context? ??
         _currentContext ??
@@ -65,17 +68,23 @@ class Context {
   /// Sets the global current Context.
   ///
   /// This updates the global current Context but does not affect Zone-specific contexts.
+  ///
+  /// @deprecated Use [Context.run] or [Context.runSync] to activate a context
+  /// within a [Zone]. Setting this static field is unreliable in complex
+  /// asynchronous workflows as it does not propagate through [Zone]s.
+  @Deprecated(
+      'Use Context.run() or Context.runSync() to ensure correct asynchronous propagation via Zones.')
   static set current(Context newContext) {
     _currentContext = newContext;
   }
 
   /// Clears the current span from the context.
   /// Returns a new context without the span and span context.
+  ///
+  /// This method only returns a new context; it does not change the current context.
+  /// To make the new context active, use [run] or [runSync].
   static Context clearCurrentSpan() {
-    // Create a new context without span and span context
-    final newContext = current.copyWithoutSpan();
-    _currentContext = newContext;
-    return newContext;
+    return current.copyWithoutSpan();
   }
 
   /// Resets the current context to a new empty context.
@@ -135,7 +144,7 @@ class Context {
   /// If the current context has no Baggage, this creates a new context with empty Baggage,
   /// sets it as the current context, and returns it.
   static Context currentWithBaggage() {
-    _getAndCacheOTelFactory();
+    _getAndCacheOtelFactory();
     if (Context.current.baggage == null) {
       Context.current =
           Context.current.copyWithBaggage(OTelFactory.otelFactory!.baggage({}));
@@ -214,26 +223,26 @@ class Context {
     });
   }
 
-  /// Sets this context as the current context with the given span active.
+  /// Creates a new Context with the given span set as active.
+  ///
   /// This is separate from span creation as per the specification.
+  /// This method only returns a new context; it does not change the current context.
+  /// To make the new context active, use [run] or [runSync].
   Context setCurrentSpan(APISpan? span) {
-    Context newContext;
     if (span == null) {
       // Remove both span and span context
-      newContext = ContextCreate.create(
+      return ContextCreate.create(
           contextMap: Map.from(_values)
             ..remove(_spanKey)
             ..remove(_spanContextKey));
     } else {
       // Set both span and span context
-      newContext = ContextCreate.create(contextMap: {
+      return ContextCreate.create(contextMap: {
         ..._values,
         _spanKey: span,
         _spanContextKey: span.spanContext,
       });
     }
-    _currentContext = newContext;
-    return newContext;
   }
 
   /// Creates a new Context with the specified value for the given key
@@ -241,11 +250,13 @@ class Context {
   ///
   /// This generates a new ContextKey with the given name and adds the value to a new Context.
   /// A new unique ID is generated for the key.
-  Context copyWithValue<T>(String name, T contextValue) {
+  Context copyWithValue<T>(String name, T contextValue,
+      {bool isTransferable = false}) {
     return ContextCreate.create(contextMap: {
       ..._values,
-      _getAndCacheOTelFactory()
-          .contextKey<T>(name, ContextKey.generateContextKeyId()): contextValue,
+      _getAndCacheOtelFactory().contextKey<T>(
+          name, ContextKey.generateContextKeyId(),
+          isTransferable: isTransferable): contextValue,
     });
   }
 
@@ -285,7 +296,23 @@ class Context {
     return newContext;
   }
 
-  /// Run an operation in a zone with this context
+  /// Runs a synchronous computation in a new Zone carrying this context.
+  ///
+  /// This is the preferred way to activate a context for synchronous code as it
+  /// ensures that any asynchronous operations started within the computation
+  /// will correctly inherit this context via the [Zone] mechanism.
+  T runSync<T>(T Function() computation) {
+    return runZoned(
+      computation,
+      zoneValues: {_zoneKey: this},
+    );
+  }
+
+  /// Runs an asynchronous operation in a new Zone carrying this context.
+  ///
+  /// This is the preferred way to activate a context for asynchronous code as it
+  /// ensures that all asynchronous callbacks throughout the [Future] chain
+  /// will correctly inherit this context via the [Zone] mechanism.
   Future<T> run<T>(Future<T> Function() operation) {
     return runZoned(
       operation,
@@ -300,13 +327,13 @@ class Context {
   ///
   /// On web platforms, this will run in the current thread as web doesn't support isolates.
   Future<T> runIsolate<T>(Future<T> Function() computation) async {
-    final oldFactory = _getAndCacheOTelFactory();
+    final oldFactory = _getAndCacheOtelFactory();
     // Capture the parent's factory configuration and serialize it.
     final serializedFactory = oldFactory.serialize();
 
-    // Capture the parent's context and serialize it.
+    // Capture the context and serialize it.
     final originalContext = current;
-    final serializedContext = current.serialize();
+    final serializedContext = serialize();
     final factoryFactory = oldFactory.factoryFactory;
 
     try {
@@ -316,7 +343,7 @@ class Context {
             OTelFactory.deserialize(serializedFactory, factoryFactory);
         // In the new isolate, deserialize the parent's context.
         final isolateContext = deserialize(serializedContext);
-        Context.current = isolateContext;
+          Context.current = isolateContext;
         // Set the static context variables in the new isolate.
         _currentContext = isolateContext;
         _rootContext ??= isolateContext;
@@ -354,8 +381,16 @@ class Context {
     // Serialize remaining context values with their unique IDs
     _values.forEach((key, value) {
       if (key != _baggageKey && key != _spanKey && key != _spanContextKey) {
+        // Skip keys that are not marked as transferable
+        if (!key.isTransferable) {
+          return;
+        }
+
         try {
-          // Try to encode to JSON to test serializability
+          // We still check for serializability to be safe, but now we only
+          // do it for keys that are expected to be transferable.
+          // In the future, we could skip this check for even better performance
+          // if we trust the isTransferable flag.
           json.encode(value);
 
           // If we get here, the value is serializable
@@ -388,7 +423,7 @@ class Context {
   ///
   /// This is used when receiving context from another isolate.
   static Context deserialize(Map<String, dynamic> values) {
-    _getAndCacheOTelFactory();
+    _getAndCacheOtelFactory();
     var context = _otelFactory!.context();
 
     // Handle baggage if present and not empty

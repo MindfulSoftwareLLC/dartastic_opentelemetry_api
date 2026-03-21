@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.0-wip] - TBD
+
+### Changed
+- **Breaking:** `tracer.startSpan()` no longer automatically activates the span in the current context, aligning with the OpenTelemetry specification.
+- **Breaking:** Deprecated the static `Context.current` setter in favor of `Context.run()` and `Context.runSync()`.
+- Refactored `APITracer.withSpan()` and `withSpanAsync()` to use `Zone`-based context propagation.
+- Added `Context.runSync()` for activating contexts in synchronous code blocks.
+- Fixed a bug in `APITracer.createSpan()` where parent spans from the provided or current context were ignored.
+- Optimized `Context.serialize()` by adding `isTransferable` to `ContextKey` to skip unnecessary serializability checks.
+- Fixed `Context.runIsolate()` to correctly serialize the instance context.
+- Updated `README.md` and examples to demonstrate modern `Zone`-based context management.
+
 ## [1.0.0-alpha] - 2025-12-22
 
 ### Changed

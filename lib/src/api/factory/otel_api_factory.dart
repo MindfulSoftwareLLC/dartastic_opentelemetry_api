@@ -88,9 +88,11 @@ class OTelAPIFactory extends OTelFactory {
   }
 
   @override
-  ContextKey<T> contextKey<T>(String name, Uint8List id) {
-    return ContextKeyCreate.create(name, id);
+  ContextKey<T> contextKey<T>(String name, Uint8List id,
+      {bool isTransferable = false}) {
+    return ContextKeyCreate.create<T>(name, id, isTransferable: isTransferable);
   }
+
 
   @override
   APITracerProvider tracerProvider(

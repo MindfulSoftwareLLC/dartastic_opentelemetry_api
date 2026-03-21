@@ -13,12 +13,15 @@ class ContextKey<T> {
   /// As per the specification, this does not uniquely identify the key.
   final String name;
 
+  /// Whether the value of this key should be transferred across isolate boundaries.
+  final bool isTransferable;
+
   /// Unique identifier ensuring each key instance is distinct, even if they have the same name.
   final Uint8List _uniqueId;
 
   /// Creates a new context key with the given name.
   /// Each instance will be unique
-  ContextKey._(this.name, this._uniqueId);
+  ContextKey._(this.name, this._uniqueId, {this.isTransferable = false});
 
   /// Returns an unmodifiable view of the unique ID as a list of integers.
   List<int> get uniqueId => List.unmodifiable(_uniqueId);

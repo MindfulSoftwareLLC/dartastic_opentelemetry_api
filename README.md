@@ -178,12 +178,12 @@ void main() {
   // Create a context with this baggage
   Context context = OTelAPI.context(baggage: baggage);
   
-  // Make this the current context
-  Context.current = context;
-  
-  // Later, retrieve baggage from current context
-  Baggage currentBaggage = Baggage.fromContext(Context.current);
-  String? userId = currentBaggage.getEntry('userId')?.value;
+  // Run code within this context to ensure baggage is available
+  context.runSync(() {
+    // Later, retrieve baggage from current context
+    Baggage currentBaggage = Baggage.fromContext(Context.current);
+    String? userId = currentBaggage.getEntry('userId')?.value;
+  });
 }
 ```
 

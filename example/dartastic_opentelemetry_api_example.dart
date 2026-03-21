@@ -33,38 +33,44 @@ void main() {
   ]);
 
   final baggage = OTelAPI.baggageForMap({'userId': 'yoda'});
-  //set the current context to one with the new baggage
-  Context.current = OTelAPI.context(baggage: baggage);
+  // Create a context with the baggage and run the example within it.
+  // This ensures correct propagation across asynchronous boundaries.
+  OTelAPI.context(baggage: baggage).runSync(() {
+    //Trace Signal
+    final defaultGlobalAPINOOPTracerProvider = OTelAPI.tracerProvider();
+    final tracer = defaultGlobalAPINOOPTracerProvider
+        .getTracer('dart-otel-api-example-service');
 
-  //Trace Signal
-  final defaultGlobalAPINOOPTracerProvider = OTelAPI.tracerProvider();
-  final tracer = defaultGlobalAPINOOPTracerProvider
-      .getTracer('dart-otel-api-example-service');
-  final rootSpan = tracer.startSpan('doSomeExampleSpan');
-  // Same thing as above, more simply but will some loss of type checking
-  // If your Map has anything but the types above and exception will be thrown.
-  final equalToTheAbove = OTelAPI.attributesFromMap({
-    'example_string_key': 'foo',
-    'example_bool_key': true,
-    'example_int_key': 42,
-    'example_double_key': 42.1,
-    'example_string_list_key': ['foo', 'bar', 'baz'],
-    'example_bool_list_key': [true, false, true],
-    'example_int_list_key': [42, 43, 44],
-    'example_double_list_key': [42.0, 42.1, 42.2]
-  });
-  rootSpan.attributes = equalToTheAbove;
-  rootSpan.addEventNow('data-retrieved',
-      OTelAPI.attributes([OTelAPI.attributeString('event-foo', 'bar')]));
-  rootSpan.end(
-      spanStatus: SpanStatusCode.Ok); //Capitalized Ok to match the OTel spec
+    // Use withSpan to make the span active within its scope
+    final span = tracer.startSpan('doSomeExampleSpan');
+    tracer.withSpan(span, () {
+      // Same thing as above, more simply but will some loss of type checking
+      // If your Map has anything but the types above and exception will be thrown.
+      final equalToTheAbove = OTelAPI.attributesFromMap({
+        'example_string_key': 'foo',
+        'example_bool_key': true,
+        'example_int_key': 42,
+        'example_double_key': 42.1,
+        'example_string_list_key': ['foo', 'bar', 'baz'],
+        'example_bool_list_key': [true, false, true],
+        'example_int_list_key': [42, 43, 44],
+        'example_double_list_key': [42.0, 42.1, 42.2]
+      });
+      span.attributes = equalToTheAbove;
+      span.addEventNow('data-retrieved',
+          OTelAPI.attributes([OTelAPI.attributeString('event-foo', 'bar')]));
+      span.end(
+          spanStatus: SpanStatusCode.Ok); //Capitalized Ok to match the OTel spec
+    });
 
-  //Log Signal
-  final defaultGlobalAPINOOPLoggerProvider = OTelAPI.loggerProvider();
-  final logger = defaultGlobalAPINOOPLoggerProvider
-      .getLogger('dart-otel-api-example-service');
+    //Log Signal
+    final defaultGlobalAPINOOPLoggerProvider = OTelAPI.loggerProvider();
+    final logger = defaultGlobalAPINOOPLoggerProvider
+        .getLogger('dart-otel-api-example-service');
 
-  logger.emit(eventName: 'heartbeat', body: 'Service is healthy.');
+    logger.emit(eventName: 'heartbeat', body: 'Service is healthy.');
+    
+    // ... rest of logger calls
 
   logger.emit(
     eventName: 'user_login',
@@ -113,15 +119,16 @@ void main() {
     }),
   );
 
-  logger.emit(
-    eventName: 'payment_failure',
-    severityText: 'ERROR',
-    body: 'Payment could not be processed.',
-    attributes: Attributes.of({
-      'payment.user_id': 101,
-      'payment.method': 'credit_card',
-      'payment.gateway': 'stripe',
-      'retry.count': 2,
-    }),
-  );
+    logger.emit(
+      eventName: 'payment_failure',
+      severityText: 'ERROR',
+      body: 'Payment could not be processed.',
+      attributes: Attributes.of({
+        'payment.user_id': 101,
+        'payment.method': 'credit_card',
+        'payment.gateway': 'stripe',
+        'retry.count': 2,
+      }),
+    );
+  });
 }

@@ -20,15 +20,18 @@ void main() {
       final tracer = OTelAPI.tracer('test-tracer');
       final span = tracer.startSpan('test-span');
 
-      // Verify the span is in the current context
-      expect(Context.current.span, equals(span));
+      // Verify the span is active when using withSpan
+      tracer.withSpan(span, () {
+        expect(Context.current.span, equals(span));
 
-      // Clear the current span
-      final newContext = Context.clearCurrentSpan();
+        // Clear the current span
+        final newContext = Context.clearCurrentSpan();
 
-      // Verify the span is removed from the current context
-      expect(Context.current.span, isNull);
-      expect(newContext.span, isNull);
+        // Verify the span is removed from the new context
+        // Note: Context.current still has the span because clearCurrentSpan 
+        // no longer modifies the global static state.
+        expect(newContext.span, isNull);
+      });
     });
 
     test('clearCurrentSpan preserves other context values', () {
@@ -36,25 +39,25 @@ void main() {
       final testKey = OTelAPI.contextKey<String>('test-key');
       final testValue = 'test-value';
 
-      // Set a value in the context
+      // Set a value in the context (using deprecated setter for now in test)
       Context.current = Context.current.copyWith(testKey, testValue);
 
       // Create a tracer and span
       final tracer = OTelAPI.tracer('test-tracer');
       final span = tracer.startSpan('test-span');
 
-      // Verify the span and value are in the current context
-      expect(Context.current.span, equals(span));
-      expect(Context.current.get<String>(testKey), equals(testValue));
+      tracer.withSpan(span, () {
+        // Verify the span and value are in the current context
+        expect(Context.current.span, equals(span));
+        expect(Context.current.get<String>(testKey), equals(testValue));
 
-      // Clear the current span
-      final newContext = Context.clearCurrentSpan();
+        // Clear the current span
+        final newContext = Context.clearCurrentSpan();
 
-      // Verify only the span is removed, but other values remain
-      expect(Context.current.span, isNull);
-      expect(Context.current.get<String>(testKey), equals(testValue));
-      expect(newContext.span, isNull);
-      expect(newContext.get<String>(testKey), equals(testValue));
+        // Verify only the span is removed in the new context, but other values remain
+        expect(newContext.span, isNull);
+        expect(newContext.get<String>(testKey), equals(testValue));
+      });
     });
 
     test('clearCurrentSpan works with baggage', () {
@@ -71,18 +74,18 @@ void main() {
       final tracer = OTelAPI.tracer('test-tracer');
       final span = tracer.startSpan('test-span');
 
-      // Verify the span and baggage are in the current context
-      expect(Context.current.span, equals(span));
-      expect(Context.current.baggage, equals(baggage));
+      tracer.withSpan(span, () {
+        // Verify the span and baggage are in the current context
+        expect(Context.current.span, equals(span));
+        expect(Context.current.baggage, equals(baggage));
 
-      // Clear the current span
-      final newContext = Context.clearCurrentSpan();
+        // Clear the current span
+        final newContext = Context.clearCurrentSpan();
 
-      // Verify only the span is removed, but baggage remains
-      expect(Context.current.span, isNull);
-      expect(Context.current.baggage, equals(baggage));
-      expect(newContext.span, isNull);
-      expect(newContext.baggage, equals(baggage));
+        // Verify only the span is removed in the new context, but baggage remains
+        expect(newContext.span, isNull);
+        expect(newContext.baggage, equals(baggage));
+      });
     });
 
     test('clearCurrentSpan handles case where no span is active', () {
@@ -102,22 +105,24 @@ void main() {
       final tracer = OTelAPI.tracer('test-tracer');
       final span = tracer.startSpan('test-span');
 
-      // Verify the span is in the current context
-      expect(Context.current.span, equals(span));
+      tracer.withSpan(span, () {
+        // Verify the span is in the current context
+        expect(Context.current.span, equals(span));
 
-      // End the span
-      span.end();
+        // End the span
+        span.end();
 
-      // Span should still be in context (per spec)
-      expect(Context.current.span, equals(span));
-      expect(span.isRecording, isFalse); // But no longer recording
+        // Span should still be in context (per spec)
+        expect(Context.current.span, equals(span));
+        expect(span.isRecording, isFalse); // But no longer recording
 
-      // Clear the current span
-      final newContext = Context.clearCurrentSpan();
+        // Clear the current span
+        final newContext = Context.clearCurrentSpan();
 
-      // Verify the span is removed from context
-      expect(Context.current.span, isNull);
-      expect(newContext.span, isNull);
+        // Verify the span is removed from context
+        expect(newContext.span, isNull);
+      });
     });
+
   });
 }
