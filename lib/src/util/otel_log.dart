@@ -136,7 +136,7 @@ class OTelLog {
   static void logSpan(String message) {
     if (isLogSpans()) {
       final timestamp = DateTime.now().toIso8601String();
-      final String msg = message;
+      final msg = message;
       spanLogFunction!('[$timestamp] [span] $msg ');
     }
   }
@@ -149,7 +149,7 @@ class OTelLog {
   static void logMetric(String message) {
     if (isLogMetrics()) {
       final timestamp = DateTime.now().toIso8601String();
-      final String msg = message;
+      final msg = message;
       metricLogFunction!('[$timestamp] [metric] $msg ');
     }
   }
@@ -162,7 +162,7 @@ class OTelLog {
   static void logExport(String message) {
     if (isLogExport()) {
       final timestamp = DateTime.now().toIso8601String();
-      final String msg = message;
+      final msg = message;
       exportLogFunction!('[$timestamp] [export] $msg ');
     }
   }

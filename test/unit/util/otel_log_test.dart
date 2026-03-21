@@ -3,8 +3,8 @@
 
 import 'dart:async';
 
-import 'package:test/test.dart';
 import 'package:dartastic_opentelemetry_api/src/util/otel_log.dart';
+import 'package:test/test.dart';
 
 void main() {
   group('OTelLog default behavior tests', () {
@@ -148,7 +148,7 @@ void main() {
       OTelLog.logFunction = null;
       OTelLog.currentLevel = LogLevel.info;
 
-      List<String> shouldBeEmpty = [];
+      var shouldBeEmpty = <String>[];
 
       // When: error messages are logged
       OTelLog.error('This should not appear anywhere');
@@ -449,7 +449,7 @@ void main() {
 
     test('trace messages log when trace level is enabled', () {
       final messages = <String>[];
-      OTelLog.logFunction = (msg) => messages.add(msg);
+      OTelLog.logFunction = messages.add;
       OTelLog.enableTraceLogging();
 
       OTelLog.trace('Test trace message');
@@ -461,7 +461,7 @@ void main() {
 
     test('only fatal messages log when fatal level is enabled', () {
       final messages = <String>[];
-      OTelLog.logFunction = (msg) => messages.add(msg);
+      OTelLog.logFunction = messages.add;
       OTelLog.enableFatalLogging();
 
       OTelLog.trace('trace');

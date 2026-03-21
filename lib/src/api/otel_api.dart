@@ -5,7 +5,39 @@ import 'dart:typed_data';
 
 import 'package:meta/meta.dart';
 
-import '../../dartastic_opentelemetry_api.dart';
+import '../factory/otel_factory.dart';
+import 'baggage/baggage.dart';
+import 'baggage/baggage_entry.dart';
+import 'common/attribute.dart';
+import 'common/attributes.dart';
+import 'common/instrumentation_scope.dart';
+import 'context/context.dart';
+import 'context/context_key.dart';
+import 'factory/otel_api_factory.dart';
+import 'id/id_generator.dart';
+import 'logs/logger.dart';
+import 'logs/logger_provider.dart';
+import 'metrics/counter.dart';
+import 'metrics/gauge.dart';
+import 'metrics/histogram.dart';
+import 'metrics/measurement.dart';
+import 'metrics/meter_provider.dart';
+import 'metrics/observable_callback.dart';
+import 'metrics/observable_counter.dart';
+import 'metrics/observable_gauge.dart';
+import 'metrics/observable_up_down_counter.dart';
+import 'metrics/up_down_counter.dart';
+import 'semantics/resource_semantics.dart';
+import 'semantics/semantics.dart';
+import 'trace/span_context.dart';
+import 'trace/span_event.dart';
+import 'trace/span_id.dart';
+import 'trace/span_link.dart';
+import 'trace/trace_flags.dart';
+import 'trace/trace_id.dart';
+import 'trace/trace_state.dart';
+import 'trace/tracer.dart';
+import 'trace/tracer_provider.dart';
 
 /// The [OTelAPI] is the no-op API implementation of OTel, as required by the
 /// specification
@@ -141,7 +173,7 @@ class OTelAPI {
     if (name == null) {
       return _otelFactory!.globalDefaultTracerProvider();
     } else {
-      APITracerProvider? tp = _otelFactory!.getNamedTracerProvider(name);
+      var tp = _otelFactory!.getNamedTracerProvider(name);
       tp ??= _otelFactory!.addTracerProvider(name);
       return tp;
     }
@@ -160,7 +192,7 @@ class OTelAPI {
     if (name == null) {
       return _otelFactory!.globalDefaultMeterProvider();
     } else {
-      APIMeterProvider? mp = _otelFactory!.getNamedMeterProvider(name);
+      var mp = _otelFactory!.getNamedMeterProvider(name);
       mp ??= _otelFactory!.addMeterProvider(name);
       return mp;
     }
@@ -179,7 +211,7 @@ class OTelAPI {
     if (name == null) {
       return _otelFactory!.globalDefaultLogProvider();
     } else {
-      APILoggerProvider? lp = _otelFactory!.getNamedLogProvider(name);
+      var lp = _otelFactory!.getNamedLogProvider(name);
       lp ??= _otelFactory!.addLogProvider(name);
       return lp;
     }
@@ -255,7 +287,7 @@ class OTelAPI {
     _getAndCacheOtelFactory();
 
     // If parentSpanId is provided but invalid, treat it as null
-    SpanId? effectiveParentSpanId = parentSpanId;
+    var effectiveParentSpanId = parentSpanId;
     if (effectiveParentSpanId != null && !effectiveParentSpanId.isValid) {
       effectiveParentSpanId = null;
     }

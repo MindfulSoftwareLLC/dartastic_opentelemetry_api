@@ -45,8 +45,8 @@ class MockPropagator implements TextMapPropagator<Map<String, String>, String> {
     for (final field in _fields) {
       final value = getter.get(field);
       if (value != null) {
-        final baggage = context.baggage?.copyWith(field, "$_prefix:$value") ??
-            OTelAPI.baggage().copyWith(field, "$_prefix:$value");
+        final baggage = context.baggage?.copyWith(field, '$_prefix:$value') ??
+            OTelAPI.baggage().copyWith(field, '$_prefix:$value');
         context = context.copyWithBaggage(baggage);
       }
     }
@@ -58,7 +58,7 @@ class MockPropagator implements TextMapPropagator<Map<String, String>, String> {
       TextMapSetter<String> setter) {
     for (final field in _fields) {
       final value = context.baggage?.getValue(field);
-      if (value != null && value.startsWith("$_prefix:")) {
+      if (value != null && value.startsWith('$_prefix:')) {
         setter.set(field, value.substring(_prefix.length + 1));
       }
     }

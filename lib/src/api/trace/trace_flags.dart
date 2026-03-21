@@ -1,7 +1,7 @@
 // Licensed under the Apache License, Version 2.0
 // Copyright 2025, Michael Bushe, All rights reserved.
 
-library trace_flags;
+import 'span_context.dart' show SpanContext;
 
 part 'trace_flags_create.dart';
 

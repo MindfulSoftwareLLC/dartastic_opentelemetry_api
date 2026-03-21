@@ -1,7 +1,7 @@
 // Licensed under the Apache License, Version 2.0
 // Copyright 2025, Michael Bushe, All rights reserved.
 
-import 'package:dartastic_opentelemetry_api/dartastic_opentelemetry_api.dart';
+import '../common/attributes.dart';
 
 /// A point in a time series of metric data.
 /// In the API, this is a minimal implementation mostly for interface purposes.

@@ -2,7 +2,16 @@
 // Copyright 2025, Michael Bushe, All rights reserved.
 
 import 'package:meta/meta.dart';
-import '../../../dartastic_opentelemetry_api.dart';
+
+import '../../factory/otel_factory.dart';
+import '../common/attributes.dart';
+import '../common/instrumentation_scope.dart';
+import '../common/timestamp.dart';
+import 'span_context.dart';
+import 'span_event.dart';
+import 'span_id.dart';
+import 'span_kind.dart';
+import 'span_link.dart';
 
 part 'span_create.dart';
 

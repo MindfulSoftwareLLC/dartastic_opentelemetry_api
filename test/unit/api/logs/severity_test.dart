@@ -1,5 +1,5 @@
-import 'package:test/test.dart';
 import 'package:dartastic_opentelemetry_api/src/api/logs/severity.dart';
+import 'package:test/test.dart';
 
 void main() {
   group('Severity', () {

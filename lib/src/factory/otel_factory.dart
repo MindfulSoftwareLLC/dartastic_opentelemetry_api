@@ -3,34 +3,33 @@
 
 import 'dart:typed_data';
 
-import 'package:dartastic_opentelemetry_api/src/api/metrics/counter.dart';
-import 'package:dartastic_opentelemetry_api/src/api/metrics/gauge.dart';
-import 'package:dartastic_opentelemetry_api/src/api/metrics/histogram.dart';
-import 'package:dartastic_opentelemetry_api/src/api/metrics/measurement.dart';
-import 'package:dartastic_opentelemetry_api/src/api/metrics/meter_provider.dart';
-import 'package:dartastic_opentelemetry_api/src/api/metrics/up_down_counter.dart';
-import 'package:dartastic_opentelemetry_api/src/api/trace/span_event.dart';
-import 'package:dartastic_opentelemetry_api/src/api/trace/span_id.dart';
-import 'package:dartastic_opentelemetry_api/src/api/trace/trace_flags.dart';
-import 'package:dartastic_opentelemetry_api/src/api/trace/trace_id.dart';
-import 'package:dartastic_opentelemetry_api/src/api/trace/trace_state.dart';
-import 'package:dartastic_opentelemetry_api/src/api/trace/tracer_provider.dart';
-
-import '../../dartastic_opentelemetry_api.dart'
-    show InstrumentationScope, OTelAPI;
 import '../api/baggage/baggage.dart';
 import '../api/baggage/baggage_entry.dart';
 import '../api/common/attribute.dart';
 import '../api/common/attributes.dart';
+import '../api/common/instrumentation_scope.dart';
 import '../api/context/context.dart';
 import '../api/context/context_key.dart';
 import '../api/logs/logger_provider.dart';
+import '../api/metrics/counter.dart';
+import '../api/metrics/gauge.dart';
+import '../api/metrics/histogram.dart';
+import '../api/metrics/measurement.dart';
+import '../api/metrics/meter_provider.dart';
 import '../api/metrics/observable_callback.dart';
 import '../api/metrics/observable_counter.dart';
 import '../api/metrics/observable_gauge.dart';
 import '../api/metrics/observable_up_down_counter.dart';
+import '../api/metrics/up_down_counter.dart';
+import '../api/otel_api.dart';
 import '../api/trace/span_context.dart';
+import '../api/trace/span_event.dart';
+import '../api/trace/span_id.dart';
 import '../api/trace/span_link.dart';
+import '../api/trace/trace_flags.dart';
+import '../api/trace/trace_id.dart';
+import '../api/trace/trace_state.dart';
+import '../api/trace/tracer_provider.dart';
 
 /// A function that creates the OTel Factory, used bu initialize methods
 typedef OTelFactoryCreationFunction = OTelFactory Function(

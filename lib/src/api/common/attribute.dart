@@ -1,8 +1,6 @@
 // Licensed under the Apache License, Version 2.0
 // Copyright 2025, Michael Bushe, All rights reserved.
 
-library attribute_value;
-
 import 'package:collection/collection.dart';
 import 'package:meta/meta.dart';
 
@@ -29,7 +27,7 @@ class Attribute<T extends Object> {
       throw ArgumentError('Attribute _value must not be an empty string');
     }
     if (_value is List) {
-      final valueList = (_value as List);
+      final valueList = _value as List;
       if (valueList.isEmpty) {
         throw ArgumentError('Attribute _value list must not be empty');
       }

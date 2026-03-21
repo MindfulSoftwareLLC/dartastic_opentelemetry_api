@@ -1,10 +1,8 @@
 // Licensed under the Apache License, Version 2.0
 // Copyright 2025, Michael Bushe, All rights reserved.
 
-library context_key;
-
 import 'dart:typed_data';
-import 'package:dartastic_opentelemetry_api/src/api/id/id_generator.dart';
+import '../id/id_generator.dart';
 
 part 'context_key_create.dart';
 

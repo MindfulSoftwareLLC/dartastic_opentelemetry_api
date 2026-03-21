@@ -10,7 +10,7 @@ class IsBetween extends Matcher {
   const IsBetween(this.before, this.after);
 
   @override
-  bool matches(item, Map<dynamic, dynamic> matchState) {
+  bool matches(Object? item, Map<dynamic, dynamic> matchState) {
     final timestamp = item as DateTime;
     return timestamp.isAfter(before) && timestamp.isBefore(after);
   }

@@ -3,37 +3,36 @@
 
 import 'dart:typed_data';
 
-import 'package:dartastic_opentelemetry_api/dartastic_opentelemetry_api.dart'
-    show OTelAPI, Timestamp;
-import 'package:dartastic_opentelemetry_api/src/api/baggage/baggage.dart';
-import 'package:dartastic_opentelemetry_api/src/api/common/instrumentation_scope.dart';
-import 'package:dartastic_opentelemetry_api/src/api/logs/logger_provider.dart';
-import 'package:dartastic_opentelemetry_api/src/api/metrics/counter.dart';
-import 'package:dartastic_opentelemetry_api/src/api/metrics/gauge.dart';
-import 'package:dartastic_opentelemetry_api/src/api/metrics/histogram.dart';
-import 'package:dartastic_opentelemetry_api/src/api/metrics/meter_provider.dart';
-import 'package:dartastic_opentelemetry_api/src/api/metrics/observable_counter.dart';
-import 'package:dartastic_opentelemetry_api/src/api/metrics/observable_gauge.dart';
-import 'package:dartastic_opentelemetry_api/src/api/metrics/observable_up_down_counter.dart';
-import 'package:dartastic_opentelemetry_api/src/api/metrics/up_down_counter.dart';
-import 'package:dartastic_opentelemetry_api/src/api/trace/span_context.dart';
-import 'package:dartastic_opentelemetry_api/src/api/trace/span_event.dart';
-import 'package:dartastic_opentelemetry_api/src/api/trace/span_id.dart';
-import 'package:dartastic_opentelemetry_api/src/api/trace/span_link.dart';
-import 'package:dartastic_opentelemetry_api/src/api/trace/trace_flags.dart';
-import 'package:dartastic_opentelemetry_api/src/api/trace/trace_id.dart';
-import 'package:dartastic_opentelemetry_api/src/api/trace/trace_state.dart';
-import 'package:dartastic_opentelemetry_api/src/api/trace/tracer_provider.dart';
-import 'package:dartastic_opentelemetry_api/src/factory/otel_factory.dart';
-
+import '../../factory/otel_factory.dart';
+import '../baggage/baggage.dart';
 import '../baggage/baggage_entry.dart';
 import '../common/attribute.dart';
 import '../common/attributes.dart';
+import '../common/instrumentation_scope.dart';
+import '../common/timestamp.dart';
 import '../context/context.dart';
 import '../context/context_key.dart';
 import '../id/id_generator.dart';
+import '../logs/logger_provider.dart';
+import '../metrics/counter.dart';
+import '../metrics/gauge.dart';
+import '../metrics/histogram.dart';
 import '../metrics/meter.dart';
+import '../metrics/meter_provider.dart';
 import '../metrics/observable_callback.dart';
+import '../metrics/observable_counter.dart';
+import '../metrics/observable_gauge.dart';
+import '../metrics/observable_up_down_counter.dart';
+import '../metrics/up_down_counter.dart';
+import '../otel_api.dart';
+import '../trace/span_context.dart';
+import '../trace/span_event.dart';
+import '../trace/span_id.dart';
+import '../trace/span_link.dart';
+import '../trace/trace_flags.dart';
+import '../trace/trace_id.dart';
+import '../trace/trace_state.dart';
+import '../trace/tracer_provider.dart';
 
 /// Factory function that creates an instance of OTelAPIFactory.
 ///
@@ -171,7 +170,7 @@ class OTelAPIFactory extends OTelFactory {
       } else if (value is bool) {
         attributes.add(AttributeCreate.create<bool>(key, value));
       } else if (value is DateTime) {
-        final String isoTimestamp = Timestamp.dateTimeToString(value);
+        final isoTimestamp = Timestamp.dateTimeToString(value);
         attributes.add(AttributeCreate.create<String>(key, isoTimestamp));
       } else if (value is Attribute) {
         attributes.add(value);
@@ -444,8 +443,8 @@ class OTelAPIFactory extends OTelFactory {
 
   @override
   Baggage baggageForMap(Map<String, String> keyValuePairs) {
-    final Map<String, BaggageEntry> entries = {};
-    for (String key in keyValuePairs.keys) {
+    final entries = <String, BaggageEntry>{};
+    for (var key in keyValuePairs.keys) {
       entries[key] = baggageEntry(keyValuePairs[key]!);
     }
     return baggage(entries);

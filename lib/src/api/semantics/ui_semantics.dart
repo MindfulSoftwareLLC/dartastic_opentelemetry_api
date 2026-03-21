@@ -1,9 +1,7 @@
 // Licensed under the Apache License, Version 2.0
 // Copyright 2025, Michael Bushe, All rights reserved.
 
-// ignore_for_file: public_member_api_docs
-
-import 'package:dartastic_opentelemetry_api/dartastic_opentelemetry_api.dart';
+import 'semantics.dart';
 
 //TODO geo
 //https://opentelemetry.io/docs/specs/semconv/attributes-registry/geo/

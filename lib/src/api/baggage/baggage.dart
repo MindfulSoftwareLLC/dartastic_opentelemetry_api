@@ -2,7 +2,9 @@
 // Copyright 2025, Michael Bushe, All rights reserved.
 
 import 'package:meta/meta.dart';
-import 'package:dartastic_opentelemetry_api/dartastic_opentelemetry_api.dart';
+
+import '../../factory/otel_factory.dart';
+import 'baggage_entry.dart';
 
 part 'baggage_create.dart';
 
