@@ -69,3 +69,15 @@ jobs:
         run: dart pub global activate pana
       - name: Run pana
         run: dart pub global run pana --no-warning --source path .
+
+  web-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: 'stable'
+      - name: Install dependencies
+        run: dart pub get
+      - name: Run web tests (dart2js + dart2wasm)
+        run: dart test -p chrome -c dart2js,dart2wasm --retry=2
