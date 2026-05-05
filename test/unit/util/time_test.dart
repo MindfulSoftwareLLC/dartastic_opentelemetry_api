@@ -1,7 +1,7 @@
 // dart
-import 'package:test/test.dart';
-import 'package:fixnum/fixnum.dart';
 import 'package:dartastic_opentelemetry_api/src/util/time.dart';
+import 'package:fixnum/fixnum.dart';
+import 'package:test/test.dart';
 
 void main() {
   group('Time utils', () {

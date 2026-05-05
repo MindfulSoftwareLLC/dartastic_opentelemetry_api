@@ -1,7 +1,7 @@
 // Licensed under the Apache License, Version 2.0
 // Copyright 2025, Michael Bushe, All rights reserved.
 
-import 'package:dartastic_opentelemetry_api/src/factory/otel_factory.dart';
+import '../../factory/otel_factory.dart';
 
 part 'trace_state_create.dart';
 

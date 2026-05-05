@@ -1,9 +1,12 @@
 // Licensed under the Apache License, Version 2.0
 // Copyright 2025, Michael Bushe, All rights reserved.
 
-library span_context;
-
-import 'package:dartastic_opentelemetry_api/dartastic_opentelemetry_api.dart';
+import '../../factory/otel_factory.dart';
+import '../otel_api.dart';
+import 'span_id.dart';
+import 'trace_flags.dart';
+import 'trace_id.dart';
+import 'trace_state.dart';
 
 part 'span_context_create.dart';
 

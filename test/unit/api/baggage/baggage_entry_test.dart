@@ -48,7 +48,6 @@ void main() {
 
       test('reflexive equality', () {
         final entry = OTelAPI.baggageEntry('value1', 'meta1');
-        // ignore: prefer_const_literals_to_create_immutables
         expect(entry, equals(entry));
       });
 

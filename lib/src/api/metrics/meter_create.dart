@@ -23,7 +23,7 @@ class APIMeterCreate {
     Attributes? attributes,
   }) {
     // Only apply all defaults if none of version, schemaUrl, or attributes are provided
-    final bool setDefaults =
+    final setDefaults =
         version == null && schemaUrl == null && attributes == null;
 
     return APIMeter._(

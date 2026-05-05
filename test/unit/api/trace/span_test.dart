@@ -194,12 +194,12 @@ void main() {
         kind: SpanKind.internal,
       );
 
-      final DateTime beforeCreation = DateTime.now();
+      final beforeCreation = DateTime.now();
       span.addEventNow(
         'test-event',
         {'event.key': 'value'}.toAttributes(),
       );
-      final DateTime afterCreation = DateTime.now();
+      final afterCreation = DateTime.now();
 
       final events = span.spanEvents;
       expect(events, hasLength(1));

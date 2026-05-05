@@ -197,7 +197,7 @@ void main() {
       // To truly test this, we need to serialize and check the serialized content
       final serialized = badContext.serialize();
       // The serialized map should contain an entry for 'int-key' with string value
-      bool foundStringValue = false;
+      var foundStringValue = false;
       serialized.forEach((key, value) {
         // Look through the serialized map for our string value
         if ((key == 'int-key' || key.startsWith('int-key-')) &&
@@ -227,9 +227,9 @@ void main() {
       final serialized = finalContext.serialize();
 
       // Check if we can find all three value types in the serialized context
-      bool foundStringValue = false;
-      bool foundIntValue = false;
-      bool foundBoolValue = false;
+      var foundStringValue = false;
+      var foundIntValue = false;
+      var foundBoolValue = false;
 
       serialized.forEach((key, value) {
         if ((key == 'mixed-key' || key.startsWith('mixed-key-')) &&

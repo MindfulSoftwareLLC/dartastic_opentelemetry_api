@@ -1,7 +1,8 @@
 // Licensed under the Apache License, Version 2.0
 // Copyright 2025, Michael Bushe, All rights reserved.
 
-import 'package:dartastic_opentelemetry_api/dartastic_opentelemetry_api.dart';
+import '../context.dart';
+import 'text_map_propagator.dart';
 
 /// A propagator that combines multiple other propagators
 class CompositePropagator<C, V> implements TextMapPropagator<C, V> {

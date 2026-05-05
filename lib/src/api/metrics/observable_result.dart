@@ -1,7 +1,9 @@
 // Licensed under the Apache License, Version 2.0
 // Copyright 2025, Michael Bushe, All rights reserved.
 
-import 'package:dartastic_opentelemetry_api/dartastic_opentelemetry_api.dart';
+import '../../factory/otel_factory.dart';
+import '../common/attributes.dart';
+import 'measurement.dart';
 
 /// Interface for recording observations from observable instruments.
 class APIObservableResult<T extends num> {

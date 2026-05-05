@@ -1,9 +1,10 @@
 // Licensed under the Apache License, Version 2.0
 // Copyright 2025, Michael Bushe, All rights reserved.
 
-library instrumentation_scope;
+library;
 
-import '../../../dartastic_opentelemetry_api.dart';
+import '../otel_api.dart';
+import 'attributes.dart';
 
 part 'instrumentation_scope_create.dart';
 

@@ -17,7 +17,7 @@ void main() {
   group('ObservableCallback', () {
     test('callback is properly typed and can be called', () {
       // Arrange
-      bool callbackInvoked = false;
+      var callbackInvoked = false;
       void callback(APIObservableResult<int> result) {
         callbackInvoked = true;
         result.observe(42);
