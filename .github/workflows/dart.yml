@@ -80,4 +80,4 @@ jobs:
       - name: Install dependencies
         run: dart pub get
       - name: Run web tests (dart2js + dart2wasm)
-        run: dart test -p chrome -c dart2js,dart2wasm --retry=2
+        run: dart test -p chrome -c dart2js,dart2wasm
