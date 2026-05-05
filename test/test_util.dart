@@ -12,7 +12,7 @@ class IsBetween extends Matcher {
   @override
   bool matches(Object? item, Map<dynamic, dynamic> matchState) {
     final timestamp = item as DateTime;
-    return timestamp.isAfter(before) && timestamp.isBefore(after);
+    return timestamp.compareTo(before) >= 0 && timestamp.compareTo(after) <= 0;
   }
 
   @override

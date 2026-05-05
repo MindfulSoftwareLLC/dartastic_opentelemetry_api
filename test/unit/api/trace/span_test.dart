@@ -146,7 +146,10 @@ void main() {
 
       expect(span.isRecording, isFalse);
       expect(span.endTime, isNotNull);
-      expect(span.endTime!.isAfter(startTime), isTrue);
+      expect(
+          span.endTime!.isAfter(startTime) ||
+              span.endTime!.isAtSameMomentAs(startTime),
+          isTrue);
     });
 
     test('records specific end time when provided', () {

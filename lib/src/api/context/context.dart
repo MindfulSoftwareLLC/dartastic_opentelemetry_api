@@ -13,7 +13,8 @@ import '../trace/span.dart';
 import '../trace/span_context.dart';
 import 'context_key.dart';
 // Use conditional imports to handle platform differences
-import 'isolate_support.dart' if (dart.library.js) 'isolate_support_web.dart';
+import 'isolate_support.dart'
+    if (dart.library.js_interop) 'isolate_support_web.dart';
 
 part 'context_create.dart';
 

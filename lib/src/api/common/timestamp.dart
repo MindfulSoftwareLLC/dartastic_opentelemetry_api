@@ -1,6 +1,7 @@
 // Licensed under the Apache License, Version 2.0
 // Copyright 2025, Michael Bushe, All rights reserved.
 
+import 'package:fixnum/fixnum.dart';
 import 'package:meta/meta.dart';
 
 import '../../util/time.dart';
@@ -9,15 +10,15 @@ import '../../util/time.dart';
 @immutable
 class Timestamp {
   /// Returns the current timestamp in nanoseconds since epoch.
-  static int now() => nowAsNanos().toInt();
+  static Int64 now() => nowAsNanos();
 
   /// Converts a [DateTime] to nanoseconds since epoch.
-  static int fromDateTime(DateTime dateTime) =>
-      dateTime.microsecondsSinceEpoch * 1000;
+  static Int64 fromDateTime(DateTime dateTime) =>
+      Int64(dateTime.microsecondsSinceEpoch) * 1000;
 
   /// Converts nanoseconds since epoch to a [DateTime].
-  static DateTime toDateTime(int nanos) =>
-      DateTime.fromMicrosecondsSinceEpoch(nanos ~/ 1000);
+  static DateTime toDateTime(Int64 nanos) =>
+      DateTime.fromMicrosecondsSinceEpoch((nanos ~/ 1000).toInt());
 
   /// Converts a DateTime value to a string in the format:
   /// "yyyy-MM-ddTHH:mm:ss.SSSZ"
