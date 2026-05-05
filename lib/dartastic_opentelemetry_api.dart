@@ -9,7 +9,7 @@
 ///
 /// For more information, see the OpenTelemetry specification at
 /// https://opentelemetry.io/docs/specs/otel/
-library dartastic_opentelemetry_api;
+library;
 
 // Baggage
 export 'src/api/baggage/baggage.dart';
@@ -29,10 +29,10 @@ export 'src/api/factory/otel_api_factory.dart';
 // Id
 export 'src/api/id/id_generator.dart';
 // Log
+export 'src/api/logs/log_record.dart';
 export 'src/api/logs/logger.dart';
 export 'src/api/logs/logger_provider.dart';
 export 'src/api/logs/severity.dart';
-export 'src/api/logs/log_record.dart';
 //Metrics
 export 'src/api/metrics/counter.dart';
 export 'src/api/metrics/gauge.dart';

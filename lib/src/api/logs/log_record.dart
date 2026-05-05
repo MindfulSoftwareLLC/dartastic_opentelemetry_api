@@ -1,7 +1,8 @@
+import 'package:fixnum/fixnum.dart';
+
 import '../common/attributes.dart';
 import '../context/context.dart';
 import 'severity.dart';
-import 'package:fixnum/fixnum.dart';
 
 /// Required parameter for LogRecord. According to the spec
 /// in https://opentelemetry.io/docs/specs/otel/logs/api/#emit-a-logrecord

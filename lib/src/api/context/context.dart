@@ -265,7 +265,7 @@ class Context {
   /// replacing existing entries that have the same keys.
   Context copyWithBaggage(Baggage moreBaggage) {
     final currentBaggage = baggage;
-    final Baggage newBaggage = currentBaggage == null
+    final newBaggage = currentBaggage == null
         ? moreBaggage
         : currentBaggage.copyWithBaggage(moreBaggage);
     return ContextCreate.create(contextMap: {
@@ -307,8 +307,7 @@ class Context {
     // Capture the parent's context and serialize it.
     final originalContext = current;
     final serializedContext = current.serialize();
-    final OTelFactoryCreationFunction factoryFactory =
-        oldFactory.factoryFactory;
+    final factoryFactory = oldFactory.factoryFactory;
 
     try {
       return await Isolate.run(() async {
@@ -361,7 +360,7 @@ class Context {
 
           // If we get here, the value is serializable
           // Handle multiple keys with the same name
-          String finalKeyName = key.name;
+          var finalKeyName = key.name;
 
           // If we've seen this key name before, make it unique
           keyNamesCount[key.name] = (keyNamesCount[key.name] ?? 0) + 1;

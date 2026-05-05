@@ -324,7 +324,7 @@ void main() {
       final tracers = <APITracerProvider>[];
       final meters = <APIMeterProvider>[];
 
-      for (int i = 0; i < 5; i++) {
+      for (var i = 0; i < 5; i++) {
         tracers.add(factory.addTracerProvider(
           'tracer-$i',
           endpoint: 'http://endpoint-$i:4317',
@@ -347,7 +347,7 @@ void main() {
       expect(factory.getMeterProviders(), containsAll(meters));
 
       // Test access to individual providers
-      for (int i = 0; i < 5; i++) {
+      for (var i = 0; i < 5; i++) {
         expect(factory.getNamedTracerProvider('tracer-$i'), equals(tracers[i]));
         expect(factory.getNamedMeterProvider('meter-$i'), equals(meters[i]));
       }

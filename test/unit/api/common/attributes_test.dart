@@ -135,7 +135,7 @@ void main() {
       final boolListAttribute =
           OTelAPI.attributeBoolList('bool.list', [true, false, true]);
 
-      final List<Attribute> attributeList = [
+      final attributeList = <Attribute>[
         stringAttribute,
         intAttribute,
         boolAttribute,

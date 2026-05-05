@@ -31,7 +31,7 @@ enum Severity {
   const Severity(this.severityNumber, this.logLevel);
 
   @override
-  String toString() => "${super.toString()}(${this.logLevel.toString()})";
+  String toString() => '${super.toString()}(${logLevel.toString()})';
 
   int compareTo(Severity other) =>
       severityNumber.compareTo(other.severityNumber);

@@ -3,9 +3,10 @@
 
 // ignore_for_file: unnecessary_getters_setters
 
-import '../../../dartastic_opentelemetry_api.dart' show OTelAPI, OTelLog;
+import '../../util/otel_log.dart';
 import '../common/attributes.dart';
 import '../common/signal_instance_key.dart';
+import '../otel_api.dart';
 import 'meter.dart';
 
 part 'meter_provider_create.dart';

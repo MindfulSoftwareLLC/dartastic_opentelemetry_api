@@ -1,13 +1,18 @@
 // Licensed under the Apache License, Version 2.0
 // Copyright 2025, Michael Bushe, All rights reserved.
 
-library attributes;
+library;
 
 import 'dart:convert';
 
 import 'package:collection/collection.dart';
 import 'package:meta/meta.dart';
-import '../../../dartastic_opentelemetry_api.dart';
+
+import '../../factory/otel_factory.dart';
+import '../../util/otel_log.dart';
+import '../factory/otel_api_factory.dart';
+import '../otel_api.dart';
+import 'attribute.dart';
 
 part 'attributes_create.dart';
 

@@ -3,10 +3,11 @@
 
 // ignore_for_file: unnecessary_getters_setters
 
-import '../../../dartastic_opentelemetry_api.dart' show OTelAPI, OTelLog;
+import '../../util/otel_log.dart';
 import '../common/attributes.dart';
 import '../common/signal_instance_key.dart';
 import '../context/context.dart';
+import '../otel_api.dart';
 import 'tracer.dart';
 
 part 'tracer_provider_create.dart';
@@ -78,8 +79,8 @@ class APITracerProvider {
     }
 
     // Apply default values if none are provided
-    String? effectiveVersion = version;
-    String? effectiveSchemaUrl = schemaUrl;
+    var effectiveVersion = version;
+    var effectiveSchemaUrl = schemaUrl;
 
     // Only apply defaults if all optional parameters are missing
     if (version == null && schemaUrl == null && attributes == null) {

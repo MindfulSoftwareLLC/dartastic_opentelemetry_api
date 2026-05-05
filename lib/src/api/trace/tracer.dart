@@ -1,14 +1,13 @@
 // Licensed under the Apache License, Version 2.0
 // Copyright 2025, Michael Bushe, All rights reserved.
 
-import 'package:dartastic_opentelemetry_api/src/api/trace/span_context.dart';
-import 'package:dartastic_opentelemetry_api/src/api/trace/span_event.dart';
-import 'package:dartastic_opentelemetry_api/src/factory/otel_factory.dart';
-
+import '../../factory/otel_factory.dart';
 import '../common/attributes.dart';
 import '../common/instrumentation_scope.dart';
 import '../context/context.dart';
 import 'span.dart';
+import 'span_context.dart';
+import 'span_event.dart';
 import 'span_kind.dart';
 import 'span_link.dart';
 

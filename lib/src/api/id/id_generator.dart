@@ -11,11 +11,11 @@ class IdGenerator {
   /// Generate a 16-byte trace ID.
   /// Returns bytes which can be formatted as a 32-char hex string.
   static Uint8List generateTraceId() {
-    final Uint8List bytes = Uint8List(16);
+    final bytes = Uint8List(16);
 
     // Generate random bytes until we get a non-zero ID
     do {
-      for (int i = 0; i < bytes.length; i++) {
+      for (var i = 0; i < bytes.length; i++) {
         bytes[i] = _random.nextInt(256);
       }
     } while (_isZero(bytes));
@@ -30,7 +30,7 @@ class IdGenerator {
 
     // Generate random bytes until we get a non-zero ID
     do {
-      for (int i = 0; i < bytes.length; i++) {
+      for (var i = 0; i < bytes.length; i++) {
         bytes[i] = _random.nextInt(256);
       }
     } while (_isZero(bytes));

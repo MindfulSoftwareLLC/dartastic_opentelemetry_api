@@ -87,7 +87,7 @@ void main() {
       final logger = provider.getLogger('test-logger');
 
       // Should not throw - it's a no-op
-      expect(() => logger.emit(), returnsNormally);
+      expect(logger.emit, returnsNormally);
     });
 
     test('emit does not throw with body', () {

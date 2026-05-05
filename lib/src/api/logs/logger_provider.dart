@@ -1,3 +1,5 @@
+// ignore_for_file: unnecessary_getters_setters
+
 import '../../util/otel_log.dart';
 import '../common/attributes.dart';
 import '../common/signal_instance_key.dart';
@@ -79,8 +81,8 @@ class APILoggerProvider {
     }
 
     // Apply default values if none are provided
-    String? effectiveVersion = version;
-    String? effectiveSchemaUrl = schemaUrl;
+    var effectiveVersion = version;
+    var effectiveSchemaUrl = schemaUrl;
 
     // Only apply defaults if all optional parameters are missing
     if (version == null && schemaUrl == null && attributes == null) {
