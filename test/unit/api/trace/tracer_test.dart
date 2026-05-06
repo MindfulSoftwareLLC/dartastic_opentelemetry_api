@@ -71,47 +71,38 @@ void main() {
     test('creates span with parent context from current context', () {
       final tracer = OTelAPI.tracer('test-tracer');
 
-      // Create a parent span and make it current
+      // Create a parent span
       final parentSpan = tracer.createSpan(name: 'parent-span');
 
-      final testContext = Context.current.setCurrentSpan(parentSpan);
-
       // Create a child span in the context with the parent span
-      Context.current = testContext;
-      final childSpan = tracer.createSpan(name: 'child-span');
+      final testContext = Context.current.withSpan(parentSpan);
+      final childSpan =
+          tracer.createSpan(name: 'child-span', context: testContext);
       expect(childSpan, isNotNull);
-
-      // Reset context
-      Context.current = Context.root;
+      expect(childSpan.spanContext.traceId,
+          equals(parentSpan.spanContext.traceId));
     });
 
     test('span with default context takes current context', () {
       final tracer = OTelAPI.tracer('test-tracer');
 
-      // Create a parent span and make it current
+      // Create a parent span
       final parentSpan = tracer.createSpan(name: 'parent-span');
       final parentContext = parentSpan.spanContext;
 
-      // Set the parent span as current
-      final testContext = Context.current.withSpan(parentSpan);
+      // Use withSpan to make it current
+      tracer.withSpan(parentSpan, () {
+        // Create a child span without explicitly passing a context
+        final childSpan = tracer.createSpan(name: 'child-span');
 
-      // Use the context
-      Context.current = testContext;
+        // The child span should have the parent context
+        expect(
+            childSpan.spanContext.parentSpanId, equals(parentContext.spanId));
+        expect(childSpan.spanContext.traceId, equals(parentContext.traceId));
+      });
 
-      // Create a child span without explicitly passing a context
-      final childSpan = tracer.createSpan(name: 'child-span');
-
-      // The child span should have the parent context
-      expect(childSpan.spanContext.parentSpanId, equals(parentContext.spanId));
-      expect(childSpan.spanContext.traceId, equals(parentContext.traceId));
-
-      // Reset context
-      Context.current = Context.root;
-
-      // Create a root span
+      // Outside withSpan, should be root
       final rootSpan = tracer.createSpan(name: 'child-span');
-
-      // Check if it has a parent span ID set at all
       expect(rootSpan.spanContext.parentSpanId?.isValid, isFalse);
     });
 
@@ -121,14 +112,10 @@ void main() {
 
       expect(Context.current.span, isNot(equals(span))); // Not active yet
 
-      // Set the span as current
-      final testContext = Context.current.setCurrentSpan(span);
-      Context.current = testContext;
-
-      expect(Context.current.span, equals(span)); // Now it should be active
-
-      // Reset context
-      Context.current = Context.root;
+      // Use withSpan to make it current
+      tracer.withSpan(span, () {
+        expect(Context.current.span, equals(span)); // Now it should be active
+      });
     });
 
     test('currentSpan returns current span in context', () {
@@ -137,14 +124,10 @@ void main() {
 
       expect(tracer.currentSpan, isNot(equals(span))); // Not active yet
 
-      // Set the span as current
-      final testContext = Context.current.setCurrentSpan(span);
-      Context.current = testContext;
-
-      expect(tracer.currentSpan, equals(span)); // Now it should be active
-
-      // Reset context
-      Context.current = Context.root;
+      // Use withSpan to make it current
+      tracer.withSpan(span, () {
+        expect(tracer.currentSpan, equals(span)); // Now it should be active
+      });
     });
 
     test('executing code with span in context', () {
@@ -185,46 +168,45 @@ void main() {
           isNot(equals(span))); // Should no longer be active after the callback
     });
 
-    test('startSpan starts and activates a span', () {
+    test('startSpan does NOT activate a span by default', () {
       final tracer = OTelAPI.tracer('test-tracer');
 
-      // Start a new span and activate it
+      // Start a new span
       final span = tracer.startSpan('test-span');
 
       expect(span, isNotNull);
-      expect(Context.current.span, equals(span)); // Should be active
+      expect(
+          Context.current.span, isNull); // Should NOT be active automatically
 
-      // End the span
-      span.end();
-
-      // Clear the span from context (since ending a span doesn't deactivate it per spec)
-      Context.clearCurrentSpan();
-
-      // Now check if it's still the current span
-      expect(Context.current.span,
-          isNot(equals(span))); // Should no longer be active
+      // Activate it manually via withSpan
+      tracer.withSpan(span, () {
+        expect(Context.current.span, equals(span)); // Now it should be active
+      });
     });
 
-    test('startSpan attaches to existing active span', () {
+    test('startSpan uses existing active span from context', () {
       final tracer = OTelAPI.tracer('test-tracer');
 
-      // Create and activate a parent span
+      // Create a parent span
       final parentSpan = tracer.startSpan('parent-span');
 
-      // The parent span should be active now
-      expect(Context.current.span, equals(parentSpan));
-      final parentTraceId = parentSpan.spanContext.traceId;
+      // Make it active
+      tracer.withSpan(parentSpan, () {
+        final parentTraceId = parentSpan.spanContext.traceId;
 
-      // Start a child span (should automatically use the parent)
-      final childSpan = tracer.startSpan('child-span');
+        // Start a child span (should automatically use the parent from context)
+        final childSpan = tracer.startSpan('child-span');
 
-      // Check the child span has the parent's context
-      expect(childSpan.spanContext.traceId, equals(parentTraceId));
-      expect(childSpan.spanContext.parentSpanId,
-          equals(parentSpan.spanContext.spanId));
+        // Check the child span has the parent's context
+        expect(childSpan.spanContext.traceId, equals(parentTraceId));
+        expect(childSpan.spanContext.parentSpanId,
+            equals(parentSpan.spanContext.spanId));
 
-      // End both spans
-      childSpan.end();
+        // End child span
+        childSpan.end();
+      });
+
+      // End parent span
       parentSpan.end();
     });
   });

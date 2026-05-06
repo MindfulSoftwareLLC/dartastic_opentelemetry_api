@@ -43,7 +43,7 @@ void main() {
       final context = Context.root
           .withBaggage(baggage)
           .withSpanContext(spanContext)
-          .copyWithValue('custom-key', 'custom-value');
+          .copyWithValue('custom-key', 'custom-value', isTransferable: true);
 
       // Serialize the context
       final serialized = context.serialize();
@@ -120,20 +120,27 @@ void main() {
       expect(deserialized, isNotNull);
     });
 
-    test('Context.currentWithBaggage creates and sets baggage', () {
+    test(
+        'Context.currentWithBaggage returns a context with baggage but does not mutate Context.current',
+        () {
       // Initial context has no baggage
       expect(Context.current.baggage, isNull);
 
-      // Get current context with baggage
+      // Get a Context with baggage
       final context = Context.currentWithBaggage();
 
-      // Should have created and set an empty baggage
+      // The returned Context has empty baggage
       expect(context.baggage, isNotNull);
       expect(context.baggage!.isEmpty, isTrue);
 
-      // And should have set it as the current context
-      expect(Context.current.baggage, isNotNull);
-      expect(Context.current.baggage!.isEmpty, isTrue);
+      // currentWithBaggage is pure — Context.current is unchanged
+      expect(Context.current.baggage, isNull);
+
+      // To activate, use runSync
+      context.runSync(() {
+        expect(Context.current.baggage, isNotNull);
+        expect(Context.current.baggage!.isEmpty, isTrue);
+      });
     });
 
     test('Context throws when withSpanContext changes trace ID', () {
@@ -183,7 +190,8 @@ void main() {
       expect(context.get<int>(intKey), equals(123));
 
       // Add a mismatched value (string with key name 'int-key')
-      final badContext = context.copyWithValue('int-key', 'not-an-int');
+      final badContext =
+          context.copyWithValue('int-key', 'not-an-int', isTransferable: true);
 
       // We should be able to access the int value still
       expect(badContext.get<int>(intKey), equals(123),
@@ -215,13 +223,16 @@ void main() {
     test('Context allows multiple keys with the same name but different types',
         () {
       // Create a context with a string value
-      final context = Context.root.copyWithValue('mixed-key', 'string-value');
+      final context = Context.root
+          .copyWithValue('mixed-key', 'string-value', isTransferable: true);
 
       // Add an int value with the same key name
-      final mixedContext = context.copyWithValue('mixed-key', 42);
+      final mixedContext =
+          context.copyWithValue('mixed-key', 42, isTransferable: true);
 
       // Add a boolean value with the same key name
-      final finalContext = mixedContext.copyWithValue('mixed-key', true);
+      final finalContext =
+          mixedContext.copyWithValue('mixed-key', true, isTransferable: true);
 
       // Serialize to check the context contents
       final serialized = finalContext.serialize();

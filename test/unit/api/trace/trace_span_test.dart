@@ -38,30 +38,34 @@ void main() {
 
     // Create root span
     final rootSpan = tracer.startSpan('root-span');
-    // Create child span
-    final childSpan = tracer.startSpan('child-span');
 
-    expect(childSpan.name, equals('child-span'));
+    // Create child span inside withSpan to ensure it becomes a child
+    APISpan? childSpan;
+    tracer.withSpan(rootSpan, () {
+      childSpan = tracer.startSpan('child-span');
+    });
+
+    expect(childSpan!.name, equals('child-span'));
 
     // Verify trace ID inheritance
-    expect(childSpan.spanContext.traceId, equals(rootSpan.spanContext.traceId),
+    expect(childSpan!.spanContext.traceId, equals(rootSpan.spanContext.traceId),
         reason: 'Child should inherit trace ID');
 
     // Verify parent span ID relationship
-    expect(
-        childSpan.spanContext.parentSpanId, equals(rootSpan.spanContext.spanId),
+    expect(childSpan!.spanContext.parentSpanId,
+        equals(rootSpan.spanContext.spanId),
         reason: 'Child should reference parent span ID');
 
     // Verify unique span ID
-    expect(childSpan.spanContext.spanId,
+    expect(childSpan!.spanContext.spanId,
         isNot(equals(rootSpan.spanContext.spanId)),
         reason: 'Child should have different span ID');
 
     // Verify flags and state inheritance
-    expect(childSpan.spanContext.traceFlags,
+    expect(childSpan!.spanContext.traceFlags,
         equals(rootSpan.spanContext.traceFlags),
         reason: 'Child should inherit trace flags');
-    expect(childSpan.spanContext.traceState,
+    expect(childSpan!.spanContext.traceState,
         equals(rootSpan.spanContext.traceState),
         reason: 'Child should inherit trace state');
   });
@@ -98,10 +102,11 @@ void main() {
     final tracer = tracerProvider.getTracer('test-tracer');
     final span = tracer.startSpan('test-span');
 
-    // Get span from context
-    final retrievedSpan = Context.current.span;
-
-    expect(retrievedSpan, equals(span));
+    tracer.withSpan(span, () {
+      // Get span from context
+      final retrievedSpan = Context.current.span;
+      expect(retrievedSpan, equals(span));
+    });
 
     span.end();
   });

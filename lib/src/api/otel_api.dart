@@ -111,10 +111,12 @@ class OTelAPI {
   /// Creates a new [ContextKey] with the given name.
   /// Each instance will be unique, even with the same name, per spec.
   /// The name is for debugging purposes only.
-  static ContextKey<T> contextKey<T>(String name) {
+  static ContextKey<T> contextKey<T>(String name,
+      {bool isTransferable = false}) {
     _getAndCacheOtelFactory();
-    return OTelFactory.otelFactory!
-        .contextKey(name, ContextKey.generateContextKeyId());
+    return OTelFactory.otelFactory!.contextKey(
+        name, ContextKey.generateContextKeyId(),
+        isTransferable: isTransferable);
   }
 
   /// Creates a new [Context] with optional [Baggage]

@@ -266,7 +266,8 @@ abstract class OTelFactory {
 
   /// Generates a [ContextKey]. Context keys are always unique, even if they
   /// have the same name, per spec.  The name is used for debugging only.
-  ContextKey<T> contextKey<T>(String name, Uint8List explicitId);
+  ContextKey<T> contextKey<T>(String name, Uint8List explicitId,
+      {bool isTransferable = false});
 
   /// Creates an `BaggageEntry` with the given `value` and optional `metadata`.
   BaggageEntry baggageEntry(String value, [String? metadata]);

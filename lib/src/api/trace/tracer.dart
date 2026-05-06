@@ -55,25 +55,15 @@ class APITracer {
   /// Executes the provided function with the given span active in the current context.
   /// The span remains active only for the duration of the function.
   T withSpan<T>(APISpan span, T Function() fn) {
-    final originalContext = Context.current;
-    try {
-      Context.current = Context.current.setCurrentSpan(span);
-      return fn();
-    } finally {
-      Context.current = originalContext;
-    }
+    final newContext = Context.current.withSpan(span);
+    return newContext.runSync(fn);
   }
 
   /// Executes the provided async function with the given span active in the current context.
   /// The span remains active throughout the entire async execution.
   Future<T> withSpanAsync<T>(APISpan span, Future<T> Function() fn) async {
-    final originalContext = Context.current;
-    try {
-      Context.current = Context.current.setCurrentSpan(span);
-      return await fn();
-    } finally {
-      Context.current = originalContext;
-    }
+    final newContext = Context.current.withSpan(span);
+    return newContext.run(fn);
   }
 
   /// Starts a new [APISpan].
@@ -91,6 +81,9 @@ class APITracer {
   /// - The new span always gets a new span ID
   /// - Parent span ID is set from the parent if any, otherwise invalid
   /// - Trace state and flags are inherited from parent if any
+  ///
+  /// Note: This method does NOT make the span active in the current context.
+  /// To make the span active, use [withSpan] or [withSpanAsync].
   APISpan startSpan(
     String name, {
     Context? context,
@@ -101,7 +94,7 @@ class APITracer {
     List<SpanLink>? links,
     bool? isRecording = true,
   }) {
-    final span = createSpan(
+    return createSpan(
         name: name,
         spanContext: spanContext,
         parentSpan: parentSpan,
@@ -110,10 +103,6 @@ class APITracer {
         links: links,
         context: context,
         isRecording: isRecording);
-
-    // Set the span in context and ensure it's properly propagated
-    Context.current = (context ?? Context.current).setCurrentSpan(span);
-    return span;
   }
 
   /// Creates a span with specific options
@@ -146,15 +135,16 @@ class APITracer {
     bool? isRecording,
     Context? context,
   }) {
+    // Get current context and determine parent
+    final contextOfSpan = context ?? Context.current;
+    final contextSpan = contextOfSpan.span;
+    final effectiveParentSpan = parentSpan ?? contextSpan;
+
     // If spanContext is not provided, we need to create one
     SpanContext effectiveSpanContext;
     if (spanContext != null) {
       effectiveSpanContext = spanContext;
     } else {
-      // Get current context and determine parent
-      final contextOfSpan = context ?? Context.current;
-      final contextSpan = contextOfSpan.span;
-      final effectiveParentSpan = parentSpan ?? contextSpan;
       final contextSpanContext = contextOfSpan.spanContext;
 
       if (contextSpanContext != null &&
@@ -188,8 +178,9 @@ class APITracer {
     }
 
     // Validate parent span and span context compatibility
-    if (parentSpan != null) {
-      if (effectiveSpanContext.traceId != parentSpan.spanContext.traceId) {
+    if (effectiveParentSpan != null) {
+      if (effectiveSpanContext.traceId !=
+          effectiveParentSpan.spanContext.traceId) {
         throw ArgumentError(
             'Parent and child span context traceIds must be the same');
       }
@@ -197,12 +188,12 @@ class APITracer {
       // Ensure child context has a proper parent span ID reference
       if (effectiveSpanContext.parentSpanId == null ||
           effectiveSpanContext.parentSpanId.toString() !=
-              parentSpan.spanContext.spanId.toString()) {
+              effectiveParentSpan.spanContext.spanId.toString()) {
         // Create a new span context with the proper parent span ID
         effectiveSpanContext = OTelFactory.otelFactory!.spanContext(
             traceId: effectiveSpanContext.traceId,
             spanId: effectiveSpanContext.spanId,
-            parentSpanId: parentSpan.spanContext.spanId,
+            parentSpanId: effectiveParentSpan.spanContext.spanId,
             traceFlags: effectiveSpanContext.traceFlags,
             traceState: effectiveSpanContext.traceState,
             isRemote: effectiveSpanContext.isRemote);
@@ -217,7 +208,7 @@ class APITracer {
           schemaUrl: schemaUrl,
           attributes: attributes),
       spanContext: effectiveSpanContext,
-      parentSpan: parentSpan,
+      parentSpan: effectiveParentSpan,
       spanKind: kind,
       attributes: attributes,
       links: links,

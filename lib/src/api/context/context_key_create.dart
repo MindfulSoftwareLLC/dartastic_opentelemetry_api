@@ -11,7 +11,8 @@ class ContextKeyCreate<T> {
   ///
   /// [name] The name for the context key, used for debugging purposes
   /// [id] The unique identifier for this context key
-  static ContextKey<T> create<T>(String name, Uint8List id) {
-    return ContextKey<T>._(name, id);
+  static ContextKey<T> create<T>(String name, Uint8List id,
+      {bool isTransferable = false}) {
+    return ContextKey<T>._(name, id, isTransferable: isTransferable);
   }
 }
