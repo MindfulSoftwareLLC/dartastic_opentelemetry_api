@@ -93,7 +93,6 @@ class OTelAPIFactory extends OTelFactory {
     return ContextKeyCreate.create<T>(name, id, isTransferable: isTransferable);
   }
 
-
   @override
   APITracerProvider tracerProvider(
       {required String endpoint,

@@ -60,7 +60,8 @@ void main() {
       span.addEventNow('data-retrieved',
           OTelAPI.attributes([OTelAPI.attributeString('event-foo', 'bar')]));
       span.end(
-          spanStatus: SpanStatusCode.Ok); //Capitalized Ok to match the OTel spec
+          spanStatus:
+              SpanStatusCode.Ok); //Capitalized Ok to match the OTel spec
     });
 
     //Log Signal
@@ -69,55 +70,53 @@ void main() {
         .getLogger('dart-otel-api-example-service');
 
     logger.emit(eventName: 'heartbeat', body: 'Service is healthy.');
-    
-    // ... rest of logger calls
 
-  logger.emit(
-    eventName: 'user_login',
-    severityNumber: Severity.INFO,
-    body: 'User successfully logged in.',
-    attributes: Attributes.of({
-      'user.id': 42,
-      'auth.method': 'password',
-    }),
-  );
+    logger.emit(
+      eventName: 'user_login',
+      severityNumber: Severity.INFO,
+      body: 'User successfully logged in.',
+      attributes: Attributes.of({
+        'user.id': 42,
+        'auth.method': 'password',
+      }),
+    );
 
-  logger.emit(
-    eventName: 'cache_miss',
-    severityText: 'WARN',
-    body: 'Cache miss for requested key.',
-    attributes: Attributes.of({
-      'cache.key': 'profile_42',
-      'cache.region': 'us-east-1',
-    }),
-  );
+    logger.emit(
+      eventName: 'cache_miss',
+      severityText: 'WARN',
+      body: 'Cache miss for requested key.',
+      attributes: Attributes.of({
+        'cache.key': 'profile_42',
+        'cache.region': 'us-east-1',
+      }),
+    );
 
-  final attrs = {
-    'db.operation': 'update',
-    'db.table': 'orders',
-    'db.rows_affected': 3,
-  }.toAttributes();
+    final attrs = {
+      'db.operation': 'update',
+      'db.table': 'orders',
+      'db.rows_affected': 3,
+    }.toAttributes();
 
-  logger.emit(
-    eventName: 'order_update',
-    severityNumber: Severity.INFO,
-    body: 'Order update completed.',
-    attributes: attrs,
-  );
+    logger.emit(
+      eventName: 'order_update',
+      severityNumber: Severity.INFO,
+      body: 'Order update completed.',
+      attributes: attrs,
+    );
 
-  logger.emit(
-    eventName: 'batch_job_summary',
-    severityNumber: Severity.INFO,
-    body: [
-      {'job': 'resize_images', 'status': 'ok'},
-      {'job': 'generate_thumbnails', 'status': 'ok'},
-      {'job': 'sync_metadata', 'status': 'failed'},
-    ],
-    attributes: Attributes.of({
-      'batch.id': 'batch-2025-11-15-01',
-      'jobs.total': 3,
-    }),
-  );
+    logger.emit(
+      eventName: 'batch_job_summary',
+      severityNumber: Severity.INFO,
+      body: [
+        {'job': 'resize_images', 'status': 'ok'},
+        {'job': 'generate_thumbnails', 'status': 'ok'},
+        {'job': 'sync_metadata', 'status': 'failed'},
+      ],
+      attributes: Attributes.of({
+        'batch.id': 'batch-2025-11-15-01',
+        'jobs.total': 3,
+      }),
+    );
 
     logger.emit(
       eventName: 'payment_failure',

@@ -76,9 +76,11 @@ void main() {
 
       // Create a child span in the context with the parent span
       final testContext = Context.current.withSpan(parentSpan);
-      final childSpan = tracer.createSpan(name: 'child-span', context: testContext);
+      final childSpan =
+          tracer.createSpan(name: 'child-span', context: testContext);
       expect(childSpan, isNotNull);
-      expect(childSpan.spanContext.traceId, equals(parentSpan.spanContext.traceId));
+      expect(childSpan.spanContext.traceId,
+          equals(parentSpan.spanContext.traceId));
     });
 
     test('span with default context takes current context', () {
@@ -94,7 +96,8 @@ void main() {
         final childSpan = tracer.createSpan(name: 'child-span');
 
         // The child span should have the parent context
-        expect(childSpan.spanContext.parentSpanId, equals(parentContext.spanId));
+        expect(
+            childSpan.spanContext.parentSpanId, equals(parentContext.spanId));
         expect(childSpan.spanContext.traceId, equals(parentContext.traceId));
       });
 
@@ -172,7 +175,8 @@ void main() {
       final span = tracer.startSpan('test-span');
 
       expect(span, isNotNull);
-      expect(Context.current.span, isNull); // Should NOT be active automatically
+      expect(
+          Context.current.span, isNull); // Should NOT be active automatically
 
       // Activate it manually via withSpan
       tracer.withSpan(span, () {

@@ -25,9 +25,8 @@ void main() {
         spanId: OTelAPI.spanId(),
       );
 
-      final context = Context.root
-          .withBaggage(baggage)
-          .withSpanContext(spanContext);
+      final context =
+          Context.root.withBaggage(baggage).withSpanContext(spanContext);
 
       final result = await context.runIsolate(() async {
         final currentBaggage = Context.current.baggage;

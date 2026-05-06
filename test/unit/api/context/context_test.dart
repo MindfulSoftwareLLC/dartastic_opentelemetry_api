@@ -36,17 +36,20 @@ void main() {
       final parentSpan = tracer.startSpan('parent-span');
 
       final parentContext = Context.current.withSpan(parentSpan);
-      expect(parentContext.span, equals(parentSpan), reason: 'parentContext should have parentSpan');
-      
+      expect(parentContext.span, equals(parentSpan),
+          reason: 'parentContext should have parentSpan');
+
       APISpan? childSpan;
       parentContext.runSync(() {
-          final current = Context.current;
-          expect(current.span, equals(parentSpan), reason: 'Context.current.span should be parentSpan inside runSync');
-          childSpan = tracer.startSpan('child-span');
+        final current = Context.current;
+        expect(current.span, equals(parentSpan),
+            reason: 'Context.current.span should be parentSpan inside runSync');
+        childSpan = tracer.startSpan('child-span');
       });
 
       expect(childSpan!.parentSpan, equals(parentSpan));
-      expect(childSpan!.spanContext.traceId, equals(parentSpan.spanContext.traceId));
+      expect(childSpan!.spanContext.traceId,
+          equals(parentSpan.spanContext.traceId));
     });
 
     test('maintains context independence', () {
@@ -93,7 +96,7 @@ void main() {
 
       final context = Context.current.withBaggage(baggage);
       context.runSync(() {
-          expect(Context.current.baggage, equals(baggage));
+        expect(Context.current.baggage, equals(baggage));
       });
     });
 
@@ -119,11 +122,11 @@ void main() {
       final tempContext = originalContext.withSpan(tempSpan);
 
       originalContext.runSync(() {
-          expect(Context.current.span, equals(originalSpan));
-          tempContext.runSync(() {
-              expect(Context.current.span, equals(tempSpan));
-          });
-          expect(Context.current.span, equals(originalSpan));
+        expect(Context.current.span, equals(originalSpan));
+        tempContext.runSync(() {
+          expect(Context.current.span, equals(tempSpan));
+        });
+        expect(Context.current.span, equals(originalSpan));
       });
     });
 
@@ -141,7 +144,7 @@ void main() {
 
     test('creating span does not affect context', () {
       final tracer = OTelAPI.tracerProvider().getTracer('test-tracer');
-      
+
       expect(Context.current.span, isNull);
       final span = tracer.startSpan('test-span');
 
@@ -160,7 +163,7 @@ void main() {
       final span = tracer.startSpan('test-span');
 
       final spanContext = Context.current.withSpan(span);
-      
+
       Context.current = spanContext;
       expect(Context.current.span, equals(span));
     });

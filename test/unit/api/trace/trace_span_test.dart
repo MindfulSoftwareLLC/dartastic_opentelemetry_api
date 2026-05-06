@@ -38,7 +38,7 @@ void main() {
 
     // Create root span
     final rootSpan = tracer.startSpan('root-span');
-    
+
     // Create child span inside withSpan to ensure it becomes a child
     APISpan? childSpan;
     tracer.withSpan(rootSpan, () {
@@ -52,8 +52,8 @@ void main() {
         reason: 'Child should inherit trace ID');
 
     // Verify parent span ID relationship
-    expect(
-        childSpan!.spanContext.parentSpanId, equals(rootSpan.spanContext.spanId),
+    expect(childSpan!.spanContext.parentSpanId,
+        equals(rootSpan.spanContext.spanId),
         reason: 'Child should reference parent span ID');
 
     // Verify unique span ID

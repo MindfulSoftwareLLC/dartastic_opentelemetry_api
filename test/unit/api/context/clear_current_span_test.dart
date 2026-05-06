@@ -28,7 +28,7 @@ void main() {
         final newContext = Context.clearCurrentSpan();
 
         // Verify the span is removed from the new context
-        // Note: Context.current still has the span because clearCurrentSpan 
+        // Note: Context.current still has the span because clearCurrentSpan
         // no longer modifies the global static state.
         expect(newContext.span, isNull);
       });
@@ -123,6 +123,5 @@ void main() {
         expect(newContext.span, isNull);
       });
     });
-
   });
 }

@@ -18,8 +18,6 @@ import 'isolate_support.dart'
 
 part 'context_create.dart';
 
-//TODO - make sure any construction with contexts share the same traceId
-
 /// Represents the immutable context containing active spans, baggage, and other data.
 @immutable
 class Context {
@@ -37,14 +35,14 @@ class Context {
 
   /// The root context with no values
   static Context get root {
-    return _rootContext ??= _getAndCacheOtelFactory().context();
+    return _rootContext ??= _getAndCacheOTelFactory().context();
   }
 
   /// Gets and caches the OTelFactory instance.
   ///
   /// Retrieves the global OTelFactory instance and caches it for future use.
   /// Throws a StateError if OpenTelemetry has not been initialized.
-  static OTelFactory _getAndCacheOtelFactory() {
+  static OTelFactory _getAndCacheOTelFactory() {
     if (_otelFactory != null) {
       return _otelFactory!;
     }
@@ -74,7 +72,7 @@ class Context {
   /// within a [Zone]. Setting this static field is unreliable in complex
   /// asynchronous workflows as it does not propagate through [Zone]s.
   @Deprecated(
-      'Use Context.run() or Context.runSync() to ensure correct asynchronous propagation via Zones.')
+      'Use Context.run() or Context.runSync() to ensure correct asynchronous propagation via Zones.  This will be removed before v1.0.0')
   static set current(Context newContext) {
     _currentContext = newContext;
   }
@@ -145,12 +143,10 @@ class Context {
   /// If the current context has no Baggage, this creates a new context with empty Baggage,
   /// sets it as the current context, and returns it.
   static Context currentWithBaggage() {
-    _getAndCacheOtelFactory();
-    if (Context.current.baggage == null) {
-      Context.current =
-          Context.current.copyWithBaggage(OTelFactory.otelFactory!.baggage({}));
-    }
-    return Context.current;
+    _getAndCacheOTelFactory();
+    final current = Context.current;
+    if (current.baggage != null) return current;
+    return current.copyWithBaggage(OTelFactory.otelFactory!.baggage({}));
   }
 
   /// Creates a new Context without a span or span context
@@ -255,7 +251,7 @@ class Context {
       {bool isTransferable = false}) {
     return ContextCreate.create(contextMap: {
       ..._values,
-      _getAndCacheOtelFactory().contextKey<T>(
+      _getAndCacheOTelFactory().contextKey<T>(
           name, ContextKey.generateContextKeyId(),
           isTransferable: isTransferable): contextValue,
     });
@@ -328,37 +324,28 @@ class Context {
   ///
   /// On web platforms, this will run in the current thread as web doesn't support isolates.
   Future<T> runIsolate<T>(Future<T> Function() computation) async {
-    final oldFactory = _getAndCacheOtelFactory();
-    // Capture the parent's factory configuration and serialize it.
+    // Serialize the current factory
+    final oldFactory = _getAndCacheOTelFactory();
     final serializedFactory = oldFactory.serialize();
-
-    // Capture the context and serialize it.
-    final originalContext = current;
     final serializedContext = serialize();
     final factoryFactory = oldFactory.factoryFactory;
 
-    try {
-      return await Isolate.run(() async {
-        // Deserialize the factory and assign it to the static field.
-        OTelFactory.otelFactory =
-            OTelFactory.deserialize(serializedFactory, factoryFactory);
-        // In the new isolate, deserialize the parent's context.
-        final isolateContext = deserialize(serializedContext);
-          Context.current = isolateContext;
-        // Set the static context variables in the new isolate.
-        _currentContext = isolateContext;
-        _rootContext ??= isolateContext;
+    return Isolate.run(() async {
+      // Set up the factory in the new isolate.
+      OTelFactory.otelFactory =
+          OTelFactory.deserialize(serializedFactory, factoryFactory);
 
-        // Run the computation in a zone that carries the deserialized context.
-        return runZoned(
-          () => computation(),
-          zoneValues: {_zoneKey: isolateContext},
-        );
-      });
-    } finally {
-      // Restore the parent's current context after the isolate call returns.
-      _currentContext = originalContext;
-    }
+      // Deserialize the parent's context in the new isolate.
+      final isolateContext = deserialize(serializedContext);
+      _currentContext = isolateContext;
+      _rootContext ??= isolateContext;
+
+      // Run the computation in a zone carrying the deserialized context.
+      return runZoned(
+        computation,
+        zoneValues: {_zoneKey: isolateContext},
+      );
+    });
   }
 
   /// Serializes the context into a JSON-compatible map.
@@ -424,7 +411,7 @@ class Context {
   ///
   /// This is used when receiving context from another isolate.
   static Context deserialize(Map<String, dynamic> values) {
-    _getAndCacheOtelFactory();
+    _getAndCacheOTelFactory();
     var context = _otelFactory!.context();
 
     // Handle baggage if present and not empty
