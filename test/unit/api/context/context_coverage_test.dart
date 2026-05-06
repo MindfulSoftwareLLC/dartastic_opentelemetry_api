@@ -120,7 +120,9 @@ void main() {
       expect(deserialized, isNotNull);
     });
 
-    test('Context.currentWithBaggage returns a context with baggage but does not mutate Context.current', () {
+    test(
+        'Context.currentWithBaggage returns a context with baggage but does not mutate Context.current',
+        () {
       // Initial context has no baggage
       expect(Context.current.baggage, isNull);
 
