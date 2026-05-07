@@ -335,8 +335,28 @@ class Context {
       OTelFactory.otelFactory =
           OTelFactory.deserialize(serializedFactory, factoryFactory);
 
-      // Deserialize the parent's context in the new isolate.
-      final isolateContext = deserialize(serializedContext);
+      // Deserialize the parent's context in the new isolate. Per the OTel
+      // spec ([trace/api.md §SpanContext]: "Each propagators' deserialization
+      // must set IsRemote to true on a parent SpanContext"), upgrade the
+      // propagated SpanContext to isRemote=true on the receiving side — same
+      // semantic as a SpanContext extracted from W3C trace-context HTTP
+      // headers. Crossing an isolate boundary is the same kind of process
+      // boundary.
+      final deserialized = deserialize(serializedContext);
+      final propagatedSpanContext = deserialized.spanContext;
+      final isolateContext =
+          (propagatedSpanContext != null && !propagatedSpanContext.isRemote)
+              ? deserialized.copyWithSpanContext(
+                  OTelFactory.otelFactory!.spanContext(
+                    traceId: propagatedSpanContext.traceId,
+                    spanId: propagatedSpanContext.spanId,
+                    parentSpanId: propagatedSpanContext.parentSpanId,
+                    traceFlags: propagatedSpanContext.traceFlags,
+                    traceState: propagatedSpanContext.traceState,
+                    isRemote: true,
+                  ),
+                )
+              : deserialized;
       _currentContext = isolateContext;
       _rootContext ??= isolateContext;
 
@@ -423,7 +443,9 @@ class Context {
       }
     }
 
-    // Handle span context if present and not null
+    // Handle span context if present and not null. Round-trip-faithful:
+    // isRemote is preserved as serialized. The remote-on-receiving-side
+    // override for cross-isolate transfer happens in [runIsolate].
     if (values.containsKey('spanContext')) {
       final spanContextValue = values['spanContext'];
       if (spanContextValue is Map<String, dynamic>) {

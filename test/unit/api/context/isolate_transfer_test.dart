@@ -44,6 +44,41 @@ void main() {
       expect(result['spanId'], equals(spanContext.spanId.toString()));
     });
 
+    test('SpanContext is marked isRemote=true after crossing isolate boundary',
+        () async {
+      // A SpanContext created in the parent isolate is by definition local
+      // (isRemote=false). When it crosses an isolate boundary via runIsolate,
+      // the receiving isolate should treat it as remote — otherwise
+      // tracer.startSpan in the new isolate falls into its "no parent"
+      // branch and creates a fresh root span instead of a child of the
+      // parent's span. This is the same semantic as W3C trace context
+      // extracted from HTTP headers.
+      final localSpanContext = OTelAPI.spanContext(
+        traceId: OTelAPI.traceId(),
+        spanId: OTelAPI.spanId(),
+        // Explicitly local in the parent isolate.
+      );
+      expect(localSpanContext.isRemote, isFalse,
+          reason: 'sanity: local SpanContext should not be remote');
+
+      final context = Context.root.withSpanContext(localSpanContext);
+
+      final result = await context.runIsolate(() async {
+        final received = Context.current.spanContext;
+        return {
+          'traceId': received?.traceId.toString(),
+          'spanId': received?.spanId.toString(),
+          'isRemote': received?.isRemote,
+        };
+      });
+
+      expect(result['traceId'], equals(localSpanContext.traceId.toString()));
+      expect(result['spanId'], equals(localSpanContext.spanId.toString()));
+      expect(result['isRemote'], isTrue,
+          reason:
+              'SpanContext crossing an isolate boundary must be marked isRemote=true so tracer.startSpan in the receiving isolate parents to it.');
+    });
+
     test('transfers custom keys only if marked as transferable', () async {
       final transferableKey =
           OTelAPI.contextKey<String>('transferable', isTransferable: true);
