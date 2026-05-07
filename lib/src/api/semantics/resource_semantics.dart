@@ -481,6 +481,46 @@ enum RPCResource implements OTelSemantic {
   const RPCResource(this.key);
 }
 
+// Server Semantic Resource
+/// [Specification](https://opentelemetry.io/docs/specs/semconv/attributes-registry/server/)
+enum ServerResource implements OTelSemantic {
+  serverAddress('server.address'),
+  serverPort('server.port');
+
+  @override
+  final String key;
+
+  @override
+  String toString() => key;
+
+  const ServerResource(this.key);
+}
+
+// URL Semantic Resource
+/// [Specification](https://opentelemetry.io/docs/specs/semconv/attributes-registry/url/)
+enum UrlResource implements OTelSemantic {
+  urlScheme('url.scheme'),
+  urlPath('url.path'),
+  urlQuery('url.query'),
+  urlFragment('url.fragment'),
+  urlFull('url.full'),
+  urlOriginal('url.original'),
+  urlTemplate('url.template'),
+  urlDomain('url.domain'),
+  urlPort('url.port'),
+  urlSubdomain('url.subdomain'),
+  urlRegisteredDomain('url.registered_domain'),
+  urlTopLevelDomain('url.top_level_domain');
+
+  @override
+  final String key;
+
+  @override
+  String toString() => key;
+
+  const UrlResource(this.key);
+}
+
 // Service Semantic Resource
 /// [Specification](https://opentelemetry.io/docs/specs/semconv/resource/#service)
 enum ServiceResource implements OTelSemantic {
