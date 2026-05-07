@@ -5,8 +5,8 @@ This document outlines the steps to follow when publishing a new version of the 
 ## Pre-release Checklist
 
 ### Code Quality
-- [ ] All tests are passing (`dart test`)
-- [ ] Code coverage is at acceptable levels (>90%)
+- [ ] All tests are passing (`./tool/test.sh`)
+- [ ] Code coverage is at acceptable levels (>90%) (`./tool/coverage.sh`)
 - [ ] No lint warnings (`dart analyze`)
 - [ ] Code is properly formatted (`dart format .`)
 - [ ] Package scores well on `pana` analysis
@@ -31,8 +31,8 @@ This document outlines the steps to follow when publishing a new version of the 
 1. **Prepare Release**
    - [ ] Update version in `pubspec.yaml`
    - [ ] Update CHANGELOG.md with release date and changes
-   - [ ] Create a git tag for the version (e.g., `git tag v0.9.0`)
-   - [ ] Push the tag to the repository (`git push origin v0.9.0`)
+   - [ ] Create a git tag for the version (e.g., `git tag v1.0.0`)
+   - [ ] Push the tag to the repository (`git push origin v1.0.0`)
 
 2. **Publish to pub.dev**
    - [ ] Run final `dart pub publish --dry-run` check

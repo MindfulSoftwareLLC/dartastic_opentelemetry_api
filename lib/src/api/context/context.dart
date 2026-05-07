@@ -72,7 +72,7 @@ class Context {
   /// within a [Zone]. Setting this static field is unreliable in complex
   /// asynchronous workflows as it does not propagate through [Zone]s.
   @Deprecated(
-      'Use Context.run() or Context.runSync() to ensure correct asynchronous propagation via Zones.  This will be removed before v1.0.0')
+      'Use Context.run() or Context.runSync() to ensure correct asynchronous propagation via Zones. This setter will be removed in v1.0.0.')
   static set current(Context newContext) {
     _currentContext = newContext;
   }

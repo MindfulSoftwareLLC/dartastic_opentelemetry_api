@@ -7,12 +7,12 @@
 [![OpenTelemetry API Specification](https://img.shields.io/badge/OpenTelemetry%20API-Specification-blueviolet)](https://opentelemetry.io/docs/specs/otel/)
 
 A Dart implementation of the [OpenTelemetry](https://opentelemetry.io/) API that strictly adheres to the 
-OpenTelemetry (OTel) specification. This package provides a vendor-neutral, implementation-agnostic API for telemetry 
-instrumentation in Dart and Flutter applications.
+OpenTelemetry (OTel) specification. This package provides a vendor-neutral, implementation-agnostic API for 
+observability instrumentation in Dart and Flutter applications.
 
 ## Overview
 
-This OpenTelemetry API for Dart exists as a standalone library to strictly adhere to the OpenTelemetry specification 
+Developers generally do not code with the API, they code with the SDK via the OTel class. This OpenTelemetry API for Dart exists as a standalone library to strictly adhere to the OpenTelemetry specification 
 which separates API and SDK concerns. The specification requires that the API can be dropped into an app without an SDK 
 and it will work in a no-op fashion.
 
@@ -24,17 +24,28 @@ To instrument Flutter applications use the [Flutterrific OpenTelemetry SDK](http
 `flutterrific_opentelemetry` to gain almost automatic instrumentation for app routes, error catching 
 and web vitals metrics and much more. 
 
-[Dartastic.io](https://dartastic.io) provides OpenTelemetry Observability backends for Flutter apps, Dart backends and 
-any other service or process that produces OpenTelemetry. Dartastic.io is an observability background built on 
-open standards, catering specifically to Flutter and Dart applications with custom dashboards and the ability to show Dart source code lines
-and function calls from production errors and logs. Dartastic.io comes with a generous data parameters, various levels of free, paid and enterprise support and 
-additional pro library features that are not available in the open source offering including telemetry 
-that integrates with native code and Real-Time User Monitoring of Flutter apps, training and consulting. 
+## Commercial Support
+
+[Dartastic.io](https://dartastic.io) provides:
+- Dartastic Cloud - an OpenTelemetry Observability platform integrated with Dart backends and Flutter apps.
+  - Facilities to get a source stack trace from production errors including Flutter mobile and web.
+  - Custom dashboards for Flutter OTel
+- Dartastic Pub Dev - a private pub dev server
+  - access Dartastic releases available to subscribers
+    - access to packages with advanced features not available in the open source offering
+    - access instrumented versions of Dart and Flutter libraries, such as Dio
+  - integrated with Dart build systems and Dartastic Cloud to show Dart source code lines and function calls from production error logs.
+  - allows you to share your packages and plugins privately, within your team or with your partners or customers.
+- Various levels of free, paid, and enterprise support.
+- Training on OTel for Dart and Flutter apps.
+- Professional consulting in Dart, Flutter and Observability.
+
+## About the API - use the SDK
 
 This `dartastic_opentelemetry_api` OTel API for Dart exists as a standalone library to strictly adhere to the
 OpenTelemetry specification which separates API and the SDK. The specification
 requires that the API can be dropped into an app without an SDK and it will work in a no-op fashion. 
-You could include just `dartastic_opentelemetry_api` in your pubspec.yaml top get a no-op implementation
+You could include just `dartastic_opentelemetry_api` in your pubspec.yaml to get a no-op implementation
 as required by the OTel specification, though this would be a rare use case. Typically, 
 backend instrumenters will include `dartastic_opentelemetry` in their pubspec.yaml
 and this dartastic_opentelemetry_api will be a transitive dependency.  Flutter instrumentation developers 
@@ -53,7 +64,7 @@ for an example.
   - Most, if not all, MAY requirements are implemented
 - ✅ **Supported signal types**:
   - Traces
-  - Metric 
+  - Metrics
   - Logs
 - ✅ **Fully typed API** with strong Dart type safety
 - ✅ **Cross-platform compatibility** - works across all Dart environments (Servers, Mobile, Web, Desktop)
@@ -72,7 +83,7 @@ Add the package to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  dartastic_opentelemetry_api: ^1.0.0-alpha
+  dartastic_opentelemetry_api: ^1.0.0-beta
 ```
 
 Then run:
@@ -88,13 +99,13 @@ This API is rarely used without an SDK. For a fully functional OpenTelemetry imp
 - **Dart Backend Applications**: Use the [Dartastic OTel SDK](https://pub.dev/packages/dartastic_opentelemetry).
   ```yaml
   dependencies:
-    dartastic_opentelemetry: ^1.0.0-alpha
+    dartastic_opentelemetry: ^1.0.0
   ```
 
 - **Flutter Applications**: Use the [Flutterific OTel SDK](https://pub.dev/packages/flutterrific_opentelemetry).
   ```yaml
   dependencies:
-    flutterrific_opentelemetry: ^1.0.0-alpha
+    flutterrific_opentelemetry: ^1.0.0
   ```
 
 Each layer exports all the relevant classes to the next layer so you only have to include one library in your pubspec.yaml.
@@ -105,7 +116,7 @@ If you need a no-op OpenTelemetry implementation (unusual but compliant with the
 
 ```yaml
 dependencies:
-  dartastic_opentelemetry_api: ^1.0.0-alpha
+  dartastic_opentelemetry_api: ^1.0.0-beta
 ```
 
 ## Usage
@@ -114,9 +125,9 @@ The entrypoint for almost all object creation is the `OTelAPI` class. Again this
 use the `OTel` class from `dartastic_opentelemetry` which has the same methods with addition methods
 for SDK objects like `Resource` and `SpanProcessor`.
 
-All public constructors are private except the `OTelAPIFactory`.  Use the `OTelAPI` to create API objects. Some
-convenience functions such as `Attributes.of` and `copyWith`, `copyWithout` and `toJson` methods on objects such 
-as `Attributes`, `Baggage`, and `Context` 
+All public constructors are private except the `OTelAPIFactory`. Use `OTelAPI` to create API objects.
+Convenience static factories such as `Attributes.of`, plus `copyWith`, `copyWithout`, and `toJson`
+methods, are provided on objects such as `Attributes`, `Baggage`, and `Context`.
 
 In order to strictly comply with the limited types the OpenTelemetry specification allows
 for `Attribute`s there's no generic `OTelAPI.attribute<T>` creation method and instead, to provide a
@@ -126,40 +137,44 @@ i.e. `OTelAPI.attributeString('foo', 'bar')`, `OTelAPI.attributeIntList('baz', [
 ## Usage Examples
 
 ### Basic Tracing Example
-This is a NOOP when using OTelAPI, use the OTel from SDK to actually real traces.
+This is a no-op when using `OTelAPI`. Use `OTel` from the SDK to record real traces.
 
 ```dart
 import 'package:dartastic_opentelemetry_api/dartastic_opentelemetry_api.dart';
 
 void main() {
-  // Create a tracer
+  // Get a tracer.
   final tracer = OTelAPI.tracerProvider().getTracer('example-service');
-  
-  // Create and use a span
-  Span rootSpan = tracer.startSpan('main-operation');
-  try {
-    // Your business logic here
-    rootSpan.setBoolAttribute('operation.success', true);
-    
-    // Create a child span for a sub-operation
-    Span childSpan = tracer.startSpan('sub-operation');
+
+  // tracer.startSpan() does NOT activate the span (per the OpenTelemetry
+  // specification). Use tracer.withSpan to make a span active for a scope
+  // so that any spans started inside are parented to it via the active
+  // context. Use withSpanAsync for asynchronous scopes.
+  final rootSpan = tracer.startSpan('main-operation');
+  tracer.withSpan(rootSpan, () {
     try {
-      // Sub-operation logic
-      childSpan.setIntAttribute('operation.value', 42);
+      rootSpan.setBoolAttribute('operation.success', true);
+
+      // Child span — parented to rootSpan via the active context.
+      // Wrap each span in try/finally so it's always ended, even on error.
+      final childSpan = tracer.startSpan('sub-operation');
+      try {
+        tracer.withSpan(childSpan, () {
+          childSpan.setIntAttribute('operation.value', 42);
+        });
+      } finally {
+        childSpan.end();
+      }
+    } catch (e, stackTrace) {
+      rootSpan
+        ..setStatus(SpanStatusCode.Error, e.toString())
+        ..recordException(e, stackTrace: stackTrace);
+      rethrow;
     } finally {
-      childSpan.end();
+      // end() defaults the status to Ok if it was never set.
+      rootSpan.end();
     }
-  } catch (e, stackTrace) {
-    // Record the error
-    rootSpan
-      ..setStatus(SpanStatusCode.error, e.toString())
-      ..recordException(e, stackTrace: stackTrace);
-    rethrow;
-  } finally {
-    rootSpan.setStatus(SpanStatusCode.Ok);
-    // Always end the span
-    rootSpan.end();
-  }
+  });
 }
 ```
 
@@ -178,11 +193,12 @@ void main() {
   // Create a context with this baggage
   Context context = OTelAPI.context(baggage: baggage);
   
-  // Run code within this context to ensure baggage is available
+  // Activate the context for a scope. runSync uses Zones, so the baggage
+  // propagates to nested code, including any async callbacks started inside.
   context.runSync(() {
-    // Later, retrieve baggage from current context
-    Baggage currentBaggage = Baggage.fromContext(Context.current);
-    String? userId = currentBaggage.getEntry('userId')?.value;
+    // Read baggage off the active context.
+    final currentBaggage = Context.current.baggage;
+    final userId = currentBaggage?.getEntry('userId')?.value;
   });
 }
 ```
@@ -223,20 +239,20 @@ void main() {
 }
 ```
 
-### Working with logging 
-This is a NOOP when using OTelAPI, use the OTel SDK to actually real logs.
+### Working with logging
+This is a no-op when using `OTelAPI`. Use the OTel SDK to emit real logs.
 ```dart
 import 'package:dartastic_opentelemetry_api/dartastic_opentelemetry_api.dart';
 
-final loggerProvider = OTelAPI.loggerProvider();
-final logger = loggerProvider.getLogger('dart-otel-api-faux-db-service');
+final otelLoggerProvider = OTelAPI.loggerProvider();
+final otelLogger = otelLoggerProvider.getLogger('dart-otel-api-faux-db-service');
 final attrs = {
   'db.operation': 'update',
   'db.table': 'orders',
   'db.rows_affected': 3,
 }.toAttributes();
 
-logger.emit(
+otelLogger.emit(
   eventName: 'order_update',
   severityNumber: Severity.INFO,
   body: 'Order update completed.',
@@ -256,7 +272,7 @@ See the `/example` folder for more complete examples.
 - **Span** - Represents a unit of work or operation
 - **Context** - Carries execution metadata across API boundaries
 - **Baggage** - Provides a mechanism to propagate key-value pairs alongside a context
-- **Attributes** - Represent keyvalue pairs with a known set of value types
+- **Attributes** - Represent key-value pairs with a known set of value types
 
 ### Important OTelAPI Methods
 
@@ -287,18 +303,6 @@ This project aims to align with Cloud Native Computing Foundation (CNCF) best pr
 - **Specification compliance** - Strictly follows the OpenTelemetry specification
 - **Vendor neutrality** - Provides a foundation for any OpenTelemetry SDK implementation
 
-## Commercial Support
-
-[Dartastic.io](https://dartastic.io) provides an OpenTelemetry Observability backend for Flutter apps, Dart backends, 
-and any other service or process that produces OpenTelemetry data. Dartastic.io is built on open standards, specifically catering to Flutter and Dart applications with the ability to show Dart source code lines and function calls from production errors and logs.
-
-Dartastic.io offers:
-- A generous free tier 
-- Custom dashboards for Flutter OTel
-- Facilities to get a source stack trace from production errors
-- Various levels of free, paid, and enterprise support
-- Private packages with advanced features not available in the open source offering
-- Native code integration and Real-Time User Monitoring for Flutter apps
 
 ## For Instrumentation Library Developers
 
@@ -309,7 +313,7 @@ To create your own SDK implementation, implement the `OTelFactory` interface. Se
 `OTelSDKFactory` for an example.
 
 ## AI Usage
-Practically all code in Dartastic was originally generated by using Claude.
+Practically all code in Dartastic was originally generated by Claude.
 EVERY character is reviewed by a human for compliance with the OTel spec. 
 A vast amount of code was edited by hand.  
 Tests may need improved quality.
