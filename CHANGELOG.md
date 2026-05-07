@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.0-beta.1] - 2026-05-07
+
+### Fixed
+- `Context.runIsolate()` now marks the deserialized `SpanContext` as `isRemote = true` on the receiving side. Previously the parent isolate's local SpanContext (with `isRemote = false`) was restored verbatim, so `tracer.startSpan` in the new isolate fell into the "no parent" branch and produced a fresh root span instead of a child of the parent. This now matches the W3C trace-context-from-HTTP semantic — a SpanContext that crossed a process or isolate boundary is treated as remote and parented correctly.
+
 ## [1.0.0-beta] - 2026-05-07
 
 ### Added
