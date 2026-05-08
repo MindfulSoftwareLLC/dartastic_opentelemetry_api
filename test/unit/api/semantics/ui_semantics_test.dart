@@ -92,7 +92,7 @@ void main() {
 
     test('UserSemantics toString returns key', () {
       expect(UserSemantics.userId.toString(), equals('user.id'));
-      expect(UserSemantics.userRole.toString(), equals('user.role'));
+      expect(UserSemantics.userRoles.toString(), equals('user.roles'));
     });
   });
 }
