@@ -93,7 +93,11 @@ enum DatabaseResource implements OTelSemantic {
   dbUser('db.user'),
   dbName('db.name'),
   dbStatement('db.statement'),
-  dbOperation('db.operation');
+  dbOperation('db.operation'),
+  // Current OTel semconv (replaces deprecated `db.sql.table`).
+  dbCollectionName('db.collection.name'),
+  // Current OTel semconv for "rows returned by the operation".
+  dbResponseReturnedRows('db.response.returned_rows');
 
   @override
   final String key;

@@ -86,14 +86,12 @@ class APISpan {
       if (spanContext.parentSpanId != parentSpan.spanContext.spanId) {
         throw ArgumentError('Parent span ID must match');
       }
-    } else {
-      // Root spans should have an invalid (all zeros) parent span ID
-      if (spanContext.parentSpanId != null &&
-          spanContext.parentSpanId!.bytes == SpanId.invalidSpanIdBytes) {
-        throw ArgumentError(
-            'Root spans must have invalid (all zeros) parent span ID or no parent span ID');
-      }
     }
+    // No `else` branch: when parentSpan is null, the span may legitimately
+    // have any parentSpanId (null, the invalid all-zeros marker, OR a
+    // valid remote span id propagated from an upstream context). The
+    // remote-parent case is a normal W3C trace-context flow and must
+    // not be rejected here.
   }
 
   /// The name of this [APISpan].

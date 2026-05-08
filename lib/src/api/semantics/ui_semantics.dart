@@ -299,7 +299,10 @@ enum SessionViewSemantics implements OTelSemantic {
 /// RUM Semantics related to user information
 enum UserSemantics implements OTelSemantic {
   userId('user.id'),
-  userRole('user.role'),
+  // Array of roles a user is assigned. The singular `user.role` is an
+  // anti-pattern — users typically have multiple roles, so always model
+  // this as a list.
+  userRoles('user.roles'),
   userSession('user.session');
 
   @override
