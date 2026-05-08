@@ -3,23 +3,64 @@
 
 import 'package:dartastic_opentelemetry_api/dartastic_opentelemetry_api.dart';
 
+/// Example-only attribute keys used in this file. Prefer enums over raw
+/// strings — the API's built-in semantic-convention enums (UserSemantics,
+/// HttpResource, DatabaseResource, etc.) cover the OTel-defined keys; this
+/// enum holds the keys that aren't in any convention. In your own app,
+/// rename this to something domain-specific (e.g. `CheckoutAttribute`).
+enum ExampleAttribute implements OTelSemantic {
+  // Generic demo keys showing attribute types.
+  exampleString('example.string'),
+  exampleBool('example.bool'),
+  exampleInt('example.int'),
+  exampleDouble('example.double'),
+  exampleStringList('example.string_list'),
+  exampleBoolList('example.bool_list'),
+  exampleIntList('example.int_list'),
+  exampleDoubleList('example.double_list'),
+  eventFoo('event.foo'),
+  // Auth / cache / batch / payment / retry — none of these are in the
+  // OTel semantic conventions, so they're app-defined here.
+  authMethod('auth.method'),
+  cacheKey('cache.key'),
+  cacheRegion('cache.region'),
+  batchId('batch.id'),
+  jobsTotal('jobs.total'),
+  paymentUserId('payment.user_id'),
+  paymentMethod('payment.method'),
+  paymentGateway('payment.gateway'),
+  retryCount('retry.count');
+
+  @override
+  final String key;
+
+  @override
+  String toString() => key;
+
+  const ExampleAttribute(this.key);
+}
+
 /// The API does nothing on its own; it's more typical to use the SDK.
 /// However, as required by the OpenTelemetry Specification, the API
 /// works (as a no-op) without the SDK installed.
 void main() {
   OTelAPI.initialize(endpoint: 'http://localhost:4317');
-  final stringAttribute = OTelAPI.attributeString('example_string_key', 'foo');
-  final boolAttribute = OTelAPI.attributeBool('example_bool_key', true);
-  final intAttr = OTelAPI.attributeInt('example_int_key', 42);
-  final doubleAttribute = OTelAPI.attributeDouble('example_double_key', 42.1);
+  // Use typed enum keys — never raw strings.
+  final stringAttribute =
+      OTelAPI.attributeString(ExampleAttribute.exampleString.key, 'foo');
+  final boolAttribute =
+      OTelAPI.attributeBool(ExampleAttribute.exampleBool.key, true);
+  final intAttr = OTelAPI.attributeInt(ExampleAttribute.exampleInt.key, 42);
+  final doubleAttribute =
+      OTelAPI.attributeDouble(ExampleAttribute.exampleDouble.key, 42.1);
   final stringListAttribute = OTelAPI.attributeStringList(
-      'example_string_list_key', ['foo', 'bar', 'baz']);
-  final boolListAttribute =
-      OTelAPI.attributeBoolList('example_bool_key', [true, false, true]);
-  final intListAttr =
-      OTelAPI.attributeIntList('example_int_list_key', [42, 43, 44]);
+      ExampleAttribute.exampleStringList.key, ['foo', 'bar', 'baz']);
+  final boolListAttribute = OTelAPI.attributeBoolList(
+      ExampleAttribute.exampleBoolList.key, [true, false, true]);
+  final intListAttr = OTelAPI.attributeIntList(
+      ExampleAttribute.exampleIntList.key, [42, 43, 44]);
   final doubleListAttribute = OTelAPI.attributeDoubleList(
-      'example_double_list_key', [42.0, 42.1, 42.2]);
+      ExampleAttribute.exampleDoubleList.key, [42.0, 42.1, 42.2]);
 
   OTelAPI.attributes([
     stringAttribute,
@@ -41,28 +82,41 @@ void main() {
     final tracer = defaultGlobalAPINOOPTracerProvider
         .getTracer('dart-otel-api-example-service');
 
-    // Use withSpan to make the span active within its scope
+    // Use withSpan to make the span active within its scope. Wrap the work
+    // in try/catch/finally so the span is always ended and any thrown
+    // exception is recorded with SpanStatusCode.Error per the OTel spec.
     final span = tracer.startSpan('doSomeExampleSpan');
-    tracer.withSpan(span, () {
-      // Same thing as above, more simply but will some loss of type checking
-      // If your Map has anything but the types above and exception will be thrown.
-      final equalToTheAbove = OTelAPI.attributesFromMap({
-        'example_string_key': 'foo',
-        'example_bool_key': true,
-        'example_int_key': 42,
-        'example_double_key': 42.1,
-        'example_string_list_key': ['foo', 'bar', 'baz'],
-        'example_bool_list_key': [true, false, true],
-        'example_int_list_key': [42, 43, 44],
-        'example_double_list_key': [42.0, 42.1, 42.2]
+    try {
+      tracer.withSpan(span, () {
+        // Same thing as above, more simply but with some loss of type
+        // checking. If your Map has anything but the types above an
+        // exception will be thrown.
+        final equalToTheAbove = OTelAPI.attributesFromMap({
+          ExampleAttribute.exampleString.key: 'foo',
+          ExampleAttribute.exampleBool.key: true,
+          ExampleAttribute.exampleInt.key: 42,
+          ExampleAttribute.exampleDouble.key: 42.1,
+          ExampleAttribute.exampleStringList.key: ['foo', 'bar', 'baz'],
+          ExampleAttribute.exampleBoolList.key: [true, false, true],
+          ExampleAttribute.exampleIntList.key: [42, 43, 44],
+          ExampleAttribute.exampleDoubleList.key: [42.0, 42.1, 42.2],
+        });
+        span.attributes = equalToTheAbove;
+        span.addEventNow(
+          'data-retrieved',
+          OTelAPI.attributes(
+              [OTelAPI.attributeString(ExampleAttribute.eventFoo.key, 'bar')]),
+        );
       });
-      span.attributes = equalToTheAbove;
-      span.addEventNow('data-retrieved',
-          OTelAPI.attributes([OTelAPI.attributeString('event-foo', 'bar')]));
-      span.end(
-          spanStatus:
-              SpanStatusCode.Ok); //Capitalized Ok to match the OTel spec
-    });
+      // Capitalized Ok to match the OTel spec.
+      span.setStatus(SpanStatusCode.Ok);
+    } catch (e, stackTrace) {
+      span.recordException(e, stackTrace: stackTrace);
+      span.setStatus(SpanStatusCode.Error, e.toString());
+      rethrow;
+    } finally {
+      span.end();
+    }
 
     //Log Signal
     final defaultGlobalAPINOOPLoggerProvider = OTelAPI.loggerProvider();
@@ -76,8 +130,8 @@ void main() {
       severityNumber: Severity.INFO,
       body: 'User successfully logged in.',
       attributes: Attributes.of({
-        'user.id': 42,
-        'auth.method': 'password',
+        UserSemantics.userId.key: 42,
+        ExampleAttribute.authMethod.key: 'password',
       }),
     );
 
@@ -86,15 +140,15 @@ void main() {
       severityText: 'WARN',
       body: 'Cache miss for requested key.',
       attributes: Attributes.of({
-        'cache.key': 'profile_42',
-        'cache.region': 'us-east-1',
+        ExampleAttribute.cacheKey.key: 'profile_42',
+        ExampleAttribute.cacheRegion.key: 'us-east-1',
       }),
     );
 
     final attrs = {
-      'db.operation': 'update',
-      'db.table': 'orders',
-      'db.rows_affected': 3,
+      DatabaseResource.dbOperation.key: 'update',
+      DatabaseResource.dbCollectionName.key: 'orders',
+      DatabaseResource.dbResponseReturnedRows.key: 3,
     }.toAttributes();
 
     logger.emit(
@@ -107,14 +161,17 @@ void main() {
     logger.emit(
       eventName: 'batch_job_summary',
       severityNumber: Severity.INFO,
+      // Body is a user-defined structure (per the OTel logs spec) — its
+      // inner keys are not span/log attributes, so they don't go through
+      // an OTelSemantic enum.
       body: [
         {'job': 'resize_images', 'status': 'ok'},
         {'job': 'generate_thumbnails', 'status': 'ok'},
         {'job': 'sync_metadata', 'status': 'failed'},
       ],
       attributes: Attributes.of({
-        'batch.id': 'batch-2025-11-15-01',
-        'jobs.total': 3,
+        ExampleAttribute.batchId.key: 'batch-2025-11-15-01',
+        ExampleAttribute.jobsTotal.key: 3,
       }),
     );
 
@@ -123,10 +180,10 @@ void main() {
       severityText: 'ERROR',
       body: 'Payment could not be processed.',
       attributes: Attributes.of({
-        'payment.user_id': 101,
-        'payment.method': 'credit_card',
-        'payment.gateway': 'stripe',
-        'retry.count': 2,
+        ExampleAttribute.paymentUserId.key: 101,
+        ExampleAttribute.paymentMethod.key: 'credit_card',
+        ExampleAttribute.paymentGateway.key: 'stripe',
+        ExampleAttribute.retryCount.key: 2,
       }),
     );
   });

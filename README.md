@@ -139,8 +139,32 @@ i.e. `OTelAPI.attributeString('foo', 'bar')`, `OTelAPI.attributeIntList('baz', [
 ### Basic Tracing Example
 This is a no-op when using `OTelAPI`. Use `OTel` from the SDK to record real traces.
 
+Prefer typed enum keys over raw strings for attributes. The API ships enums for every
+namespace in the [OTel semantic conventions](https://opentelemetry.io/docs/specs/semconv/)
+(`HttpResource`, `UrlResource`, `ServerResource`, `DatabaseResource`, `UserSemantics`, etc.)
+For app-specific attributes that aren't in a convention, define your own enum implementing
+`OTelSemantic`.
+
 ```dart
 import 'package:dartastic_opentelemetry_api/dartastic_opentelemetry_api.dart';
+
+/// Example-only attribute keys for things not in the OTel semantic
+/// conventions. Rename this in your own code (e.g. `CheckoutAttribute`)
+/// so the names reflect your domain.
+enum ExampleAttribute implements OTelSemantic {
+  operationSuccess('operation.success'),
+  operationValue('operation.value'),
+  retryCount('retry.count'),
+  requestDuration('request.duration'),
+  requestSuccess('request.success'),
+  tags('tags');
+
+  @override
+  final String key;
+  @override
+  String toString() => key;
+  const ExampleAttribute(this.key);
+}
 
 void main() {
   // Get a tracer.
@@ -151,30 +175,36 @@ void main() {
   // so that any spans started inside are parented to it via the active
   // context. Use withSpanAsync for asynchronous scopes.
   final rootSpan = tracer.startSpan('main-operation');
-  tracer.withSpan(rootSpan, () {
-    try {
-      rootSpan.setBoolAttribute('operation.success', true);
+  try {
+    tracer.withSpan(rootSpan, () {
+      rootSpan.setBoolAttribute(ExampleAttribute.operationSuccess.key, true);
 
-      // Child span — parented to rootSpan via the active context.
-      // Wrap each span in try/finally so it's always ended, even on error.
+      // Child span — parented to rootSpan via the active context. Wrap
+      // each span in its own try/catch/finally so exceptions are recorded
+      // on the right span and the span is always ended.
       final childSpan = tracer.startSpan('sub-operation');
       try {
         tracer.withSpan(childSpan, () {
-          childSpan.setIntAttribute('operation.value', 42);
+          childSpan.setIntAttribute(ExampleAttribute.operationValue.key, 42);
         });
+        childSpan.setStatus(SpanStatusCode.Ok);
+      } catch (e, stackTrace) {
+        // Per the OTel spec: recordException first, then setStatus(Error).
+        childSpan.recordException(e, stackTrace: stackTrace);
+        childSpan.setStatus(SpanStatusCode.Error, e.toString());
+        rethrow;
       } finally {
         childSpan.end();
       }
-    } catch (e, stackTrace) {
-      rootSpan
-        ..setStatus(SpanStatusCode.Error, e.toString())
-        ..recordException(e, stackTrace: stackTrace);
-      rethrow;
-    } finally {
-      // end() defaults the status to Ok if it was never set.
-      rootSpan.end();
-    }
-  });
+    });
+    rootSpan.setStatus(SpanStatusCode.Ok);
+  } catch (e, stackTrace) {
+    rootSpan.recordException(e, stackTrace: stackTrace);
+    rootSpan.setStatus(SpanStatusCode.Error, e.toString());
+    rethrow;
+  } finally {
+    rootSpan.end();
+  }
 }
 ```
 
@@ -218,24 +248,27 @@ void main() {
     'example_int_list_key': [42, 43, 44],
   });
 
-  // Using the typesafe API methods
+  // Using the typesafe API methods. Mix API convention enums (e.g.
+  // ServiceResource) with your own enum (ExampleAttribute) for
+  // non-convention keys — never use raw strings.
   Attributes attributes = OTelAPI.attributes([
-    OTelAPI.attributeString('service.name', 'payment-processor'),
-    OTelAPI.attributeInt('retry.count', 3),
-    OTelAPI.attributeDouble('request.duration', 0.125),
-    OTelAPI.attributeBool('request.success', true),
-    OTelAPI.attributeStringList('tags', ['payment', 'critical']),
+    OTelAPI.attributeString(
+        ServiceResource.serviceName.key, 'payment-processor'),
+    OTelAPI.attributeInt(ExampleAttribute.retryCount.key, 3),
+    OTelAPI.attributeDouble(ExampleAttribute.requestDuration.key, 0.125),
+    OTelAPI.attributeBool(ExampleAttribute.requestSuccess.key, true),
+    OTelAPI.attributeStringList(
+        ExampleAttribute.tags.key, ['payment', 'critical']),
   ]);
-  
-  // Using Map extension
+
+  // Using Map extension — same enum-key principle.
   Attributes fromMap = <String, Object>{
-    'http.method': 'GET',
-    'http.url': 'https://api.example.com/users',
-    'http.status_code': 200,
-    'environment': 'production',
-    'user.roles': ['admin', 'operator'],
+    HttpResource.requestMethod.key: 'GET',
+    UrlResource.urlFull.key: 'https://api.example.com/users',
+    HttpResource.responseStatusCode.key: 200,
+    DeploymentResource.deploymentEnvironmentName.key: 'production',
+    UserSemantics.userRoles.key: ['admin', 'operator'],
   }.toAttributes();
-  
 }
 ```
 
@@ -247,9 +280,9 @@ import 'package:dartastic_opentelemetry_api/dartastic_opentelemetry_api.dart';
 final otelLoggerProvider = OTelAPI.loggerProvider();
 final otelLogger = otelLoggerProvider.getLogger('dart-otel-api-faux-db-service');
 final attrs = {
-  'db.operation': 'update',
-  'db.table': 'orders',
-  'db.rows_affected': 3,
+  DatabaseResource.dbOperation.key: 'update',
+  DatabaseResource.dbCollectionName.key: 'orders',
+  DatabaseResource.dbResponseReturnedRows.key: 3,
 }.toAttributes();
 
 otelLogger.emit(
