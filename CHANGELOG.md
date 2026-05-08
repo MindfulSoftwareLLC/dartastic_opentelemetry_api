@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.0-beta.2] - 2026-05-08
+
+### Added
+- `DatabaseResource.dbCollectionName` (`db.collection.name`) — current OTel semconv key, replaces the deprecated `db.sql.table`.
+- `DatabaseResource.dbResponseReturnedRows` (`db.response.returned_rows`) — current OTel semconv key for the row count returned by a database operation.
+- `UserSemantics.userRoles` (`user.roles`) — current OTel semconv key, an array of roles assigned to a user. Replaces the deprecated singular `user.role` (which remains for backwards compatibility).
+
 ## [1.0.0-beta.1] - 2026-05-07
 
 ### Fixed

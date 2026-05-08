@@ -300,6 +300,9 @@ enum SessionViewSemantics implements OTelSemantic {
 enum UserSemantics implements OTelSemantic {
   userId('user.id'),
   userRole('user.role'),
+  // Current OTel semconv: array of roles a user is assigned. Replaces
+  // the deprecated singular `user.role`.
+  userRoles('user.roles'),
   userSession('user.session');
 
   @override
