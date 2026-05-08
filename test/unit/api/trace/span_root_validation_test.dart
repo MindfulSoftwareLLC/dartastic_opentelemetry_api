@@ -1,31 +1,38 @@
 // Licensed under the Apache License, Version 2.0
 // Copyright 2025, Michael Bushe, All rights reserved.
 
-// Coverage tests for APISpan / APISpanCreate root-vs-child validation
+// Coverage tests for APISpan / APISpanCreate root-span construction
 // and SpanContextCreate default fallbacks.
 //
-// These tests exercise contracts that were previously uncovered:
+// What "no parentSpan" actually means in OTel:
 //
-//   APISpanCreate.create + APISpan._ root-span validation:
-//     - parentSpan == null AND parentSpanId is null → no throw
-//     - parentSpan == null AND parentSpanId is the invalid (all-zeros)
-//       SpanId → no throw (the documented "valid root" form)
-//     - parentSpan == null AND parentSpanId is a valid non-zero SpanId
-//       → MUST throw ArgumentError (a root span cannot reference an
-//       arbitrary parent span ID without a parentSpan).
+//   parentSpan == null does NOT imply "true root span." It only means
+//   there is no in-process parent Span object to reference. The W3C
+//   trace-context propagation flow produces spans where parentSpan is
+//   null but parentSpanId is set to a valid remote span id (carried in
+//   from a `traceparent` header or equivalent). That is a legitimate
+//   OTel pattern, not a malformed root.
+//
+//   Therefore APISpan / APISpanCreate must not reject any specific
+//   parentSpanId shape when parentSpan is null. Earlier code in this
+//   file *attempted* such a validation but the condition was inverted
+//   AND used Uint8List `==` (identity equality on a fresh-copy getter)
+//   so it never fired anyway. The dead code has been removed; this
+//   suite locks down the legitimate construction shapes so the cleanup
+//   doesn't regress.
 //
 //   SpanContextCreate.create defaults:
 //     - traceId/spanId omitted → SpanContextCreate falls back to factory
-//       generators (these `??` branches are unreachable from
+//       generators. These `??` branches are unreachable from
 //       OTelAPI.spanContext() because that wrapper substitutes defaults
 //       *before* calling the factory; the factory-direct path still
-//       needs the fallbacks).
+//       needs the fallbacks.
 
 import 'package:dartastic_opentelemetry_api/dartastic_opentelemetry_api.dart';
 import 'package:test/test.dart';
 
 void main() {
-  group('Root span parentSpanId validation', () {
+  group('Root / parent-less span construction', () {
     late APITracer tracer;
 
     setUp(() {
@@ -38,10 +45,10 @@ void main() {
       tracer = OTelAPI.tracer('test-tracer');
     });
 
-    test('tracer.startSpan creates a root span without throwing', () {
-      // Sanity: the standard root-span creation path through the tracer
-      // sets parentSpanId to the invalid (all-zeros) SpanId, which is
-      // the OTel-spec form of "this is a root."
+    test('tracer.startSpan creates a true root span', () {
+      // The standard root-span path through the tracer sets parentSpanId
+      // to the invalid (all-zeros) SpanId, which is the OTel-spec form
+      // of "this is a root."
       final span = tracer.startSpan('root');
       expect(span.parentSpan, isNull);
       expect(span.spanContext.parentSpanId, isNotNull);
@@ -74,12 +81,12 @@ void main() {
     });
 
     test(
-        'createSpan with invalid (all-zeros) parentSpanId and no parentSpan does not throw',
+        'createSpan with explicit invalid (all-zeros) parentSpanId and no parentSpan does not throw',
         () {
-      // The OTel spec lets a root span carry the invalid SpanId as its
-      // parentSpanId — that is the canonical "no parent" marker.
-      // OTelAPI.spanContext() normalises invalid → null at the API
-      // boundary, so build the SpanContext via the factory directly.
+      // Build the SpanContext via the factory directly — OTelAPI.spanContext
+      // normalises an invalid parentSpanId to null at the API boundary,
+      // so the only way to materialise the all-zeros form on the SpanContext
+      // is to skip the wrapper.
       final ctx = OTelFactory.otelFactory!.spanContext(
         traceId: OTelAPI.traceId(),
         spanId: OTelAPI.spanId(),
@@ -99,31 +106,34 @@ void main() {
     });
 
     test(
-        'createSpan with valid non-zero parentSpanId and no parentSpan throws ArgumentError',
+        'createSpan with valid non-zero parentSpanId and no parentSpan succeeds (remote-parent flow)',
         () {
-      // A root span (parentSpan == null) must not carry a non-zero
-      // parentSpanId — there is no parent to reference. The error
-      // message explicitly states: "Root spans must have invalid
-      // (all zeros) parent span ID or no parent span ID".
-      final orphanedParent = OTelAPI.spanId(); // valid, non-zero
-      expect(orphanedParent.isValid, isTrue);
+      // This is the W3C trace-context propagation pattern: an incoming
+      // request carries a `traceparent` header, the receiver builds a
+      // remote SpanContext from it, and starts a new span whose
+      // parentSpanId is the upstream span's id. The new span has no
+      // in-process parentSpan but is NOT a root.
+      final remoteParentSpanId = OTelAPI.spanId();
+      expect(remoteParentSpanId.isValid, isTrue);
 
       final ctx = OTelAPI.spanContext(
         traceId: OTelAPI.traceId(),
         spanId: OTelAPI.spanId(),
-        parentSpanId: orphanedParent,
+        parentSpanId: remoteParentSpanId,
       );
-
       // Sanity: the API didn't normalise our valid parentSpanId away.
-      expect(ctx.parentSpanId, equals(orphanedParent));
+      expect(ctx.parentSpanId, equals(remoteParentSpanId));
 
+      // Must succeed — span_create.dart / span.dart cannot distinguish
+      // the remote-parent case from a malformed root, and the OTel spec
+      // permits the remote-parent shape, so no throw.
       expect(
         () => tracer.createSpan(
-          name: 'orphan-with-fake-parent',
+          name: 'remote-parent',
           spanContext: ctx,
           parentSpan: null,
         ),
-        throwsA(isA<ArgumentError>()),
+        returnsNormally,
       );
     });
   });
