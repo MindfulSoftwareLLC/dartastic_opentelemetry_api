@@ -529,7 +529,7 @@ enum UrlResource implements OTelSemantic {
 /// [Specification](https://opentelemetry.io/docs/specs/semconv/resource/#service)
 enum ServiceResource implements OTelSemantic {
   serviceName('service.name'),
-  serviceResourcepace('service.Resourcepace'),
+  serviceNamespace('service.namespace'),
   serviceInstanceId('service.instance.id'),
   serviceVersion('service.version');
 

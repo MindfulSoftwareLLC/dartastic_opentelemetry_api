@@ -519,11 +519,26 @@ void main() {
         expect(value.toString(), equals(value.key));
       }
       expect(ServiceResource.serviceName.key, equals('service.name'));
-      expect(ServiceResource.serviceResourcepace.key,
-          equals('service.Resourcepace'));
       expect(
           ServiceResource.serviceInstanceId.key, equals('service.instance.id'));
       expect(ServiceResource.serviceVersion.key, equals('service.version'));
+    });
+
+    test('ServiceResource exposes service.namespace per OTel semconv', () {
+      // A find/replace of "Name" → "Resource" once mangled the
+      // `serviceNamespace('service.namespace')` entry into
+      // `serviceResourcepace('service.Resourcepace')`. This test asserts
+      // the spec-correct key is present, looking up via the enum's
+      // values list so it compiles against any name the entry happens
+      // to have.
+      final allKeys = ServiceResource.values.map((e) => e.key).toList();
+      expect(
+        allKeys,
+        contains('service.namespace'),
+        reason:
+            'ServiceResource must expose the OTel-spec key `service.namespace`. '
+            'Found keys: $allKeys',
+      );
     });
 
     test('SourceCodeResource toString and key', () {
