@@ -205,6 +205,74 @@ void main() {
       }, throwsUnsupportedError);
     });
 
+    // -----------------------------------------------------------------------
+    // loggerProviders() — added in beta.4 so OTel.shutdown can iterate
+    // over named LoggerProviders the way it does for tracer/meter.
+    // -----------------------------------------------------------------------
+
+    test('loggerProviders returns empty list initially', () {
+      final providers = OTelAPI.loggerProviders();
+      expect(providers, isNotNull);
+      expect(providers, isEmpty);
+    });
+
+    test('loggerProviders returns list with default provider after access', () {
+      OTelAPI.loggerProvider();
+
+      final providers = OTelAPI.loggerProviders();
+      expect(providers, isNotNull);
+      expect(providers, hasLength(1));
+      expect(providers.first, isA<APILoggerProvider>());
+    });
+
+    test('loggerProviders returns list with named providers', () {
+      final namedProvider1 = OTelAPI.addLoggerProvider('provider1');
+      final namedProvider2 = OTelAPI.addLoggerProvider('provider2');
+
+      final providers = OTelAPI.loggerProviders();
+      expect(providers, isNotNull);
+      expect(providers, hasLength(2));
+      expect(providers, contains(namedProvider1));
+      expect(providers, contains(namedProvider2));
+    });
+
+    test('loggerProviders returns list with both default and named providers',
+        () {
+      final defaultProvider = OTelAPI.loggerProvider();
+      final namedProvider1 = OTelAPI.addLoggerProvider('provider1');
+      final namedProvider2 = OTelAPI.addLoggerProvider('provider2');
+
+      final providers = OTelAPI.loggerProviders();
+      expect(providers, hasLength(3));
+      expect(providers, contains(defaultProvider));
+      expect(providers, contains(namedProvider1));
+      expect(providers, contains(namedProvider2));
+      // Default first (matches tracer/meter ordering).
+      expect(providers.first, equals(defaultProvider));
+    });
+
+    test('loggerProviders returns unmodifiable list', () {
+      final provider = OTelAPI.addLoggerProvider('test-provider');
+      final providers = OTelAPI.loggerProviders();
+
+      expect(providers, hasLength(1));
+      expect(() {
+        providers.add(provider);
+      }, throwsUnsupportedError);
+    });
+
+    test('loggerProviders does not include tracer or meter providers', () {
+      final tracerProvider = OTelAPI.addTracerProvider('tracer-x');
+      final meterProvider = OTelAPI.addMeterProvider('meter-x');
+      final loggerProvider = OTelAPI.addLoggerProvider('logger-x');
+
+      final loggerProviders = OTelAPI.loggerProviders();
+      expect(loggerProviders, hasLength(1));
+      expect(loggerProviders, contains(loggerProvider));
+      expect(loggerProviders, isNot(contains(tracerProvider)));
+      expect(loggerProviders, isNot(contains(meterProvider)));
+    });
+
     test('provider lists reflect changes after adding new providers', () {
       // Initially empty
       expect(OTelAPI.tracerProviders(), isEmpty);
