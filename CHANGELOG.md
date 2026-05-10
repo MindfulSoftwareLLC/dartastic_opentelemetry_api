@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.0.0-beta.4-wip]
+## [1.0.0-beta.4] - 2026-05-10
 
 ### Added
 - `OTelAPI.loggerProviders()` — returns the global default `APILoggerProvider` plus any named providers added via `OTelAPI.addLoggerProvider(name)`. Parallel to the existing `tracerProviders()` and `meterProviders()`. Backed by a new `OTelFactory.getLoggerProviders()` so SDK implementations get the same enumeration. Lets `OTel.shutdown()` in the SDK iterate over named LoggerProviders the way it already does for tracer / meter providers — without this, `OTel.addLoggerProvider(name)` consumers had to remember to shut each one down manually.
