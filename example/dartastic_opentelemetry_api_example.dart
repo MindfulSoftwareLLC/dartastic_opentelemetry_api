@@ -88,18 +88,20 @@ void main() {
     final span = tracer.startSpan('doSomeExampleSpan');
     try {
       tracer.withSpan(span, () {
-        // Same thing as above, more simply but with some loss of type
-        // checking. If your Map has anything but the types above an
-        // exception will be thrown.
-        final equalToTheAbove = OTelAPI.attributesFromMap({
-          ExampleAttribute.exampleString.key: 'foo',
-          ExampleAttribute.exampleBool.key: true,
-          ExampleAttribute.exampleInt.key: 42,
-          ExampleAttribute.exampleDouble.key: 42.1,
-          ExampleAttribute.exampleStringList.key: ['foo', 'bar', 'baz'],
-          ExampleAttribute.exampleBoolList.key: [true, false, true],
-          ExampleAttribute.exampleIntList.key: [42, 43, 44],
-          ExampleAttribute.exampleDoubleList.key: [42.0, 42.1, 42.2],
+        // Same thing as above, more compactly. attributesFromSemanticMap
+        // takes the typed enum directly (no `.key` on each entry) and
+        // accepts any mix of OTelSemantic-implementing enums, including
+        // your own. Throws at construction if a value isn't a supported
+        // attribute type.
+        final equalToTheAbove = OTelAPI.attributesFromSemanticMap({
+          ExampleAttribute.exampleString: 'foo',
+          ExampleAttribute.exampleBool: true,
+          ExampleAttribute.exampleInt: 42,
+          ExampleAttribute.exampleDouble: 42.1,
+          ExampleAttribute.exampleStringList: ['foo', 'bar', 'baz'],
+          ExampleAttribute.exampleBoolList: [true, false, true],
+          ExampleAttribute.exampleIntList: [42, 43, 44],
+          ExampleAttribute.exampleDoubleList: [42.0, 42.1, 42.2],
         });
         span.attributes = equalToTheAbove;
         span.addEventNow(
@@ -129,9 +131,9 @@ void main() {
       eventName: 'user_login',
       severityNumber: Severity.INFO,
       body: 'User successfully logged in.',
-      attributes: Attributes.of({
-        UserSemantics.userId.key: 42,
-        ExampleAttribute.authMethod.key: 'password',
+      attributes: OTelAPI.attributesFromSemanticMap({
+        UserSemantics.userId: 42,
+        ExampleAttribute.authMethod: 'password',
       }),
     );
 
@@ -139,17 +141,17 @@ void main() {
       eventName: 'cache_miss',
       severityText: 'WARN',
       body: 'Cache miss for requested key.',
-      attributes: Attributes.of({
-        ExampleAttribute.cacheKey.key: 'profile_42',
-        ExampleAttribute.cacheRegion.key: 'us-east-1',
+      attributes: OTelAPI.attributesFromSemanticMap({
+        ExampleAttribute.cacheKey: 'profile_42',
+        ExampleAttribute.cacheRegion: 'us-east-1',
       }),
     );
 
-    final attrs = {
-      DatabaseResource.dbOperation.key: 'update',
-      DatabaseResource.dbCollectionName.key: 'orders',
-      DatabaseResource.dbResponseReturnedRows.key: 3,
-    }.toAttributes();
+    final attrs = OTelAPI.attributesFromSemanticMap({
+      DatabaseResource.dbOperation: 'update',
+      DatabaseResource.dbCollectionName: 'orders',
+      DatabaseResource.dbResponseReturnedRows: 3,
+    });
 
     logger.emit(
       eventName: 'order_update',
@@ -169,9 +171,9 @@ void main() {
         {'job': 'generate_thumbnails', 'status': 'ok'},
         {'job': 'sync_metadata', 'status': 'failed'},
       ],
-      attributes: Attributes.of({
-        ExampleAttribute.batchId.key: 'batch-2025-11-15-01',
-        ExampleAttribute.jobsTotal.key: 3,
+      attributes: OTelAPI.attributesFromSemanticMap({
+        ExampleAttribute.batchId: 'batch-2025-11-15-01',
+        ExampleAttribute.jobsTotal: 3,
       }),
     );
 
@@ -179,11 +181,11 @@ void main() {
       eventName: 'payment_failure',
       severityText: 'ERROR',
       body: 'Payment could not be processed.',
-      attributes: Attributes.of({
-        ExampleAttribute.paymentUserId.key: 101,
-        ExampleAttribute.paymentMethod.key: 'credit_card',
-        ExampleAttribute.paymentGateway.key: 'stripe',
-        ExampleAttribute.retryCount.key: 2,
+      attributes: OTelAPI.attributesFromSemanticMap({
+        ExampleAttribute.paymentUserId: 101,
+        ExampleAttribute.paymentMethod: 'credit_card',
+        ExampleAttribute.paymentGateway: 'stripe',
+        ExampleAttribute.retryCount: 2,
       }),
     );
   });

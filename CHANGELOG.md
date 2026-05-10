@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.0.0-beta.5-wip]
 
+### Changed
+- README and the API example now use `OTelAPI.attributesFromSemanticMap({Enum.value: ...})` for typed-enum-keyed attribute maps in place of `OTelAPI.attributesFromMap({Enum.value.key: ...})` / `Attributes.of({Enum.value.key: ...})` / `<String, Object>{...}.toAttributes()`. The shorter form drops the `.key` accessor on every entry while keeping the typed-enum-key principle. Mixing different semconv enum types in one map is fine — the param is `Map<OTelSemantic, Object>` and every semconv enum implements `OTelSemantic`. No API surface change; `attributesFromSemanticMap` has existed since beta-era.
+
 ## [1.0.0-beta.4] - 2026-05-10
 
 ### Added
