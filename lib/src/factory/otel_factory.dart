@@ -249,6 +249,24 @@ abstract class OTelFactory {
     }
   }
 
+  /// return an array combining the global default logger provider and any
+  /// additional named logger providers added.
+  List<APILoggerProvider> getLoggerProviders() {
+    if (_logProviders == null || _logProviders!.isEmpty) {
+      if (_globalDefaultLogProvider == null) {
+        return [];
+      } else {
+        return [_globalDefaultLogProvider!];
+      }
+    } else {
+      if (_globalDefaultLogProvider == null) {
+        return List.unmodifiable(_logProviders!.values);
+      } else {
+        return [_globalDefaultLogProvider!, ..._logProviders!.values];
+      }
+    }
+  }
+
   /// Creates a [APITracerProvider]
   APITracerProvider tracerProvider(
       {required String endpoint, String serviceName, String serviceVersion});

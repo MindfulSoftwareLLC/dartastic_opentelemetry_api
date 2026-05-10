@@ -161,6 +161,12 @@ class OTelAPI {
     return _otelFactory == null ? [] : _otelFactory!.getMeterProviders();
   }
 
+  /// returns a list of [APILoggerProvider]s including the global default
+  /// and any named providers added.
+  static List<APILoggerProvider> loggerProviders() {
+    return _otelFactory == null ? [] : _otelFactory!.getLoggerProviders();
+  }
+
   /// Gets a TracerProvider.  If name is null, this returns
   /// the global default [APITracerProvider] from the installed factory,
   /// (API if no SDK is installed), if not it returns an
