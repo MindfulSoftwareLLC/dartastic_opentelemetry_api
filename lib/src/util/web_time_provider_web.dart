@@ -19,9 +19,7 @@ import 'time_provider.dart';
 /// use.
 ///
 /// True nanosecond precision is **not available in browsers** regardless of
-/// what the OTLP wire format claims to support. For native targets, see the
-/// Pro `dartastic_native_time` package, which uses FFI to
-/// `clock_gettime(CLOCK_REALTIME)` / `QueryPerformanceCounter`.
+/// what the OTLP wire format claims to support.
 class WebTimeProvider implements TimeProvider {
   /// Constructs a `WebTimeProvider` and snapshots `timeOrigin` once.
   WebTimeProvider();

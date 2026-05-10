@@ -44,8 +44,7 @@ class APITracerProvider {
   /// (`DateTime.now`, microsecond precision); web targets (Dart-on-JS or
   /// Wasm) get `WebTimeProvider` (`window.performance.now()`, sub-
   /// millisecond precision). Override only if you want different behaviour
-  /// — e.g., a fake clock in tests or a Pro `NativeNanosecondTimeProvider`
-  /// for FFI-backed nanosecond timing on native servers.
+  /// — e.g., a fake clock in tests.
   TimeProvider timeProvider;
 
   /// Creates a new [APITracerProvider].
