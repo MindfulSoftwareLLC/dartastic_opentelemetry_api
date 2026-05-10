@@ -9,8 +9,7 @@ import 'time_provider.dart';
 /// `window.performance.now()`. On native (Dart-VM, Flutter mobile/desktop),
 /// `package:web` is unavailable, so the conditional facade in
 /// `web_time_provider.dart` exports this stub instead. Constructing it
-/// throws — native consumers should use [SystemTimeProvider] (or, for true
-/// nanosecond timing on native, the Pro `dartastic_native_time` package).
+/// throws — native consumers should use [SystemTimeProvider].
 class WebTimeProvider implements TimeProvider {
   /// Throws — `WebTimeProvider` requires a web target.
   WebTimeProvider() {
