@@ -194,12 +194,18 @@ void main() {
         kind: SpanKind.internal,
       );
 
-      final beforeCreation = DateTime.now();
+      // Capture bounds from the same TimeProvider the span uses, so the
+      // bracketing assertion is exact on every platform. On Dart-on-JS /
+      // Wasm, `tracer.timeProvider` is `WebTimeProvider` (sub-ms via
+      // `performance.now`) while `DateTime.now` is `Date.now` (ms-
+      // truncated) — bracketing with `DateTime.now` would let the event
+      // timestamp fall up to ~1ms past `afterCreation`.
+      final beforeCreation = tracer.timeProvider.nowDateTime();
       span.addEventNow(
         'test-event',
         {'event.key': 'value'}.toAttributes(),
       );
-      final afterCreation = DateTime.now();
+      final afterCreation = tracer.timeProvider.nowDateTime();
 
       final events = span.spanEvents;
       expect(events, hasLength(1));

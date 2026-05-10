@@ -2,6 +2,8 @@
 // Copyright 2025, Michael Bushe, All rights reserved.
 
 import '../../factory/otel_factory.dart';
+import '../../util/default_time_provider.dart';
+import '../../util/time_provider.dart';
 import '../common/attributes.dart';
 import '../common/instrumentation_scope.dart';
 import '../context/context.dart';
@@ -33,6 +35,14 @@ class APITracer {
   /// can be used for filtering or grouping telemetry data.
   Attributes? attributes;
 
+  /// Clock used for span start, end, and event timestamps. Inherited from
+  /// the [APITracerProvider] that created this tracer; spans created via
+  /// [createSpan] are constructed with this clock so all timestamps in a
+  /// trace are consistent. Defaults to the platform-aware
+  /// `defaultTimeProvider` (native: `SystemTimeProvider`; web:
+  /// `WebTimeProvider`).
+  final TimeProvider timeProvider;
+
   /// Creates a new [APITracer].
   /// You cannot create a Tracer directly; you must use [TracerProvider]:
   /// ```dart
@@ -43,7 +53,8 @@ class APITracer {
     this.schemaUrl,
     this.version,
     this.attributes,
-  });
+    TimeProvider? timeProvider,
+  }) : timeProvider = timeProvider ?? defaultTimeProvider;
 
   /// Returns true if the tracer is enabled and will create sampling spans.
   /// This should be checked before performing expensive operations to create spans.
@@ -215,6 +226,7 @@ class APITracer {
       spanEvents: spanEvents,
       startTime: startTime,
       isRecording: isRecording ?? true && enabled,
+      timeProvider: timeProvider,
     );
     return apiSpan;
   }

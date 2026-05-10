@@ -3,7 +3,9 @@
 
 // ignore_for_file: unnecessary_getters_setters
 
+import '../../util/default_time_provider.dart';
 import '../../util/otel_log.dart';
+import '../../util/time_provider.dart';
 import '../common/attributes.dart';
 import '../common/signal_instance_key.dart';
 import '../context/context.dart';
@@ -34,6 +36,18 @@ class APITracerProvider {
   // Cache for created tracers, keyed by _TracerKey.
   final Map<SignalInstanceKey, APITracer> _tracerCache = {};
 
+  /// Clock used for span start, end, and event timestamps. Tracers and
+  /// spans created from this provider inherit this clock so all timestamps
+  /// in a trace are consistent.
+  ///
+  /// **Defaults are platform-aware**: native targets get `SystemTimeProvider`
+  /// (`DateTime.now`, microsecond precision); web targets (Dart-on-JS or
+  /// Wasm) get `WebTimeProvider` (`window.performance.now()`, sub-
+  /// millisecond precision). Override only if you want different behaviour
+  /// — e.g., a fake clock in tests or a Pro `NativeNanosecondTimeProvider`
+  /// for FFI-backed nanosecond timing on native servers.
+  TimeProvider timeProvider;
+
   /// Creates a new [APITracerProvider].
   APITracerProvider._({
     required String endpoint,
@@ -41,11 +55,13 @@ class APITracerProvider {
     String? serviceVersion = OTelAPI.defaultServiceVersion,
     bool enabled = true,
     bool isShutdown = false,
+    TimeProvider? timeProvider,
   })  : _endpoint = endpoint,
         _serviceName = serviceName,
         _serviceVersion = serviceVersion,
         _enabled = enabled,
-        _isShutdown = isShutdown;
+        _isShutdown = isShutdown,
+        timeProvider = timeProvider ?? defaultTimeProvider;
 
   /// Gets the endpoint URL used by this tracer provider.
   ///
@@ -100,6 +116,7 @@ class APITracerProvider {
         version: effectiveVersion,
         schemaUrl: effectiveSchemaUrl,
         attributes: attributes,
+        timeProvider: timeProvider,
       );
       _tracerCache[key] = tracer;
       return tracer;

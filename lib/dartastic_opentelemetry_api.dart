@@ -69,4 +69,7 @@ export 'src/api/trace/tracer.dart';
 export 'src/api/trace/tracer_provider.dart';
 export 'src/factory/otel_factory.dart';
 // Util
+export 'src/util/default_time_provider.dart';
 export 'src/util/otel_log.dart';
+export 'src/util/time_provider.dart';
+export 'src/util/web_time_provider.dart';
