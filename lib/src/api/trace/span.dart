@@ -75,7 +75,8 @@ class APISpan {
         _spankind = spanKind,
         _attributes = attributes,
         _timeProvider = timeProvider ?? defaultTimeProvider,
-        _startTime = startTime ?? (timeProvider ?? defaultTimeProvider).nowDateTime(),
+        _startTime =
+            startTime ?? (timeProvider ?? defaultTimeProvider).nowDateTime(),
         _spanLinks = spanLinks,
         _spanEvents = spanEvents {
     // Set initial status to unset per spec
@@ -309,9 +310,9 @@ class APISpan {
     }
     if (!isEnded) {
       _spanEvents ??= [];
-      spanEvents.forEach((name, attributes) => _spanEvents!.add(
-          OTelFactory.otelFactory!
-              .spanEvent(name, attributes, _timeProvider.nowDateTime())));
+      spanEvents.forEach((name, attributes) => _spanEvents!.add(OTelFactory
+          .otelFactory!
+          .spanEvent(name, attributes, _timeProvider.nowDateTime())));
     }
   }
 
