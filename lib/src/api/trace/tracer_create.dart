@@ -11,12 +11,14 @@ class TracerCreate {
     String? version,
     String? schemaUrl,
     Attributes? attributes,
+    TimeProvider? timeProvider,
   }) {
     return APITracer._(
       name: name,
       version: version,
       schemaUrl: schemaUrl,
       attributes: attributes,
+      timeProvider: timeProvider,
     );
   }
 }

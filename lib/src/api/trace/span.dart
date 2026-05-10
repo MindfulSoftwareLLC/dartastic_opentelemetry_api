@@ -4,6 +4,8 @@
 import 'package:meta/meta.dart';
 
 import '../../factory/otel_factory.dart';
+import '../../util/default_time_provider.dart';
+import '../../util/time_provider.dart';
 import '../common/attributes.dart';
 import '../common/instrumentation_scope.dart';
 import '../common/timestamp.dart';
@@ -46,6 +48,7 @@ class APISpan {
   final SpanKind _spankind;
   final APISpan? _parentSpan;
   final InstrumentationScope _instrumentationScope;
+  final TimeProvider _timeProvider;
   late final DateTime _startTime;
   DateTime? _endTime;
   Attributes _attributes;
@@ -64,13 +67,15 @@ class APISpan {
     List<SpanEvent>? spanEvents,
     List<SpanLink>? spanLinks,
     DateTime? startTime,
+    TimeProvider? timeProvider,
   })  : _name = name,
         _instrumentationScope = instrumentationScope,
         _spanContext = spanContext,
         _parentSpan = parentSpan,
         _spankind = spanKind,
         _attributes = attributes,
-        _startTime = startTime ?? DateTime.now(),
+        _timeProvider = timeProvider ?? defaultTimeProvider,
+        _startTime = startTime ?? (timeProvider ?? defaultTimeProvider).nowDateTime(),
         _spanLinks = spanLinks,
         _spanEvents = spanEvents {
     // Set initial status to unset per spec
@@ -287,7 +292,13 @@ class APISpan {
     }
     if (!isEnded) {
       _spanEvents ??= [];
-      _spanEvents!.add(OTelFactory.otelFactory!.spanEventNow(name, attributes));
+      // Source the event timestamp from this span's TimeProvider so events
+      // share the same clock as start/end. Bypasses the static
+      // `OTelFactory.spanEventNow` shortcut, which hardcodes `DateTime.now`
+      // and so would silently drop sub-millisecond precision when a
+      // `WebTimeProvider` is configured.
+      _spanEvents!.add(OTelFactory.otelFactory!
+          .spanEvent(name, attributes, _timeProvider.nowDateTime()));
     }
   }
 
@@ -298,8 +309,9 @@ class APISpan {
     }
     if (!isEnded) {
       _spanEvents ??= [];
-      spanEvents.forEach((name, attributes) => _spanEvents!
-          .add(OTelFactory.otelFactory!.spanEventNow(name, attributes)));
+      spanEvents.forEach((name, attributes) => _spanEvents!.add(
+          OTelFactory.otelFactory!
+              .spanEvent(name, attributes, _timeProvider.nowDateTime())));
     }
   }
 
@@ -416,7 +428,7 @@ class APISpan {
   /// Only the first call to end modifies the Span.
   void end({DateTime? endTime, SpanStatusCode? spanStatus}) {
     if (!isEnded) {
-      _endTime = endTime ?? DateTime.now();
+      _endTime = endTime ?? _timeProvider.nowDateTime();
       // Only set status if no status has been set
       if (_spanStatusCode == null || _spanStatusCode == SpanStatusCode.Unset) {
         _spanStatusCode = spanStatus ?? SpanStatusCode.Ok;

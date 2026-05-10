@@ -30,6 +30,7 @@ class APISpanCreate {
     List<SpanEvent>? spanEvents,
     DateTime? startTime,
     bool isRecording = true,
+    TimeProvider? timeProvider,
   }) {
     if (OTelFactory.otelFactory == null) {
       throw StateError('Call initialize() first.');
@@ -63,6 +64,7 @@ class APISpanCreate {
         attributes: attributes ?? OTelFactory.otelFactory!.attributes(),
         spanLinks: links,
         startTime: startTime,
-        spanEvents: spanEvents);
+        spanEvents: spanEvents,
+        timeProvider: timeProvider);
   }
 }
