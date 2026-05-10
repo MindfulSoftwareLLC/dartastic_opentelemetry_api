@@ -261,14 +261,16 @@ void main() {
         ExampleAttribute.tags.key, ['payment', 'critical']),
   ]);
 
-  // Using Map extension — same enum-key principle.
-  Attributes fromMap = <String, Object>{
-    HttpResource.requestMethod.key: 'GET',
-    UrlResource.urlFull.key: 'https://api.example.com/users',
-    HttpResource.responseStatusCode.key: 200,
-    DeploymentResource.deploymentEnvironmentName.key: 'production',
-    UserSemantics.userRoles.key: ['admin', 'operator'],
-  }.toAttributes();
+  // Using attributesFromSemanticMap — same typed-enum principle, no
+  // `.key` accessor on each entry. Mixes any combination of
+  // OTel-spec semconv enums with your own ExampleAttribute-style enums.
+  Attributes fromMap = OTelAPI.attributesFromSemanticMap({
+    HttpResource.requestMethod: 'GET',
+    UrlResource.urlFull: 'https://api.example.com/users',
+    HttpResource.responseStatusCode: 200,
+    DeploymentResource.deploymentEnvironmentName: 'production',
+    UserSemantics.userRoles: ['admin', 'operator'],
+  });
 }
 ```
 
@@ -279,11 +281,11 @@ import 'package:dartastic_opentelemetry_api/dartastic_opentelemetry_api.dart';
 
 final otelLoggerProvider = OTelAPI.loggerProvider();
 final otelLogger = otelLoggerProvider.getLogger('dart-otel-api-faux-db-service');
-final attrs = {
-  DatabaseResource.dbOperation.key: 'update',
-  DatabaseResource.dbCollectionName.key: 'orders',
-  DatabaseResource.dbResponseReturnedRows.key: 3,
-}.toAttributes();
+final attrs = OTelAPI.attributesFromSemanticMap({
+  DatabaseResource.dbOperation: 'update',
+  DatabaseResource.dbCollectionName: 'orders',
+  DatabaseResource.dbResponseReturnedRows: 3,
+});
 
 otelLogger.emit(
   eventName: 'order_update',

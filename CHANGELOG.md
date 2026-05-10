@@ -18,6 +18,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   **Why this matters on web.** `DateTime.now()` on Dart-on-JS is millisecond-precision — the underlying source is JS `Date.now()`, and `microsecondsSinceEpoch` returns `millisecondsSinceEpoch × 1000` (the lower three digits are always zero, regardless of the Int64 storage type used by OTLP). `WebTimeProvider` routes through the browser performance API: ~5µs nominal precision, browser-coarsened to ~100µs as a Spectre mitigation, still 10–200× better than `Date.now()`. Native targets are unaffected and stay at `DateTime.now`'s 1µs floor.
 
   **Auto-default on web.** Web users do not have to opt in — constructing an `APITracerProvider` on a web target automatically gets `WebTimeProvider` via `defaultTimeProvider`. To override (e.g., a fake clock in tests), assign `tracerProvider.timeProvider = customProvider`.
+### Changed
+- README and the API example now use `OTelAPI.attributesFromSemanticMap({Enum.value: ...})` for typed-enum-keyed attribute maps in place of `OTelAPI.attributesFromMap({Enum.value.key: ...})` / `Attributes.of({Enum.value.key: ...})` / `<String, Object>{...}.toAttributes()`. The shorter form drops the `.key` accessor on every entry while keeping the typed-enum-key principle. Mixing different semconv enum types in one map is fine — the param is `Map<OTelSemantic, Object>` and every semconv enum implements `OTelSemantic`. No API surface change; `attributesFromSemanticMap` has existed since beta-era.
 
 ## [1.0.0-beta.4] - 2026-05-10
 
