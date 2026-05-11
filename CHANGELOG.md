@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.0.0-beta.6-wip]
 
+### Added
+- `NetworkResource.networkProtocolName` (`network.protocol.name`),
+  `NetworkResource.networkProtocolVersion` (`network.protocol.version`),
+  and `NetworkResource.networkTransport` (`network.transport`) — current
+  OTel semconv keys for the wire protocol an HTTP client / server is
+  speaking over.
+- `UserAgentResource` enum with `userAgentOriginal` (`user_agent.original`),
+  `userAgentName` (`user_agent.name`), and `userAgentVersion`
+  (`user_agent.version`) — the OTel semconv user-agent attributes set
+  by HTTP-client instrumentation (e.g. `dartastic_dio_otel`) on each
+  outbound request.
+
 ## [1.0.0-beta.5] - 2026-05-10
 
 ### Added

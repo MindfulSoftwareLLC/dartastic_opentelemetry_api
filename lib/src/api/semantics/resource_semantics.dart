@@ -421,7 +421,10 @@ enum NetworkResource implements OTelSemantic {
   networkCarrierName('network.carrier.name'),
   networkCarrierMcc('network.carrier.mcc'),
   networkCarrierMnc('network.carrier.mnc'),
-  networkCarrierIcc('network.carrier.icc');
+  networkCarrierIcc('network.carrier.icc'),
+  networkProtocolName('network.protocol.name'),
+  networkProtocolVersion('network.protocol.version'),
+  networkTransport('network.transport');
 
   @override
   final String key;
@@ -590,6 +593,22 @@ enum TelemetrySDKResource implements OTelSemantic {
   String toString() => key;
 
   const TelemetrySDKResource(this.key);
+}
+
+// User Agent Semantic Conventions
+/// [Specification](https://opentelemetry.io/docs/specs/semconv/attributes-registry/user-agent/)
+enum UserAgentResource implements OTelSemantic {
+  userAgentOriginal('user_agent.original'),
+  userAgentName('user_agent.name'),
+  userAgentVersion('user_agent.version');
+
+  @override
+  final String key;
+
+  @override
+  String toString() => key;
+
+  const UserAgentResource(this.key);
 }
 
 // Version Semantic Resource
