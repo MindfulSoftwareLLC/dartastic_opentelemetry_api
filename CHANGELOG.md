@@ -7,7 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.0.0-beta.6-wip]
 
-## [1.0.0-beta.5] - 2026-05-10
+### Changed
+- **`OTelAPI.initialize` now tracks user-initialization separately from "is a factory installed".** 
+  Previously the second-call guard was `OTelFactory.otelFactory != null` — but that field becomes non-null 
+  the moment any API method is called (via the existing `_getAndCacheOtelFactory` lazy noop default). 
+  So `OTelAPI.initialize` would throw `StateError` even on the first user call if anything had touched 
+  the API beforehand. Now guarded by a separate `_userInitialized` boolean, so a first user `initialize` call 
+  legitimately upgrades from the spec-mandated noop default to a user-configured factory exactly once; the second
+  `OTelAPI.initialize` still throws. Matches the Java/JS/Python `setGlobal*` pattern.
+- `OTelAPI.reset` now also nulls `OTelFactory.otelFactory` (in addition to calling its `.reset()`) so the next API 
+   access reinstalls a fresh noop default — clean slate for test fixtures.
+
+### Added
+- `OTelAPI.isInitialized` static getter — `true` if `initialize` has been called explicitly, `false` if only the 
+   auto-installed noop default is in place. Lets library code that owns its own initialization guard against 
+   double-init without try/catch.
 
 ### Added
 - **Pluggable `TimeProvider` for span timestamps.** New abstraction with three pieces:

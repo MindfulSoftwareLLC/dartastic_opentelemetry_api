@@ -61,6 +61,22 @@ class OTelAPI {
   /// Cached reference to the global OTelFactory instance.
   static OTelFactory? _otelFactory;
 
+  /// Tracks whether [initialize] has been called explicitly by user code.
+  /// Distinct from "is a factory installed" — `_getAndCacheOtelFactory`
+  /// auto-installs a noop API factory on first access per the OTel spec
+  /// ("in the absence of an installed SDK, the Trace API is a 'no-op'
+  /// API"). The auto-install does NOT count as user initialization, so a
+  /// subsequent [initialize] call legitimately upgrades from noop to a
+  /// user-configured factory exactly once.
+  static bool _userInitialized = false;
+
+  /// Whether [initialize] has been called explicitly. Returns `false` if
+  /// only the auto-installed noop default is in place (which is the spec-
+  /// compliant pre-initialization state). Useful for library code that
+  /// owns its own initialization and wants to guard against double-init
+  /// without try/catch.
+  static bool get isInitialized => _userInitialized;
+
   /// Typically developers will want to initialize [OTel] (the SDK),
   /// and not [OTelAPI] (the no-op API).
   /// The [initialize] method must be called before any other methods.
@@ -85,7 +101,7 @@ class OTelAPI {
       String? serviceName = OTelAPI.defaultServiceName,
       String? serviceVersion = OTelAPI.defaultServiceVersion,
       OTelFactoryCreationFunction? oTelFactoryCreationFunction}) {
-    if (OTelFactory.otelFactory != null) {
+    if (_userInitialized) {
       throw StateError(
           'OTelAPI can only be initialized once. If you need multiple endpoints or service names or versions create a named TracerProvider');
     }
@@ -102,10 +118,18 @@ class OTelAPI {
     }
     final factoryFactory =
         oTelFactoryCreationFunction ?? otelApiFactoryFactoryFunction;
+    // Replaces whatever's installed — including the lazy noop default
+    // that `_getAndCacheOtelFactory` may have installed on a pre-init
+    // API access. The `_userInitialized` flag (not the factory pointer)
+    // is what guards against double-initialization.
     OTelFactory.otelFactory = factoryFactory(
         apiEndpoint: endpoint,
         apiServiceName: serviceName,
         apiServiceVersion: serviceVersion);
+    // Clear the cache so the next `_getAndCacheOtelFactory` pulls the
+    // new factory instead of the cached noop.
+    _otelFactory = null;
+    _userInitialized = true;
   }
 
   /// Creates a new [ContextKey] with the given name.
@@ -709,11 +733,18 @@ class OTelAPI {
     return _otelFactory!;
   }
 
-  /// Reset API state (only public for testing)
+  /// Reset API state (only public for testing).
+  ///
+  /// Clears the user-init flag and the installed factory so a subsequent
+  /// [initialize] call can install a fresh factory. The next API access
+  /// after reset will trigger `_getAndCacheOtelFactory` to install a new
+  /// noop default — matching the spec's pre-init noop semantics.
   @visibleForTesting
   static void reset() {
+    _userInitialized = false;
     _otelFactory = null;
     OTelFactory.otelFactory?.reset();
+    OTelFactory.otelFactory = null;
     // ignore: invalid_use_of_visible_for_testing_member
     Context.resetRoot();
     // ignore: invalid_use_of_visible_for_testing_member
