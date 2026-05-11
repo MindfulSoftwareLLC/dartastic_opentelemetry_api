@@ -1,6 +1,6 @@
 name: dartastic_opentelemetry_api
 description: Dartastic.io's OpenTelemetry API for Dart following the OpenTelemetry specification. Supports all platforms including web.
-version: 1.0.0-beta.6
+version: 1.0.0-beta.7-wip
 repository: https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api.git
 homepage: https://dartastic.io
 
