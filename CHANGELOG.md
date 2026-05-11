@@ -7,7 +7,83 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.0.0-beta.6-wip]
 
+### Changed
+- **Breaking:** Dropped the `Resource` suffix from semconv-enum names where
+  it didn't conflict with a built-in Dart / Flutter / common-package type.
+  `HttpResource.requestMethod` is now `Http.requestMethod`,
+  `UrlResource.urlFull` is now `Url.urlFull`, etc. — a straight find-and-
+  replace migration for ~60 enums. Migration: replace `XResource` →
+  `X` for every enum below.
+
+  **Kept** the `Resource` suffix on five enums to avoid name clashes with
+  common types:
+
+  | Enum             | Conflicts with             |
+  | ---------------- | --------------------------- |
+  | `ErrorResource`  | `dart:core` `Error`         |
+  | `ExceptionResource` | `dart:core` `Exception`  |
+  | `FileResource`   | `dart:io` `File`            |
+  | `ProcessResource` | `dart:io` `Process`        |
+  | `ServerResource` | `package:grpc` `Server`     |
+  | `EventResource`  | `package:web` `Event`       |
+
+  All other 60+ enums dropped the suffix: `Client`, `Cloud`,
+  `ComputeUnit`, `ComputeInstance`, `Database`, `Deployment`, `Device`,
+  `Environment`, `FeatureFlag`, `GenAI`, `General`, `GraphQL`, `Host`,
+  `Http`, `Kubernetes`, `Messaging`, `Network`, `OperatingSystem`,
+  `RPC`, `Url`, `Service`, `SourceCode`, `TelemetryDistro`,
+  `TelemetrySDK`, `UserAgent`, `Version`, plus all 33 new enums in this
+  release (`Android`, `Artifact`, `Aws`, `Azure`, `Browser`, `Cassandra`,
+  `Cicd`, `CloudEvents`, `Cloudfoundry`, `Code`, `Destination`, `Dns`,
+  `Elasticsearch`, `Enduser`, `Faas`, `Gcp`, `Geo`, `Hardware`,
+  `Heroku`, `Ios`, `Log`, `Oci`, `Opentracing`, `Otel`, `Peer`,
+  `Profile`, `Source`, `System`, `Test`, `Thread`, `Tls`, `Vcs`,
+  `Webengine`).
+
 ### Added
+- **Typed value-set enums** — a new `resource_values.dart` file exposes
+  enums for the 35+ OTel attributes whose spec entry defines a closed
+  set of valid string values. Each value enum exposes its on-wire
+  string via a `.value` getter and implements `OTelSemanticValue` for
+  future polymorphic helpers. Highlights:
+
+  - `CloudProvider`, `CloudPlatform`, `FaasInvokedProvider`,
+    `FaasTrigger`
+  - `HostArch`, `OsType`
+  - `HttpRequestMethod`, `HttpConnectionState`
+  - `NetworkType`, `NetworkTransport`, `NetworkConnectionType`,
+    `NetworkIoDirection`
+  - `DbSystem`, `DbClientConnectionState`, `CassandraConsistencyLevel`,
+    `AzureCosmosdbConnectionMode`, `AzureCosmosdbConsistencyLevel`
+  - `MessagingSystem`, `MessagingOperation`
+  - `RpcSystem`, `RpcMessageType`, `GraphqlOperationType`
+  - `OpentracingRefType`, `OtelStatusCode`, `OtelSpanSamplingResult`,
+    `TelemetrySdkLanguage`
+  - `SystemCpuState`, `SystemMemoryState`, `SystemFilesystemState`,
+    `SystemFilesystemType`, `SystemPagingDirection`,
+    `SystemPagingState`, `SystemPagingType`, `SystemProcessStatus`,
+    `DiskIoDirection`, `LogIostream`
+  - `IosAppState`, `AndroidAppState`
+  - `AwsEcsLaunchType`
+  - `CicdPipelineRunState`, `CicdPipelineTaskType`, `CicdWorkerState`
+  - `HardwareType`, `TlsProtocolName`
+  - `VcsChangeState`, `VcsLineChangeType`, `VcsRefType`
+  - `TestCaseResultStatus`, `TestSuiteRunStatus`
+  - `ProfileFrameType`
+  - `GenAiOperationName`, `GenAiSystem`, `GenAiTokenType`
+  - `ContainerCpuState`, `ProcessContextSwitchType`,
+    `ProcessPagingFaultType`
+
+  Usage:
+
+  ```dart
+  OTelAPI.attributesFromSemanticMap({
+    Database.dbSystemName: DbSystem.postgresql.value,
+    Cloud.cloudProvider:   CloudProvider.gcp.value,
+    Network.networkTransport: NetworkTransport.quic.value,
+  });
+  ```
+
 - **Comprehensive semconv-enum coverage of the OTel
   [attribute registry](https://opentelemetry.io/docs/specs/semconv/attributes-registry/).**
   Every top-level registry namespace that wasn't already represented
