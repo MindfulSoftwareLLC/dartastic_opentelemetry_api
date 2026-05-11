@@ -52,12 +52,25 @@ enum CloudResource implements OTelSemantic {
 
 // Compute Unit Semantic Resource
 /// [Specification](https://opentelemetry.io/docs/specs/semconv/resource/#compute-unit)
+/// Covers the OTel container.* registry — see
+/// https://opentelemetry.io/docs/specs/semconv/attributes-registry/container/.
 enum ComputeUnitResource implements OTelSemantic {
   containerName('container.name'),
   containerId('container.id'),
   containerRuntime('container.runtime'),
   containerImageName('container.image.name'),
-  containerImageTag('container.image.tag');
+  // `container.image.tag` is the singular legacy form; the current
+  // spec uses the pluralized `container.image.tags` (List<String>).
+  containerImageTag('container.image.tag'),
+  containerImageTags('container.image.tags'),
+  containerImageId('container.image.id'),
+  containerImageRepoDigests('container.image.repo_digests'),
+  containerCommand('container.command'),
+  containerCommandArgs('container.command_args'),
+  containerCommandLine('container.command_line'),
+  containerCsiPluginName('container.csi.plugin.name'),
+  containerCsiVolumeId('container.csi.volume.id'),
+  containerLabels('container.labels');
 
   @override
   final String key;
@@ -88,6 +101,7 @@ enum ComputeInstanceResource implements OTelSemantic {
 }
 
 enum DatabaseResource implements OTelSemantic {
+  // Legacy / pre-stable keys — retained for backward compatibility.
   dbSystem('db.system'),
   dbConnectionString('db.connection_string'),
   dbUser('db.user'),
@@ -97,7 +111,20 @@ enum DatabaseResource implements OTelSemantic {
   // Current OTel semconv (replaces deprecated `db.sql.table`).
   dbCollectionName('db.collection.name'),
   // Current OTel semconv for "rows returned by the operation".
-  dbResponseReturnedRows('db.response.returned_rows');
+  dbResponseReturnedRows('db.response.returned_rows'),
+  // Current OTel semconv keys (replace the legacy entries above; the
+  // legacy keys are kept for consumers still emitting them).
+  dbSystemName('db.system.name'),
+  dbNamespace('db.namespace'),
+  dbOperationName('db.operation.name'),
+  dbOperationBatchSize('db.operation.batch.size'),
+  dbQueryText('db.query.text'),
+  dbQuerySummary('db.query.summary'),
+  dbResponseStatusCode('db.response.status_code'),
+  dbStoredProcedureName('db.stored_procedure.name'),
+  dbClientConnectionState('db.client.connection.state'),
+  dbClientConnectionPoolName('db.client.connection.pool.name'),
+  dbClientConnectionUsedState('db.client.connection.used.state');
 
   @override
   final String key;
@@ -609,6 +636,647 @@ enum UserAgentResource implements OTelSemantic {
   String toString() => key;
 
   const UserAgentResource(this.key);
+}
+
+// =============================================================================
+// Additional semantic-convention enums — comprehensive coverage of the
+// OTel attribute registry (https://opentelemetry.io/docs/specs/semconv/attributes-registry/).
+//
+// Each enum below mirrors a top-level namespace in the registry. Keys
+// are reproduced verbatim from the spec so they survive cross-tool
+// matching. Enums are ordered alphabetically by registry namespace.
+// =============================================================================
+
+/// Android-specific attributes.
+/// [Specification](https://opentelemetry.io/docs/specs/semconv/attributes-registry/android/)
+enum AndroidResource implements OTelSemantic {
+  androidOsApiLevel('android.os.api_level'),
+  androidAppState('android.app.state'),
+  androidState('android.state');
+
+  @override
+  final String key;
+  @override
+  String toString() => key;
+  const AndroidResource(this.key);
+}
+
+/// Software-artifact / supply-chain attributes.
+/// [Specification](https://opentelemetry.io/docs/specs/semconv/attributes-registry/artifact/)
+enum ArtifactResource implements OTelSemantic {
+  artifactAttestationFilename('artifact.attestation.filename'),
+  artifactAttestationHash('artifact.attestation.hash'),
+  artifactAttestationId('artifact.attestation.id'),
+  artifactFilename('artifact.filename'),
+  artifactHash('artifact.hash'),
+  artifactPurl('artifact.purl'),
+  artifactVersion('artifact.version');
+
+  @override
+  final String key;
+  @override
+  String toString() => key;
+  const ArtifactResource(this.key);
+}
+
+/// AWS-specific attributes (ECS, EKS, Lambda, S3, DynamoDB, etc.).
+/// [Specification](https://opentelemetry.io/docs/specs/semconv/attributes-registry/aws/)
+enum AwsResource implements OTelSemantic {
+  awsRequestId('aws.request_id'),
+  // ECS
+  awsEcsClusterArn('aws.ecs.cluster.arn'),
+  awsEcsContainerArn('aws.ecs.container.arn'),
+  awsEcsLaunchType('aws.ecs.launchtype'),
+  awsEcsTaskArn('aws.ecs.task.arn'),
+  awsEcsTaskFamily('aws.ecs.task.family'),
+  awsEcsTaskId('aws.ecs.task.id'),
+  awsEcsTaskRevision('aws.ecs.task.revision'),
+  // EKS
+  awsEksClusterArn('aws.eks.cluster.arn'),
+  // Lambda
+  awsLambdaInvokedArn('aws.lambda.invoked_arn'),
+  // CloudWatch Logs
+  awsLogGroupArns('aws.log.group.arns'),
+  awsLogGroupNames('aws.log.group.names'),
+  awsLogStreamArns('aws.log.stream.arns'),
+  awsLogStreamNames('aws.log.stream.names'),
+  // S3
+  awsS3Bucket('aws.s3.bucket'),
+  awsS3CopySource('aws.s3.copy_source'),
+  awsS3Delete('aws.s3.delete'),
+  awsS3Key('aws.s3.key'),
+  awsS3PartNumber('aws.s3.part_number'),
+  awsS3UploadId('aws.s3.upload_id'),
+  // DynamoDB
+  awsDynamodbTableNames('aws.dynamodb.table_names'),
+  awsDynamodbConsumedCapacity('aws.dynamodb.consumed_capacity'),
+  awsDynamodbItemCollectionMetrics('aws.dynamodb.item_collection_metrics'),
+  awsDynamodbProvisionedReadCapacity('aws.dynamodb.provisioned_read_capacity'),
+  awsDynamodbProvisionedWriteCapacity(
+      'aws.dynamodb.provisioned_write_capacity'),
+  awsDynamodbAttributesToGet('aws.dynamodb.attributes_to_get'),
+  awsDynamodbProjection('aws.dynamodb.projection'),
+  awsDynamodbLimit('aws.dynamodb.limit'),
+  awsDynamodbAttributeDefinitions('aws.dynamodb.attribute_definitions'),
+  awsDynamodbCount('aws.dynamodb.count'),
+  awsDynamodbScannedCount('aws.dynamodb.scanned_count'),
+  awsDynamodbIndexName('aws.dynamodb.index_name'),
+  awsDynamodbSelect('aws.dynamodb.select'),
+  awsDynamodbExclusiveStartTable('aws.dynamodb.exclusive_start_table'),
+  awsDynamodbGlobalSecondaryIndexes('aws.dynamodb.global_secondary_indexes'),
+  awsDynamodbLocalSecondaryIndexes('aws.dynamodb.local_secondary_indexes'),
+  awsDynamodbTotalSegments('aws.dynamodb.total_segments'),
+  awsDynamodbSegment('aws.dynamodb.segment'),
+  awsDynamodbTableCount('aws.dynamodb.table_count');
+
+  @override
+  final String key;
+  @override
+  String toString() => key;
+  const AwsResource(this.key);
+}
+
+/// Azure-specific attributes.
+/// [Specification](https://opentelemetry.io/docs/specs/semconv/attributes-registry/azure/)
+enum AzureResource implements OTelSemantic {
+  azureClientId('azure.client.id'),
+  azureCosmosdbConnectionMode('azure.cosmosdb.connection.mode'),
+  azureCosmosdbConsistencyLevel('azure.cosmosdb.consistency.level'),
+  azureCosmosdbOperationContactedRegions(
+      'azure.cosmosdb.operation.contacted_regions'),
+  azureCosmosdbOperationRequestCharge(
+      'azure.cosmosdb.operation.request_charge'),
+  azureCosmosdbRequestBodySize('azure.cosmosdb.request.body.size'),
+  azureCosmosdbResponseSubStatusCode('azure.cosmosdb.response.sub_status_code'),
+  // Legacy az.* namespace, kept because many SDKs still emit it.
+  azNamespace('az.namespace'),
+  azServiceRequestId('az.service_request_id');
+
+  @override
+  final String key;
+  @override
+  String toString() => key;
+  const AzureResource(this.key);
+}
+
+/// Browser-specific attributes (set by web/Flutter-Web resource detector).
+/// [Specification](https://opentelemetry.io/docs/specs/semconv/attributes-registry/browser/)
+enum BrowserResource implements OTelSemantic {
+  browserBrands('browser.brands'),
+  browserLanguage('browser.language'),
+  browserMobile('browser.mobile'),
+  browserPlatform('browser.platform');
+
+  @override
+  final String key;
+  @override
+  String toString() => key;
+  const BrowserResource(this.key);
+}
+
+/// Cassandra-specific attributes (used alongside `db.*`).
+/// [Specification](https://opentelemetry.io/docs/specs/semconv/attributes-registry/cassandra/)
+enum CassandraResource implements OTelSemantic {
+  cassandraConsistencyLevel('cassandra.consistency.level'),
+  cassandraCoordinatorDc('cassandra.coordinator.dc'),
+  cassandraCoordinatorId('cassandra.coordinator.id'),
+  cassandraPageSize('cassandra.page.size'),
+  cassandraQueryIdempotent('cassandra.query.idempotent'),
+  cassandraSpeculativeExecutionCount('cassandra.speculative_execution.count');
+
+  @override
+  final String key;
+  @override
+  String toString() => key;
+  const CassandraResource(this.key);
+}
+
+/// CI/CD pipeline attributes.
+/// [Specification](https://opentelemetry.io/docs/specs/semconv/attributes-registry/cicd/)
+enum CicdResource implements OTelSemantic {
+  cicdPipelineName('cicd.pipeline.name'),
+  cicdPipelineRunId('cicd.pipeline.run.id'),
+  cicdPipelineRunState('cicd.pipeline.run.state'),
+  cicdPipelineRunUrlFull('cicd.pipeline.run.url.full'),
+  cicdPipelineTaskName('cicd.pipeline.task.name'),
+  cicdPipelineTaskRunId('cicd.pipeline.task.run.id'),
+  cicdPipelineTaskRunUrlFull('cicd.pipeline.task.run.url.full'),
+  cicdPipelineTaskType('cicd.pipeline.task.type'),
+  cicdSystemComponent('cicd.system.component'),
+  cicdWorkerId('cicd.worker.id'),
+  cicdWorkerName('cicd.worker.name'),
+  cicdWorkerState('cicd.worker.state'),
+  cicdWorkerUrlFull('cicd.worker.url.full');
+
+  @override
+  final String key;
+  @override
+  String toString() => key;
+  const CicdResource(this.key);
+}
+
+/// CloudEvents (https://cloudevents.io) attributes.
+/// [Specification](https://opentelemetry.io/docs/specs/semconv/attributes-registry/cloudevents/)
+enum CloudEventsResource implements OTelSemantic {
+  cloudEventsEventId('cloudevents.event_id'),
+  cloudEventsEventSource('cloudevents.event_source'),
+  cloudEventsEventSpecVersion('cloudevents.event_spec_version'),
+  cloudEventsEventSubject('cloudevents.event_subject'),
+  cloudEventsEventType('cloudevents.event_type');
+
+  @override
+  final String key;
+  @override
+  String toString() => key;
+  const CloudEventsResource(this.key);
+}
+
+/// Cloud Foundry attributes.
+/// [Specification](https://opentelemetry.io/docs/specs/semconv/attributes-registry/cloudfoundry/)
+enum CloudfoundryResource implements OTelSemantic {
+  cloudfoundryAppId('cloudfoundry.app.id'),
+  cloudfoundryAppInstanceId('cloudfoundry.app.instance.id'),
+  cloudfoundryAppName('cloudfoundry.app.name'),
+  cloudfoundryOrgId('cloudfoundry.org.id'),
+  cloudfoundryOrgName('cloudfoundry.org.name'),
+  cloudfoundryProcessId('cloudfoundry.process.id'),
+  cloudfoundryProcessType('cloudfoundry.process.type'),
+  cloudfoundrySpaceId('cloudfoundry.space.id'),
+  cloudfoundrySpaceName('cloudfoundry.space.name'),
+  cloudfoundrySystemId('cloudfoundry.system.id'),
+  cloudfoundrySystemInstanceId('cloudfoundry.system.instance.id');
+
+  @override
+  final String key;
+  @override
+  String toString() => key;
+  const CloudfoundryResource(this.key);
+}
+
+/// Source code attributes (set on spans, log records, exceptions).
+/// [Specification](https://opentelemetry.io/docs/specs/semconv/attributes-registry/code/)
+enum CodeResource implements OTelSemantic {
+  codeColumnNumber('code.column.number'),
+  codeFilePath('code.file.path'),
+  codeFunctionName('code.function.name'),
+  codeLineNumber('code.line.number'),
+  codeNamespace('code.namespace'),
+  codeStacktrace('code.stacktrace');
+
+  @override
+  final String key;
+  @override
+  String toString() => key;
+  const CodeResource(this.key);
+}
+
+/// Destination of a network connection. Mirror of `ServerResource` for
+/// outbound non-HTTP connections (databases, gRPC, etc.).
+/// [Specification](https://opentelemetry.io/docs/specs/semconv/attributes-registry/destination/)
+enum DestinationResource implements OTelSemantic {
+  destinationAddress('destination.address'),
+  destinationPort('destination.port');
+
+  @override
+  final String key;
+  @override
+  String toString() => key;
+  const DestinationResource(this.key);
+}
+
+/// DNS query attributes.
+/// [Specification](https://opentelemetry.io/docs/specs/semconv/attributes-registry/dns/)
+enum DnsResource implements OTelSemantic {
+  dnsQuestionName('dns.question.name'),
+  dnsAnswers('dns.answers');
+
+  @override
+  final String key;
+  @override
+  String toString() => key;
+  const DnsResource(this.key);
+}
+
+/// Elasticsearch-specific attributes (used alongside `db.*`).
+/// [Specification](https://opentelemetry.io/docs/specs/semconv/attributes-registry/elasticsearch/)
+enum ElasticsearchResource implements OTelSemantic {
+  elasticsearchClusterName('elasticsearch.cluster.name'),
+  elasticsearchNodeName('elasticsearch.node.name'),
+  elasticsearchNodeVersion('elasticsearch.node.version');
+
+  @override
+  final String key;
+  @override
+  String toString() => key;
+  const ElasticsearchResource(this.key);
+}
+
+/// End-user identity attributes. Separate from `user.*` per spec —
+/// `enduser.*` is set by services about the end user they're serving.
+/// [Specification](https://opentelemetry.io/docs/specs/semconv/attributes-registry/enduser/)
+enum EnduserResource implements OTelSemantic {
+  enduserId('enduser.id'),
+  enduserRole('enduser.role'),
+  enduserScope('enduser.scope');
+
+  @override
+  final String key;
+  @override
+  String toString() => key;
+  const EnduserResource(this.key);
+}
+
+/// Event-record attributes (used by the logs signal).
+/// [Specification](https://opentelemetry.io/docs/specs/semconv/attributes-registry/event/)
+enum EventResource implements OTelSemantic {
+  eventName('event.name');
+
+  @override
+  final String key;
+  @override
+  String toString() => key;
+  const EventResource(this.key);
+}
+
+/// Function-as-a-Service attributes.
+/// [Specification](https://opentelemetry.io/docs/specs/semconv/attributes-registry/faas/)
+enum FaasResource implements OTelSemantic {
+  faasColdstart('faas.coldstart'),
+  faasCron('faas.cron'),
+  faasDocumentCollection('faas.document.collection'),
+  faasDocumentName('faas.document.name'),
+  faasDocumentOperation('faas.document.operation'),
+  faasDocumentTime('faas.document.time'),
+  faasInstance('faas.instance'),
+  faasInvocationId('faas.invocation_id'),
+  faasInvokedName('faas.invoked_name'),
+  faasInvokedProvider('faas.invoked_provider'),
+  faasInvokedRegion('faas.invoked_region'),
+  faasMaxMemory('faas.max_memory'),
+  faasName('faas.name'),
+  faasTime('faas.time'),
+  faasTrigger('faas.trigger'),
+  faasVersion('faas.version');
+
+  @override
+  final String key;
+  @override
+  String toString() => key;
+  const FaasResource(this.key);
+}
+
+/// GCP-specific attributes.
+/// [Specification](https://opentelemetry.io/docs/specs/semconv/attributes-registry/gcp/)
+enum GcpResource implements OTelSemantic {
+  gcpClientService('gcp.client.service'),
+  gcpCloudRunJobExecution('gcp.cloud_run.job.execution'),
+  gcpCloudRunJobTaskIndex('gcp.cloud_run.job.task_index'),
+  gcpGceInstanceHostname('gcp.gce.instance.hostname'),
+  gcpGceInstanceName('gcp.gce.instance.name');
+
+  @override
+  final String key;
+  @override
+  String toString() => key;
+  const GcpResource(this.key);
+}
+
+/// Geographic-location attributes.
+/// [Specification](https://opentelemetry.io/docs/specs/semconv/attributes-registry/geo/)
+enum GeoResource implements OTelSemantic {
+  geoContinentCode('geo.continent.code'),
+  geoCountryIsoCode('geo.country.iso_code'),
+  geoLocalityName('geo.locality.name'),
+  geoLocationLat('geo.location.lat'),
+  geoLocationLon('geo.location.lon'),
+  geoPostalCode('geo.postal_code'),
+  geoRegionIsoCode('geo.region.iso_code');
+
+  @override
+  final String key;
+  @override
+  String toString() => key;
+  const GeoResource(this.key);
+}
+
+/// Hardware-component attributes.
+/// [Specification](https://opentelemetry.io/docs/specs/semconv/attributes-registry/hardware/)
+enum HardwareResource implements OTelSemantic {
+  hardwareId('hardware.id'),
+  hardwareName('hardware.name'),
+  hardwareParent('hardware.parent'),
+  hardwareSerialNumber('hardware.serial_number'),
+  hardwareType('hardware.type'),
+  hardwareVendor('hardware.vendor'),
+  hardwareModel('hardware.model');
+
+  @override
+  final String key;
+  @override
+  String toString() => key;
+  const HardwareResource(this.key);
+}
+
+/// Heroku platform attributes.
+/// [Specification](https://opentelemetry.io/docs/specs/semconv/attributes-registry/heroku/)
+enum HerokuResource implements OTelSemantic {
+  herokuAppId('heroku.app.id'),
+  herokuReleaseCommit('heroku.release.commit'),
+  herokuReleaseCreationTimestamp('heroku.release.creation_timestamp');
+
+  @override
+  final String key;
+  @override
+  String toString() => key;
+  const HerokuResource(this.key);
+}
+
+/// iOS-specific attributes.
+/// [Specification](https://opentelemetry.io/docs/specs/semconv/attributes-registry/ios/)
+enum IosResource implements OTelSemantic {
+  iosAppState('ios.app.state'),
+  iosState('ios.state');
+
+  @override
+  final String key;
+  @override
+  String toString() => key;
+  const IosResource(this.key);
+}
+
+/// Log-record attributes.
+/// [Specification](https://opentelemetry.io/docs/specs/semconv/attributes-registry/log/)
+enum LogResource implements OTelSemantic {
+  logIostream('log.iostream'),
+  logFileName('log.file.name'),
+  logFileNameResolved('log.file.name_resolved'),
+  logFilePath('log.file.path'),
+  logFilePathResolved('log.file.path_resolved'),
+  logRecordOriginal('log.record.original'),
+  logRecordUid('log.record.uid');
+
+  @override
+  final String key;
+  @override
+  String toString() => key;
+  const LogResource(this.key);
+}
+
+/// OCI image attributes.
+/// [Specification](https://opentelemetry.io/docs/specs/semconv/attributes-registry/oci/)
+enum OciResource implements OTelSemantic {
+  ociManifestDigest('oci.manifest.digest');
+
+  @override
+  final String key;
+  @override
+  String toString() => key;
+  const OciResource(this.key);
+}
+
+/// OpenTracing-bridge attributes.
+/// [Specification](https://opentelemetry.io/docs/specs/semconv/attributes-registry/opentracing/)
+enum OpentracingResource implements OTelSemantic {
+  opentracingRefType('opentracing.ref_type');
+
+  @override
+  final String key;
+  @override
+  String toString() => key;
+  const OpentracingResource(this.key);
+}
+
+/// OpenTelemetry-internal attributes (instrumentation scope, etc.).
+/// [Specification](https://opentelemetry.io/docs/specs/semconv/attributes-registry/otel/)
+enum OtelResource implements OTelSemantic {
+  otelScopeName('otel.scope.name'),
+  otelScopeVersion('otel.scope.version'),
+  otelStatusCode('otel.status_code'),
+  otelStatusDescription('otel.status_description'),
+  otelSpanSamplingResult('otel.span.sampling_result'),
+  // Deprecated in current spec but still emitted by some backends.
+  otelLibraryName('otel.library.name'),
+  otelLibraryVersion('otel.library.version');
+
+  @override
+  final String key;
+  @override
+  String toString() => key;
+  const OtelResource(this.key);
+}
+
+/// Peer-service attribute (cross-service correlation).
+/// [Specification](https://opentelemetry.io/docs/specs/semconv/attributes-registry/peer/)
+enum PeerResource implements OTelSemantic {
+  peerService('peer.service');
+
+  @override
+  final String key;
+  @override
+  String toString() => key;
+  const PeerResource(this.key);
+}
+
+/// Profiling-signal attributes (experimental).
+/// [Specification](https://opentelemetry.io/docs/specs/semconv/attributes-registry/profile/)
+enum ProfileResource implements OTelSemantic {
+  profileFrameType('profile.frame.type');
+
+  @override
+  final String key;
+  @override
+  String toString() => key;
+  const ProfileResource(this.key);
+}
+
+/// Source of a network connection. Mirror of `ClientResource` for
+/// inbound non-HTTP connections.
+/// [Specification](https://opentelemetry.io/docs/specs/semconv/attributes-registry/source/)
+enum SourceResource implements OTelSemantic {
+  sourceAddress('source.address'),
+  sourcePort('source.port');
+
+  @override
+  final String key;
+  @override
+  String toString() => key;
+  const SourceResource(this.key);
+}
+
+/// System-level metrics attributes (CPU, memory, disk, network, filesystem).
+/// Used by the SDK's auto-collected runtime metrics.
+/// [Specification](https://opentelemetry.io/docs/specs/semconv/attributes-registry/system/)
+enum SystemResource implements OTelSemantic {
+  systemCpuLogicalNumber('system.cpu.logical_number'),
+  systemCpuState('system.cpu.state'),
+  systemDevice('system.device'),
+  systemDiskIoDirection('system.disk.io.direction'),
+  systemFilesystemMode('system.filesystem.mode'),
+  systemFilesystemMountpoint('system.filesystem.mountpoint'),
+  systemFilesystemState('system.filesystem.state'),
+  systemFilesystemType('system.filesystem.type'),
+  systemMemoryState('system.memory.state'),
+  systemNetworkState('system.network.state'),
+  systemPagingDirection('system.paging.direction'),
+  systemPagingState('system.paging.state'),
+  systemPagingType('system.paging.type'),
+  systemProcessStatus('system.process.status');
+
+  @override
+  final String key;
+  @override
+  String toString() => key;
+  const SystemResource(this.key);
+}
+
+/// Test framework / test result attributes.
+/// [Specification](https://opentelemetry.io/docs/specs/semconv/attributes-registry/test/)
+enum TestResource implements OTelSemantic {
+  testCaseName('test.case.name'),
+  testCaseResultStatus('test.case.result.status'),
+  testSuiteName('test.suite.name'),
+  testSuiteRunStatus('test.suite.run.status');
+
+  @override
+  final String key;
+  @override
+  String toString() => key;
+  const TestResource(this.key);
+}
+
+/// Thread-of-execution attributes (used by exceptions, logs).
+/// [Specification](https://opentelemetry.io/docs/specs/semconv/attributes-registry/thread/)
+enum ThreadResource implements OTelSemantic {
+  threadId('thread.id'),
+  threadName('thread.name');
+
+  @override
+  final String key;
+  @override
+  String toString() => key;
+  const ThreadResource(this.key);
+}
+
+/// TLS connection attributes.
+/// [Specification](https://opentelemetry.io/docs/specs/semconv/attributes-registry/tls/)
+enum TlsResource implements OTelSemantic {
+  tlsCipher('tls.cipher'),
+  tlsCurve('tls.curve'),
+  tlsEstablished('tls.established'),
+  tlsNextProtocol('tls.next_protocol'),
+  tlsProtocolName('tls.protocol.name'),
+  tlsProtocolVersion('tls.protocol.version'),
+  tlsResumed('tls.resumed'),
+  tlsClientCertificate('tls.client.certificate'),
+  tlsClientCertificateChain('tls.client.certificate_chain'),
+  tlsClientHashMd5('tls.client.hash.md5'),
+  tlsClientHashSha1('tls.client.hash.sha1'),
+  tlsClientHashSha256('tls.client.hash.sha256'),
+  tlsClientIssuer('tls.client.issuer'),
+  tlsClientJa3('tls.client.ja3'),
+  tlsClientNotAfter('tls.client.not_after'),
+  tlsClientNotBefore('tls.client.not_before'),
+  tlsClientSubject('tls.client.subject'),
+  tlsClientSupportedCiphers('tls.client.supported_ciphers'),
+  tlsServerCertificate('tls.server.certificate'),
+  tlsServerCertificateChain('tls.server.certificate_chain'),
+  tlsServerHashMd5('tls.server.hash.md5'),
+  tlsServerHashSha1('tls.server.hash.sha1'),
+  tlsServerHashSha256('tls.server.hash.sha256'),
+  tlsServerIssuer('tls.server.issuer'),
+  tlsServerJa3s('tls.server.ja3s'),
+  tlsServerNotAfter('tls.server.not_after'),
+  tlsServerNotBefore('tls.server.not_before'),
+  tlsServerSubject('tls.server.subject');
+
+  @override
+  final String key;
+  @override
+  String toString() => key;
+  const TlsResource(this.key);
+}
+
+/// Version-control-system attributes (source repository info).
+/// [Specification](https://opentelemetry.io/docs/specs/semconv/attributes-registry/vcs/)
+enum VcsResource implements OTelSemantic {
+  vcsRepositoryUrlFull('vcs.repository.url.full'),
+  vcsRepositoryRefName('vcs.repository.ref.name'),
+  vcsRepositoryRefRevision('vcs.repository.ref.revision'),
+  vcsRepositoryRefType('vcs.repository.ref.type'),
+  vcsRepositoryChangeId('vcs.repository.change.id'),
+  vcsRepositoryChangeTitle('vcs.repository.change.title'),
+  vcsRefHeadName('vcs.ref.head.name'),
+  vcsRefHeadRevision('vcs.ref.head.revision'),
+  vcsRefHeadType('vcs.ref.head.type'),
+  vcsRefBaseName('vcs.ref.base.name'),
+  vcsRefBaseRevision('vcs.ref.base.revision'),
+  vcsRefBaseType('vcs.ref.base.type'),
+  vcsChangeId('vcs.change.id'),
+  vcsChangeTitle('vcs.change.title'),
+  vcsChangeState('vcs.change.state'),
+  vcsLineChangeType('vcs.line_change.type'),
+  vcsOwnerName('vcs.owner.name'),
+  vcsProviderName('vcs.provider.name');
+
+  @override
+  final String key;
+  @override
+  String toString() => key;
+  const VcsResource(this.key);
+}
+
+/// Web engine attributes (servlet container, framework).
+/// [Specification](https://opentelemetry.io/docs/specs/semconv/attributes-registry/webengine/)
+enum WebengineResource implements OTelSemantic {
+  webengineDescription('webengine.description'),
+  webengineName('webengine.name'),
+  webengineVersion('webengine.version');
+
+  @override
+  final String key;
+  @override
+  String toString() => key;
+  const WebengineResource(this.key);
 }
 
 // Version Semantic Resource
