@@ -8,6 +8,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.0.0-beta.6-wip]
 
 ### Added
+- `OTelAPI.attributesOf<E extends OTelSemantic>(Map<E, Object>)` — a
+  shorthand-friendly counterpart to `attributesFromSemanticMap`.
+  Parameterized on a single concrete semconv enum [E], so Dart 3.10
+  static dot-shorthand can drop the prefix at the call site:
+
+  ```dart
+  // Today and forever:
+  OTelAPI.attributesOf<Http>({
+    Http.requestMethod: 'GET',
+    Http.responseStatusCode: 200,
+  });
+
+  // With Dart 3.10+ static dot-shorthand enabled:
+  OTelAPI.attributesOf<Http>({
+    .requestMethod: 'GET',
+    .responseStatusCode: 200,
+  });
+  ```
+
+  `attributesFromSemanticMap` stays the right call site when you need to
+  mix multiple semconv enums or your own `OTelSemantic`-implementing
+  enums in one map.
+
+- New top-level `User` enum in `semantics.dart` covering the OTel-spec
+  `user.*` keys: `userId`, `userEmail`, `userFullName`, `userName`,
+  `userRoles`, `userSession`. Replaces the previous `UserSemantics`
+  enum in `ui_semantics.dart`.
+
+- New top-level `Session` enum in `semantics.dart` covering the OTel-spec
+  `session.*` keys: `sessionId`, `sessionPreviousId`. Spec-only subset
+  of the previous `SessionViewSemantics`.
+
 - **Spec-derived metric-name enums** in new `semantic_metrics.dart`.
   Covers every metric in the OTel attribute registry except the
   language-runtime namespaces (`jvm.*`, `go.*`, `nodejs.*`,
@@ -70,8 +102,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `Profile`, `Source`, `System`, `Test`, `Thread`, `Tls`, `Vcs`,
   `Webengine`).
 
+- **Breaking — file restructure.** `lib/src/api/semantics/resource_semantics.dart`
+  → `lib/src/api/semantics/semantics.dart` (the new consolidated home
+  for the `OTelSemantic` interface and every attribute-key enum);
+  `lib/src/api/semantics/resource_values.dart` →
+  `lib/src/api/semantics/semantic_values.dart`. The previous standalone
+  `semantics.dart` (interface only) is deleted; its content moved to
+  the top of the renamed file. Consumers using the package barrel
+  (`package:dartastic_opentelemetry_api/dartastic_opentelemetry_api.dart`)
+  are unaffected. Direct `src/api/semantics/...` imports need the
+  new paths.
+
+- **Breaking — `UserSemantics` removed.** Use the new `User` enum in
+  `semantics.dart` instead. Migration: `UserSemantics.userId` →
+  `User.userId`, etc.
+
+- **Breaking — `SessionViewSemantics` split.** OTel-spec keys
+  (`session.id`, `session.previous_id`) → `Session` in `semantics.dart`.
+  Datadog/Dynatrace-style non-spec RUM keys (`session_id` underscored,
+  `session.start`, `session.duration`, `view.*`, `action.count`,
+  `user_satisfaction_score`) → new `RumSessionView` enum in
+  `ui_semantics.dart`. `ui_semantics.dart` is now strictly the home
+  for Flutter / RUM non-spec conventions.
+
 ### Added
-- **Typed value-set enums** — a new `resource_values.dart` file exposes
+- **Typed value-set enums** — a new `semantic_values.dart` file exposes
   enums for the 35+ OTel attributes whose spec entry defines a closed
   set of valid string values. Each value enum exposes its on-wire
   string via a `.value` getter and implements `OTelSemanticValue` for
