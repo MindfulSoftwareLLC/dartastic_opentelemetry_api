@@ -19,7 +19,7 @@ extension OTelSemanticExtension on OTelSemantic {
 
 // Client Semantic Resource
 /// [Specification](https://opentelemetry.io/docs/specs/semconv/attributes-registry/client/)
-enum ClientResource implements OTelSemantic {
+enum Client implements OTelSemantic {
   clientAddress('client.address'),
   clientPort('client.port');
 
@@ -29,12 +29,12 @@ enum ClientResource implements OTelSemantic {
   @override
   String toString() => key;
 
-  const ClientResource(this.key);
+  const Client(this.key);
 }
 
 // Cloud Semantic Resource
 /// [Specification](https://opentelemetry.io/docs/specs/semconv/resource/#cloud-provider)
-enum CloudResource implements OTelSemantic {
+enum Cloud implements OTelSemantic {
   cloudProvider('cloud.provider'),
   cloudAccountId('cloud.account.id'),
   cloudRegion('cloud.region'),
@@ -47,14 +47,14 @@ enum CloudResource implements OTelSemantic {
   @override
   String toString() => key;
 
-  const CloudResource(this.key);
+  const Cloud(this.key);
 }
 
 // Compute Unit Semantic Resource
 /// [Specification](https://opentelemetry.io/docs/specs/semconv/resource/#compute-unit)
 /// Covers the OTel container.* registry — see
 /// https://opentelemetry.io/docs/specs/semconv/attributes-registry/container/.
-enum ComputeUnitResource implements OTelSemantic {
+enum ComputeUnit implements OTelSemantic {
   containerName('container.name'),
   containerId('container.id'),
   containerRuntime('container.runtime'),
@@ -78,12 +78,12 @@ enum ComputeUnitResource implements OTelSemantic {
   @override
   String toString() => key;
 
-  const ComputeUnitResource(this.key);
+  const ComputeUnit(this.key);
 }
 
 // Compute Instance Semantic Resource
 /// [Specification](https://opentelemetry.io/docs/specs/semconv/resource/#compute-instance)
-enum ComputeInstanceResource implements OTelSemantic {
+enum ComputeInstance implements OTelSemantic {
   hostId('host.id'),
   hostName('host.name'),
   hostType('host.type'),
@@ -97,10 +97,10 @@ enum ComputeInstanceResource implements OTelSemantic {
   @override
   String toString() => key;
 
-  const ComputeInstanceResource(this.key);
+  const ComputeInstance(this.key);
 }
 
-enum DatabaseResource implements OTelSemantic {
+enum Database implements OTelSemantic {
   // Legacy / pre-stable keys — retained for backward compatibility.
   dbSystem('db.system'),
   dbConnectionString('db.connection_string'),
@@ -132,12 +132,12 @@ enum DatabaseResource implements OTelSemantic {
   @override
   String toString() => key;
 
-  const DatabaseResource(this.key);
+  const Database(this.key);
 }
 
 // Deployment Semantic Resource
 /// [Specification](https://opentelemetry.io/docs/specs/semconv/resource/#deployment)
-enum DeploymentResource implements OTelSemantic {
+enum Deployment implements OTelSemantic {
   deploymentId('deployment.id'),
   deploymentName('deployment.name'),
   deploymentEnvironmentName('deployment.environment.name');
@@ -148,12 +148,12 @@ enum DeploymentResource implements OTelSemantic {
   @override
   String toString() => key;
 
-  const DeploymentResource(this.key);
+  const Deployment(this.key);
 }
 
 // Device Semantic Resource
 /// [Specification](https://opentelemetry.io/docs/specs/semconv/resource/#device)
-enum DeviceResource implements OTelSemantic {
+enum Device implements OTelSemantic {
   deviceId('device.id'),
   deviceModelIdentifier('device.model.identifier'),
   deviceModelName('device.model.name'),
@@ -165,7 +165,7 @@ enum DeviceResource implements OTelSemantic {
   @override
   String toString() => key;
 
-  const DeviceResource(this.key);
+  const Device(this.key);
 }
 
 // Error Semantic Resource
@@ -184,7 +184,7 @@ enum ErrorResource implements OTelSemantic {
 
 // Environment Semantic Resource
 /// [Specification](https://opentelemetry.io/docs/specs/semconv/resource/#environment)
-enum EnvironmentResource implements OTelSemantic {
+enum Environment implements OTelSemantic {
   deploymentEnvironment('deployment.environment');
 
   @override
@@ -193,7 +193,7 @@ enum EnvironmentResource implements OTelSemantic {
   @override
   String toString() => key;
 
-  const EnvironmentResource(this.key);
+  const Environment(this.key);
 }
 
 enum ExceptionResource implements OTelSemantic {
@@ -214,7 +214,7 @@ enum ExceptionResource implements OTelSemantic {
 
 // Feature Flag Semantic Resource
 /// [Specification](https://opentelemetry.io/docs/specs/semconv/attributes-registry/feature-flag/)
-enum FeatureFlagResource implements OTelSemantic {
+enum FeatureFlag implements OTelSemantic {
   featureFlagKey('feature_flag.key'),
   featureFlagVariant('feature_flag.variant'),
   featureFlagProviderName('feature_flag.provider_name'),
@@ -230,7 +230,7 @@ enum FeatureFlagResource implements OTelSemantic {
   @override
   String toString() => key;
 
-  const FeatureFlagResource(this.key);
+  const FeatureFlag(this.key);
 }
 
 /// OpenTelemetry Semantic Conventions - File Attributes
@@ -270,7 +270,7 @@ enum FileResource implements OTelSemantic {
 
 // GenAI Semantic Resource
 /// [Specification](https://opentelemetry.io/docs/specs/semconv/attributes-registry/gen-ai/)
-enum GenAIResource implements OTelSemantic {
+enum GenAI implements OTelSemantic {
   genAiOperationName('gen_ai.operation.name'),
   genAiRequestEncodingFormats('gen_ai.request.encoding_formats'),
   genAiRequestFrequencyPenalty('gen_ai.request.frequency_penalty'),
@@ -285,10 +285,10 @@ enum GenAIResource implements OTelSemantic {
   @override
   String toString() => key;
 
-  const GenAIResource(this.key);
+  const GenAI(this.key);
 }
 
-enum GeneralResourceResource implements OTelSemantic {
+enum General implements OTelSemantic {
   serviceName('service.name'),
   serviceVersion('service.version'),
   telemetrySdkName('telemetry.sdk.name'),
@@ -301,10 +301,10 @@ enum GeneralResourceResource implements OTelSemantic {
   @override
   String toString() => key;
 
-  const GeneralResourceResource(this.key);
+  const General(this.key);
 }
 
-enum GraphQLResource implements OTelSemantic {
+enum GraphQL implements OTelSemantic {
   graphqlDocument('graphql.document'),
   graphqlOperationName('graphql.operation.name'),
   graphqlOperationType('graphql.operation.type');
@@ -315,14 +315,14 @@ enum GraphQLResource implements OTelSemantic {
   @override
   String toString() => key;
 
-  const GraphQLResource(this.key);
+  const GraphQL(this.key);
 }
 
 /// OpenTelemetry Semantic Conventions - Host Attributes
 
 // Host Semantic Resource (experimental)
 /// [Specification](https://opentelemetry.io/docs/specs/semconv/attributes-registry/host/)
-enum HostResource implements OTelSemantic {
+enum Host implements OTelSemantic {
   hostArch('host.arch'),
   hostCpuCacheL2Size('host.cpu.cache.l2.size'),
   hostCpuFamily('host.cpu.family'),
@@ -345,11 +345,11 @@ enum HostResource implements OTelSemantic {
   @override
   String toString() => key;
 
-  const HostResource(this.key);
+  const Host(this.key);
 }
 
 // Enum for standard HTTP attributes
-enum HttpResource implements OTelSemantic {
+enum Http implements OTelSemantic {
   httpConnectionState('http.connection.state'),
   requestMethod('http.request.method'),
   requestMethodOriginal('http.request.method_original'),
@@ -368,7 +368,7 @@ enum HttpResource implements OTelSemantic {
   @override
   String toString() => key;
 
-  const HttpResource(this.key);
+  const Http(this.key);
 }
 
 /// Enum for HTTP header attributes with dynamic keys
@@ -398,7 +398,7 @@ class HttpHeaderAttribute {
 
 // Kubernetes Semantic Resource
 /// [Specification](https://opentelemetry.io/docs/specs/semconv/resource/#kubernetes)
-enum KubernetesResource implements OTelSemantic {
+enum Kubernetes implements OTelSemantic {
   k8sClusterName('k8s.cluster.name'),
   k8sResourcepaceName('k8s.Resourcepace.name'),
   k8sPodName('k8s.pod.name'),
@@ -423,10 +423,10 @@ enum KubernetesResource implements OTelSemantic {
   @override
   String toString() => key;
 
-  const KubernetesResource(this.key);
+  const Kubernetes(this.key);
 }
 
-enum MessagingResource implements OTelSemantic {
+enum Messaging implements OTelSemantic {
   messagingSystem('messaging.system'),
   messagingDestination('messaging.destination'),
   messagingDestinationKind('messaging.destination_kind'),
@@ -440,10 +440,10 @@ enum MessagingResource implements OTelSemantic {
   @override
   String toString() => key;
 
-  const MessagingResource(this.key);
+  const Messaging(this.key);
 }
 
-enum NetworkResource implements OTelSemantic {
+enum Network implements OTelSemantic {
   networkType('network.type'),
   networkCarrierName('network.carrier.name'),
   networkCarrierMcc('network.carrier.mcc'),
@@ -459,12 +459,12 @@ enum NetworkResource implements OTelSemantic {
   @override
   String toString() => key;
 
-  const NetworkResource(this.key);
+  const Network(this.key);
 }
 
 // Operating System Semantic Resource
 /// [Specification](https://opentelemetry.io/docs/specs/semconv/resource/#operating-system)
-enum OperatingSystemResource implements OTelSemantic {
+enum OperatingSystem implements OTelSemantic {
   osType('os.type'),
   osDescription('os.description'),
   osName('os.name'),
@@ -476,7 +476,7 @@ enum OperatingSystemResource implements OTelSemantic {
   @override
   String toString() => key;
 
-  const OperatingSystemResource(this.key);
+  const OperatingSystem(this.key);
 }
 
 // Process Semantic Resource
@@ -501,7 +501,7 @@ enum ProcessResource implements OTelSemantic {
   const ProcessResource(this.key);
 }
 
-enum RPCResource implements OTelSemantic {
+enum RPC implements OTelSemantic {
   rpcSystem('rpc.system'),
   rpcService('rpc.service'),
   rpcMethod('rpc.method');
@@ -512,12 +512,12 @@ enum RPCResource implements OTelSemantic {
   @override
   String toString() => key;
 
-  const RPCResource(this.key);
+  const RPC(this.key);
 }
 
 // Server Semantic Resource
 /// [Specification](https://opentelemetry.io/docs/specs/semconv/attributes-registry/server/)
-enum ServerResource implements OTelSemantic {
+enum Server implements OTelSemantic {
   serverAddress('server.address'),
   serverPort('server.port');
 
@@ -527,12 +527,12 @@ enum ServerResource implements OTelSemantic {
   @override
   String toString() => key;
 
-  const ServerResource(this.key);
+  const Server(this.key);
 }
 
 // URL Semantic Resource
 /// [Specification](https://opentelemetry.io/docs/specs/semconv/attributes-registry/url/)
-enum UrlResource implements OTelSemantic {
+enum Url implements OTelSemantic {
   urlScheme('url.scheme'),
   urlPath('url.path'),
   urlQuery('url.query'),
@@ -552,12 +552,12 @@ enum UrlResource implements OTelSemantic {
   @override
   String toString() => key;
 
-  const UrlResource(this.key);
+  const Url(this.key);
 }
 
 // Service Semantic Resource
 /// [Specification](https://opentelemetry.io/docs/specs/semconv/resource/#service)
-enum ServiceResource implements OTelSemantic {
+enum Service implements OTelSemantic {
   serviceName('service.name'),
   serviceNamespace('service.namespace'),
   serviceInstanceId('service.instance.id'),
@@ -569,12 +569,12 @@ enum ServiceResource implements OTelSemantic {
   @override
   String toString() => key;
 
-  const ServiceResource(this.key);
+  const Service(this.key);
 }
 
 // Source Code Semantic Resource
 /// [Specification](https://opentelemetry.io/docs/specs/semconv/general/attributes/)
-enum SourceCodeResource implements OTelSemantic {
+enum SourceCode implements OTelSemantic {
   codeFunctionName('code.function.name'),
   codeResourcepace('code.Resourcepace'),
   codeFilePath('code.file.path'),
@@ -588,12 +588,12 @@ enum SourceCodeResource implements OTelSemantic {
   @override
   String toString() => key;
 
-  const SourceCodeResource(this.key);
+  const SourceCode(this.key);
 }
 
 // Telemetry Distro Semantic Resource
 /// [Specification](https://opentelemetry.io/docs/specs/semconv/resource/#telemetry-distro)
-enum TelemetryDistroResource implements OTelSemantic {
+enum TelemetryDistro implements OTelSemantic {
   distroName('telemetry.distro.name'),
   distroVersion('telemetry.distro.version');
 
@@ -603,12 +603,12 @@ enum TelemetryDistroResource implements OTelSemantic {
   @override
   String toString() => key;
 
-  const TelemetryDistroResource(this.key);
+  const TelemetryDistro(this.key);
 }
 
 // Telemetry SDK Semantic Resource
 /// [Specification](https://opentelemetry.io/docs/specs/semconv/resource/#telemetry-sdk)
-enum TelemetrySDKResource implements OTelSemantic {
+enum TelemetrySDK implements OTelSemantic {
   sdkName('telemetry.sdk.name'),
   sdkLanguage('telemetry.sdk.language'),
   sdkVersion('telemetry.sdk.version');
@@ -619,12 +619,12 @@ enum TelemetrySDKResource implements OTelSemantic {
   @override
   String toString() => key;
 
-  const TelemetrySDKResource(this.key);
+  const TelemetrySDK(this.key);
 }
 
 // User Agent Semantic Conventions
 /// [Specification](https://opentelemetry.io/docs/specs/semconv/attributes-registry/user-agent/)
-enum UserAgentResource implements OTelSemantic {
+enum UserAgent implements OTelSemantic {
   userAgentOriginal('user_agent.original'),
   userAgentName('user_agent.name'),
   userAgentVersion('user_agent.version');
@@ -635,7 +635,7 @@ enum UserAgentResource implements OTelSemantic {
   @override
   String toString() => key;
 
-  const UserAgentResource(this.key);
+  const UserAgent(this.key);
 }
 
 // =============================================================================
@@ -649,7 +649,7 @@ enum UserAgentResource implements OTelSemantic {
 
 /// Android-specific attributes.
 /// [Specification](https://opentelemetry.io/docs/specs/semconv/attributes-registry/android/)
-enum AndroidResource implements OTelSemantic {
+enum Android implements OTelSemantic {
   androidOsApiLevel('android.os.api_level'),
   androidAppState('android.app.state'),
   androidState('android.state');
@@ -658,12 +658,12 @@ enum AndroidResource implements OTelSemantic {
   final String key;
   @override
   String toString() => key;
-  const AndroidResource(this.key);
+  const Android(this.key);
 }
 
 /// Software-artifact / supply-chain attributes.
 /// [Specification](https://opentelemetry.io/docs/specs/semconv/attributes-registry/artifact/)
-enum ArtifactResource implements OTelSemantic {
+enum Artifact implements OTelSemantic {
   artifactAttestationFilename('artifact.attestation.filename'),
   artifactAttestationHash('artifact.attestation.hash'),
   artifactAttestationId('artifact.attestation.id'),
@@ -676,12 +676,12 @@ enum ArtifactResource implements OTelSemantic {
   final String key;
   @override
   String toString() => key;
-  const ArtifactResource(this.key);
+  const Artifact(this.key);
 }
 
 /// AWS-specific attributes (ECS, EKS, Lambda, S3, DynamoDB, etc.).
 /// [Specification](https://opentelemetry.io/docs/specs/semconv/attributes-registry/aws/)
-enum AwsResource implements OTelSemantic {
+enum Aws implements OTelSemantic {
   awsRequestId('aws.request_id'),
   // ECS
   awsEcsClusterArn('aws.ecs.cluster.arn'),
@@ -733,12 +733,12 @@ enum AwsResource implements OTelSemantic {
   final String key;
   @override
   String toString() => key;
-  const AwsResource(this.key);
+  const Aws(this.key);
 }
 
 /// Azure-specific attributes.
 /// [Specification](https://opentelemetry.io/docs/specs/semconv/attributes-registry/azure/)
-enum AzureResource implements OTelSemantic {
+enum Azure implements OTelSemantic {
   azureClientId('azure.client.id'),
   azureCosmosdbConnectionMode('azure.cosmosdb.connection.mode'),
   azureCosmosdbConsistencyLevel('azure.cosmosdb.consistency.level'),
@@ -756,12 +756,12 @@ enum AzureResource implements OTelSemantic {
   final String key;
   @override
   String toString() => key;
-  const AzureResource(this.key);
+  const Azure(this.key);
 }
 
 /// Browser-specific attributes (set by web/Flutter-Web resource detector).
 /// [Specification](https://opentelemetry.io/docs/specs/semconv/attributes-registry/browser/)
-enum BrowserResource implements OTelSemantic {
+enum Browser implements OTelSemantic {
   browserBrands('browser.brands'),
   browserLanguage('browser.language'),
   browserMobile('browser.mobile'),
@@ -771,12 +771,12 @@ enum BrowserResource implements OTelSemantic {
   final String key;
   @override
   String toString() => key;
-  const BrowserResource(this.key);
+  const Browser(this.key);
 }
 
 /// Cassandra-specific attributes (used alongside `db.*`).
 /// [Specification](https://opentelemetry.io/docs/specs/semconv/attributes-registry/cassandra/)
-enum CassandraResource implements OTelSemantic {
+enum Cassandra implements OTelSemantic {
   cassandraConsistencyLevel('cassandra.consistency.level'),
   cassandraCoordinatorDc('cassandra.coordinator.dc'),
   cassandraCoordinatorId('cassandra.coordinator.id'),
@@ -788,12 +788,12 @@ enum CassandraResource implements OTelSemantic {
   final String key;
   @override
   String toString() => key;
-  const CassandraResource(this.key);
+  const Cassandra(this.key);
 }
 
 /// CI/CD pipeline attributes.
 /// [Specification](https://opentelemetry.io/docs/specs/semconv/attributes-registry/cicd/)
-enum CicdResource implements OTelSemantic {
+enum Cicd implements OTelSemantic {
   cicdPipelineName('cicd.pipeline.name'),
   cicdPipelineRunId('cicd.pipeline.run.id'),
   cicdPipelineRunState('cicd.pipeline.run.state'),
@@ -812,12 +812,12 @@ enum CicdResource implements OTelSemantic {
   final String key;
   @override
   String toString() => key;
-  const CicdResource(this.key);
+  const Cicd(this.key);
 }
 
 /// CloudEvents (https://cloudevents.io) attributes.
 /// [Specification](https://opentelemetry.io/docs/specs/semconv/attributes-registry/cloudevents/)
-enum CloudEventsResource implements OTelSemantic {
+enum CloudEvents implements OTelSemantic {
   cloudEventsEventId('cloudevents.event_id'),
   cloudEventsEventSource('cloudevents.event_source'),
   cloudEventsEventSpecVersion('cloudevents.event_spec_version'),
@@ -828,12 +828,12 @@ enum CloudEventsResource implements OTelSemantic {
   final String key;
   @override
   String toString() => key;
-  const CloudEventsResource(this.key);
+  const CloudEvents(this.key);
 }
 
 /// Cloud Foundry attributes.
 /// [Specification](https://opentelemetry.io/docs/specs/semconv/attributes-registry/cloudfoundry/)
-enum CloudfoundryResource implements OTelSemantic {
+enum Cloudfoundry implements OTelSemantic {
   cloudfoundryAppId('cloudfoundry.app.id'),
   cloudfoundryAppInstanceId('cloudfoundry.app.instance.id'),
   cloudfoundryAppName('cloudfoundry.app.name'),
@@ -850,12 +850,12 @@ enum CloudfoundryResource implements OTelSemantic {
   final String key;
   @override
   String toString() => key;
-  const CloudfoundryResource(this.key);
+  const Cloudfoundry(this.key);
 }
 
 /// Source code attributes (set on spans, log records, exceptions).
 /// [Specification](https://opentelemetry.io/docs/specs/semconv/attributes-registry/code/)
-enum CodeResource implements OTelSemantic {
+enum Code implements OTelSemantic {
   codeColumnNumber('code.column.number'),
   codeFilePath('code.file.path'),
   codeFunctionName('code.function.name'),
@@ -867,13 +867,13 @@ enum CodeResource implements OTelSemantic {
   final String key;
   @override
   String toString() => key;
-  const CodeResource(this.key);
+  const Code(this.key);
 }
 
-/// Destination of a network connection. Mirror of `ServerResource` for
+/// Destination of a network connection. Mirror of `Server` for
 /// outbound non-HTTP connections (databases, gRPC, etc.).
 /// [Specification](https://opentelemetry.io/docs/specs/semconv/attributes-registry/destination/)
-enum DestinationResource implements OTelSemantic {
+enum Destination implements OTelSemantic {
   destinationAddress('destination.address'),
   destinationPort('destination.port');
 
@@ -881,12 +881,12 @@ enum DestinationResource implements OTelSemantic {
   final String key;
   @override
   String toString() => key;
-  const DestinationResource(this.key);
+  const Destination(this.key);
 }
 
 /// DNS query attributes.
 /// [Specification](https://opentelemetry.io/docs/specs/semconv/attributes-registry/dns/)
-enum DnsResource implements OTelSemantic {
+enum Dns implements OTelSemantic {
   dnsQuestionName('dns.question.name'),
   dnsAnswers('dns.answers');
 
@@ -894,12 +894,12 @@ enum DnsResource implements OTelSemantic {
   final String key;
   @override
   String toString() => key;
-  const DnsResource(this.key);
+  const Dns(this.key);
 }
 
 /// Elasticsearch-specific attributes (used alongside `db.*`).
 /// [Specification](https://opentelemetry.io/docs/specs/semconv/attributes-registry/elasticsearch/)
-enum ElasticsearchResource implements OTelSemantic {
+enum Elasticsearch implements OTelSemantic {
   elasticsearchClusterName('elasticsearch.cluster.name'),
   elasticsearchNodeName('elasticsearch.node.name'),
   elasticsearchNodeVersion('elasticsearch.node.version');
@@ -908,13 +908,13 @@ enum ElasticsearchResource implements OTelSemantic {
   final String key;
   @override
   String toString() => key;
-  const ElasticsearchResource(this.key);
+  const Elasticsearch(this.key);
 }
 
 /// End-user identity attributes. Separate from `user.*` per spec —
 /// `enduser.*` is set by services about the end user they're serving.
 /// [Specification](https://opentelemetry.io/docs/specs/semconv/attributes-registry/enduser/)
-enum EnduserResource implements OTelSemantic {
+enum Enduser implements OTelSemantic {
   enduserId('enduser.id'),
   enduserRole('enduser.role'),
   enduserScope('enduser.scope');
@@ -923,7 +923,7 @@ enum EnduserResource implements OTelSemantic {
   final String key;
   @override
   String toString() => key;
-  const EnduserResource(this.key);
+  const Enduser(this.key);
 }
 
 /// Event-record attributes (used by the logs signal).
@@ -940,7 +940,7 @@ enum EventResource implements OTelSemantic {
 
 /// Function-as-a-Service attributes.
 /// [Specification](https://opentelemetry.io/docs/specs/semconv/attributes-registry/faas/)
-enum FaasResource implements OTelSemantic {
+enum Faas implements OTelSemantic {
   faasColdstart('faas.coldstart'),
   faasCron('faas.cron'),
   faasDocumentCollection('faas.document.collection'),
@@ -962,12 +962,12 @@ enum FaasResource implements OTelSemantic {
   final String key;
   @override
   String toString() => key;
-  const FaasResource(this.key);
+  const Faas(this.key);
 }
 
 /// GCP-specific attributes.
 /// [Specification](https://opentelemetry.io/docs/specs/semconv/attributes-registry/gcp/)
-enum GcpResource implements OTelSemantic {
+enum Gcp implements OTelSemantic {
   gcpClientService('gcp.client.service'),
   gcpCloudRunJobExecution('gcp.cloud_run.job.execution'),
   gcpCloudRunJobTaskIndex('gcp.cloud_run.job.task_index'),
@@ -978,12 +978,12 @@ enum GcpResource implements OTelSemantic {
   final String key;
   @override
   String toString() => key;
-  const GcpResource(this.key);
+  const Gcp(this.key);
 }
 
 /// Geographic-location attributes.
 /// [Specification](https://opentelemetry.io/docs/specs/semconv/attributes-registry/geo/)
-enum GeoResource implements OTelSemantic {
+enum Geo implements OTelSemantic {
   geoContinentCode('geo.continent.code'),
   geoCountryIsoCode('geo.country.iso_code'),
   geoLocalityName('geo.locality.name'),
@@ -996,12 +996,12 @@ enum GeoResource implements OTelSemantic {
   final String key;
   @override
   String toString() => key;
-  const GeoResource(this.key);
+  const Geo(this.key);
 }
 
 /// Hardware-component attributes.
 /// [Specification](https://opentelemetry.io/docs/specs/semconv/attributes-registry/hardware/)
-enum HardwareResource implements OTelSemantic {
+enum Hardware implements OTelSemantic {
   hardwareId('hardware.id'),
   hardwareName('hardware.name'),
   hardwareParent('hardware.parent'),
@@ -1014,12 +1014,12 @@ enum HardwareResource implements OTelSemantic {
   final String key;
   @override
   String toString() => key;
-  const HardwareResource(this.key);
+  const Hardware(this.key);
 }
 
 /// Heroku platform attributes.
 /// [Specification](https://opentelemetry.io/docs/specs/semconv/attributes-registry/heroku/)
-enum HerokuResource implements OTelSemantic {
+enum Heroku implements OTelSemantic {
   herokuAppId('heroku.app.id'),
   herokuReleaseCommit('heroku.release.commit'),
   herokuReleaseCreationTimestamp('heroku.release.creation_timestamp');
@@ -1028,12 +1028,12 @@ enum HerokuResource implements OTelSemantic {
   final String key;
   @override
   String toString() => key;
-  const HerokuResource(this.key);
+  const Heroku(this.key);
 }
 
 /// iOS-specific attributes.
 /// [Specification](https://opentelemetry.io/docs/specs/semconv/attributes-registry/ios/)
-enum IosResource implements OTelSemantic {
+enum Ios implements OTelSemantic {
   iosAppState('ios.app.state'),
   iosState('ios.state');
 
@@ -1041,12 +1041,12 @@ enum IosResource implements OTelSemantic {
   final String key;
   @override
   String toString() => key;
-  const IosResource(this.key);
+  const Ios(this.key);
 }
 
 /// Log-record attributes.
 /// [Specification](https://opentelemetry.io/docs/specs/semconv/attributes-registry/log/)
-enum LogResource implements OTelSemantic {
+enum Log implements OTelSemantic {
   logIostream('log.iostream'),
   logFileName('log.file.name'),
   logFileNameResolved('log.file.name_resolved'),
@@ -1059,36 +1059,36 @@ enum LogResource implements OTelSemantic {
   final String key;
   @override
   String toString() => key;
-  const LogResource(this.key);
+  const Log(this.key);
 }
 
 /// OCI image attributes.
 /// [Specification](https://opentelemetry.io/docs/specs/semconv/attributes-registry/oci/)
-enum OciResource implements OTelSemantic {
+enum Oci implements OTelSemantic {
   ociManifestDigest('oci.manifest.digest');
 
   @override
   final String key;
   @override
   String toString() => key;
-  const OciResource(this.key);
+  const Oci(this.key);
 }
 
 /// OpenTracing-bridge attributes.
 /// [Specification](https://opentelemetry.io/docs/specs/semconv/attributes-registry/opentracing/)
-enum OpentracingResource implements OTelSemantic {
+enum Opentracing implements OTelSemantic {
   opentracingRefType('opentracing.ref_type');
 
   @override
   final String key;
   @override
   String toString() => key;
-  const OpentracingResource(this.key);
+  const Opentracing(this.key);
 }
 
 /// OpenTelemetry-internal attributes (instrumentation scope, etc.).
 /// [Specification](https://opentelemetry.io/docs/specs/semconv/attributes-registry/otel/)
-enum OtelResource implements OTelSemantic {
+enum Otel implements OTelSemantic {
   otelScopeName('otel.scope.name'),
   otelScopeVersion('otel.scope.version'),
   otelStatusCode('otel.status_code'),
@@ -1102,37 +1102,37 @@ enum OtelResource implements OTelSemantic {
   final String key;
   @override
   String toString() => key;
-  const OtelResource(this.key);
+  const Otel(this.key);
 }
 
 /// Peer-service attribute (cross-service correlation).
 /// [Specification](https://opentelemetry.io/docs/specs/semconv/attributes-registry/peer/)
-enum PeerResource implements OTelSemantic {
+enum Peer implements OTelSemantic {
   peerService('peer.service');
 
   @override
   final String key;
   @override
   String toString() => key;
-  const PeerResource(this.key);
+  const Peer(this.key);
 }
 
 /// Profiling-signal attributes (experimental).
 /// [Specification](https://opentelemetry.io/docs/specs/semconv/attributes-registry/profile/)
-enum ProfileResource implements OTelSemantic {
+enum Profile implements OTelSemantic {
   profileFrameType('profile.frame.type');
 
   @override
   final String key;
   @override
   String toString() => key;
-  const ProfileResource(this.key);
+  const Profile(this.key);
 }
 
-/// Source of a network connection. Mirror of `ClientResource` for
+/// Source of a network connection. Mirror of `Client` for
 /// inbound non-HTTP connections.
 /// [Specification](https://opentelemetry.io/docs/specs/semconv/attributes-registry/source/)
-enum SourceResource implements OTelSemantic {
+enum Source implements OTelSemantic {
   sourceAddress('source.address'),
   sourcePort('source.port');
 
@@ -1140,13 +1140,13 @@ enum SourceResource implements OTelSemantic {
   final String key;
   @override
   String toString() => key;
-  const SourceResource(this.key);
+  const Source(this.key);
 }
 
 /// System-level metrics attributes (CPU, memory, disk, network, filesystem).
 /// Used by the SDK's auto-collected runtime metrics.
 /// [Specification](https://opentelemetry.io/docs/specs/semconv/attributes-registry/system/)
-enum SystemResource implements OTelSemantic {
+enum System implements OTelSemantic {
   systemCpuLogicalNumber('system.cpu.logical_number'),
   systemCpuState('system.cpu.state'),
   systemDevice('system.device'),
@@ -1166,12 +1166,12 @@ enum SystemResource implements OTelSemantic {
   final String key;
   @override
   String toString() => key;
-  const SystemResource(this.key);
+  const System(this.key);
 }
 
 /// Test framework / test result attributes.
 /// [Specification](https://opentelemetry.io/docs/specs/semconv/attributes-registry/test/)
-enum TestResource implements OTelSemantic {
+enum Test implements OTelSemantic {
   testCaseName('test.case.name'),
   testCaseResultStatus('test.case.result.status'),
   testSuiteName('test.suite.name'),
@@ -1181,12 +1181,12 @@ enum TestResource implements OTelSemantic {
   final String key;
   @override
   String toString() => key;
-  const TestResource(this.key);
+  const Test(this.key);
 }
 
 /// Thread-of-execution attributes (used by exceptions, logs).
 /// [Specification](https://opentelemetry.io/docs/specs/semconv/attributes-registry/thread/)
-enum ThreadResource implements OTelSemantic {
+enum Thread implements OTelSemantic {
   threadId('thread.id'),
   threadName('thread.name');
 
@@ -1194,12 +1194,12 @@ enum ThreadResource implements OTelSemantic {
   final String key;
   @override
   String toString() => key;
-  const ThreadResource(this.key);
+  const Thread(this.key);
 }
 
 /// TLS connection attributes.
 /// [Specification](https://opentelemetry.io/docs/specs/semconv/attributes-registry/tls/)
-enum TlsResource implements OTelSemantic {
+enum Tls implements OTelSemantic {
   tlsCipher('tls.cipher'),
   tlsCurve('tls.curve'),
   tlsEstablished('tls.established'),
@@ -1233,12 +1233,12 @@ enum TlsResource implements OTelSemantic {
   final String key;
   @override
   String toString() => key;
-  const TlsResource(this.key);
+  const Tls(this.key);
 }
 
 /// Version-control-system attributes (source repository info).
 /// [Specification](https://opentelemetry.io/docs/specs/semconv/attributes-registry/vcs/)
-enum VcsResource implements OTelSemantic {
+enum Vcs implements OTelSemantic {
   vcsRepositoryUrlFull('vcs.repository.url.full'),
   vcsRepositoryRefName('vcs.repository.ref.name'),
   vcsRepositoryRefRevision('vcs.repository.ref.revision'),
@@ -1262,12 +1262,12 @@ enum VcsResource implements OTelSemantic {
   final String key;
   @override
   String toString() => key;
-  const VcsResource(this.key);
+  const Vcs(this.key);
 }
 
 /// Web engine attributes (servlet container, framework).
 /// [Specification](https://opentelemetry.io/docs/specs/semconv/attributes-registry/webengine/)
-enum WebengineResource implements OTelSemantic {
+enum Webengine implements OTelSemantic {
   webengineDescription('webengine.description'),
   webengineName('webengine.name'),
   webengineVersion('webengine.version');
@@ -1276,12 +1276,12 @@ enum WebengineResource implements OTelSemantic {
   final String key;
   @override
   String toString() => key;
-  const WebengineResource(this.key);
+  const Webengine(this.key);
 }
 
 // Version Semantic Resource
 /// [Specification](https://opentelemetry.io/docs/specs/semconv/resource/#version-Resource)
-enum VersionResource implements OTelSemantic {
+enum Version implements OTelSemantic {
   schemaUrl('schema.url');
 
   @override
@@ -1290,5 +1290,5 @@ enum VersionResource implements OTelSemantic {
   @override
   String toString() => key;
 
-  const VersionResource(this.key);
+  const Version(this.key);
 }
