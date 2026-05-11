@@ -517,7 +517,7 @@ enum RPC implements OTelSemantic {
 
 // Server Semantic Resource
 /// [Specification](https://opentelemetry.io/docs/specs/semconv/attributes-registry/server/)
-enum Server implements OTelSemantic {
+enum ServerResource implements OTelSemantic {
   serverAddress('server.address'),
   serverPort('server.port');
 
@@ -527,7 +527,7 @@ enum Server implements OTelSemantic {
   @override
   String toString() => key;
 
-  const Server(this.key);
+  const ServerResource(this.key);
 }
 
 // URL Semantic Resource
