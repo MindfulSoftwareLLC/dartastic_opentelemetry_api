@@ -6,31 +6,29 @@ import 'package:test/test.dart';
 
 void main() {
   group('Non-OTelSemantic Resource Classes', () {
-    group('FeatureFlagResource', () {
+    group('FeatureFlag', () {
       test('should have correct keys for all values', () {
         // Test each value explicitly
+        expect(FeatureFlag.featureFlagKey.key, equals('feature_flag.key'));
         expect(
-            FeatureFlagResource.featureFlagKey.key, equals('feature_flag.key'));
-        expect(FeatureFlagResource.featureFlagVariant.key,
-            equals('feature_flag.variant'));
-        expect(FeatureFlagResource.featureFlagProviderName.key,
+            FeatureFlag.featureFlagVariant.key, equals('feature_flag.variant'));
+        expect(FeatureFlag.featureFlagProviderName.key,
             equals('feature_flag.provider_name'));
-        expect(FeatureFlagResource.featureFlagContextId.key,
+        expect(FeatureFlag.featureFlagContextId.key,
             equals('feature_flag.context.id'));
-        expect(FeatureFlagResource.featureFlagEvaluationReason.key,
+        expect(FeatureFlag.featureFlagEvaluationReason.key,
             equals('feature_flag.evaluation.reason'));
-        expect(FeatureFlagResource.featureFlagEvaluationErrorMessage.key,
+        expect(FeatureFlag.featureFlagEvaluationErrorMessage.key,
             equals('feature_flag.evaluation.error.message'));
-        expect(FeatureFlagResource.featureFlagSetId.key,
-            equals('feature_flag.set.id'));
-        expect(FeatureFlagResource.featureFlagVersion.key,
-            equals('feature_flag.version'));
+        expect(FeatureFlag.featureFlagSetId.key, equals('feature_flag.set.id'));
+        expect(
+            FeatureFlag.featureFlagVersion.key, equals('feature_flag.version'));
       });
 
       test('toString should return the key value', () {
-        expect(FeatureFlagResource.featureFlagKey.toString(),
-            equals('feature_flag.key'));
-        expect(FeatureFlagResource.featureFlagVariant.toString(),
+        expect(
+            FeatureFlag.featureFlagKey.toString(), equals('feature_flag.key'));
+        expect(FeatureFlag.featureFlagVariant.toString(),
             equals('feature_flag.variant'));
       });
     });
@@ -65,58 +63,53 @@ void main() {
       });
     });
 
-    group('HostResource', () {
+    group('Host', () {
       test('should have correct keys for all values', () {
         // Test each value explicitly
-        expect(HostResource.hostArch.key, equals('host.arch'));
-        expect(HostResource.hostCpuCacheL2Size.key,
-            equals('host.cpu.cache.l2.size'));
-        expect(HostResource.hostCpuFamily.key, equals('host.cpu.family'));
-        expect(HostResource.hostCpuModelId.key, equals('host.cpu.model.id'));
-        expect(
-            HostResource.hostCpuModelName.key, equals('host.cpu.model.name'));
-        expect(HostResource.hostCpuStepping.key, equals('host.cpu.stepping'));
-        expect(HostResource.hostCpuVendorId.key, equals('host.cpu.vendor.id'));
-        expect(HostResource.hostId.key, equals('host.id'));
-        expect(HostResource.hostImageId.key, equals('host.image.id'));
-        expect(HostResource.hostImageName.key, equals('host.image.name'));
-        expect(HostResource.hostImageVersion.key, equals('host.image.version'));
-        expect(HostResource.hostName.key, equals('host.name'));
-        expect(HostResource.hostType.key, equals('host.type'));
-        expect(HostResource.hostMac.key, equals('host.mac'));
-        expect(HostResource.hostIp.key, equals('host.ip'));
+        expect(Host.hostArch.key, equals('host.arch'));
+        expect(Host.hostCpuCacheL2Size.key, equals('host.cpu.cache.l2.size'));
+        expect(Host.hostCpuFamily.key, equals('host.cpu.family'));
+        expect(Host.hostCpuModelId.key, equals('host.cpu.model.id'));
+        expect(Host.hostCpuModelName.key, equals('host.cpu.model.name'));
+        expect(Host.hostCpuStepping.key, equals('host.cpu.stepping'));
+        expect(Host.hostCpuVendorId.key, equals('host.cpu.vendor.id'));
+        expect(Host.hostId.key, equals('host.id'));
+        expect(Host.hostImageId.key, equals('host.image.id'));
+        expect(Host.hostImageName.key, equals('host.image.name'));
+        expect(Host.hostImageVersion.key, equals('host.image.version'));
+        expect(Host.hostName.key, equals('host.name'));
+        expect(Host.hostType.key, equals('host.type'));
+        expect(Host.hostMac.key, equals('host.mac'));
+        expect(Host.hostIp.key, equals('host.ip'));
       });
 
       test('toString should return the key value', () {
-        expect(HostResource.hostArch.toString(), equals('host.arch'));
-        expect(HostResource.hostId.toString(), equals('host.id'));
+        expect(Host.hostArch.toString(), equals('host.arch'));
+        expect(Host.hostId.toString(), equals('host.id'));
       });
     });
 
-    group('GenAIResource', () {
+    group('GenAI', () {
       test('should have correct keys for all values', () {
         // Test each value explicitly
-        expect(GenAIResource.genAiOperationName.key,
-            equals('gen_ai.operation.name'));
-        expect(GenAIResource.genAiRequestEncodingFormats.key,
+        expect(GenAI.genAiOperationName.key, equals('gen_ai.operation.name'));
+        expect(GenAI.genAiRequestEncodingFormats.key,
             equals('gen_ai.request.encoding_formats'));
-        expect(GenAIResource.genAiRequestFrequencyPenalty.key,
+        expect(GenAI.genAiRequestFrequencyPenalty.key,
             equals('gen_ai.request.frequency_penalty'));
-        expect(GenAIResource.genAiRequestMaxTokens.key,
+        expect(GenAI.genAiRequestMaxTokens.key,
             equals('gen_ai.request.max_tokens'));
-        expect(GenAIResource.genAiRequestModel.key,
-            equals('gen_ai.request.model'));
-        expect(GenAIResource.genAiRequestPresencePenalty.key,
+        expect(GenAI.genAiRequestModel.key, equals('gen_ai.request.model'));
+        expect(GenAI.genAiRequestPresencePenalty.key,
             equals('gen_ai.request.presence_penalty'));
-        expect(
-            GenAIResource.genAiRequestSeed.key, equals('gen_ai.request.seed'));
+        expect(GenAI.genAiRequestSeed.key, equals('gen_ai.request.seed'));
       });
 
       test('toString should return the key value', () {
-        expect(GenAIResource.genAiOperationName.toString(),
+        expect(GenAI.genAiOperationName.toString(),
             equals('gen_ai.operation.name'));
-        expect(GenAIResource.genAiRequestModel.toString(),
-            equals('gen_ai.request.model'));
+        expect(
+            GenAI.genAiRequestModel.toString(), equals('gen_ai.request.model'));
       });
     });
   });

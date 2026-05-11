@@ -51,8 +51,10 @@ export 'src/api/metrics/up_down_counter.dart';
 export 'src/api/otel_api.dart';
 export 'src/api/semantics/lifecycle_state.dart';
 export 'src/api/semantics/navigation_action.dart';
-export 'src/api/semantics/resource_semantics.dart';
 // Semantics
+export 'src/api/semantics/semantic_events.dart';
+export 'src/api/semantics/semantic_metrics.dart';
+export 'src/api/semantics/semantic_values.dart';
 export 'src/api/semantics/semantics.dart';
 export 'src/api/semantics/ui_semantics.dart';
 // Trace

@@ -271,13 +271,17 @@ enum NetworkSemantics implements OTelSemantic {
   const NetworkSemantics(this.key);
 }
 
-/// RUM Semantics related to session and view information
-enum SessionViewSemantics implements OTelSemantic {
-  sessionId('session.id'),
+/// RUM-style view + extended session attributes (not in OTel core
+/// semconv). The OTel-spec session keys (`session.id`,
+/// `session.previous_id`) live in `Session` in `semantics.dart`; the
+/// OTel-spec user keys (`user.id`, `user.email`, `user.full_name`,
+/// `user.name`, `user.roles`, `user.session`) live in `User`. This
+/// enum keeps the Datadog/Dynatrace-style underscore variants and the
+/// view-duration metrics that aren't in the OTel registry.
+enum RumSessionView implements OTelSemantic {
   rumSessionId('session_id'),
   sessionStart('session.start'),
   sessionDuration('session.duration'),
-
   viewName('view.name'),
   rumViewName('view_name'),
   rumViewId('view_id'),
@@ -293,23 +297,5 @@ enum SessionViewSemantics implements OTelSemantic {
   @override
   String toString() => key;
 
-  const SessionViewSemantics(this.key);
-}
-
-/// RUM Semantics related to user information
-enum UserSemantics implements OTelSemantic {
-  userId('user.id'),
-  // Array of roles a user is assigned. The singular `user.role` is an
-  // anti-pattern — users typically have multiple roles, so always model
-  // this as a list.
-  userRoles('user.roles'),
-  userSession('user.session');
-
-  @override
-  final String key;
-
-  @override
-  String toString() => key;
-
-  const UserSemantics(this.key);
+  const RumSessionView(this.key);
 }

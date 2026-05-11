@@ -4,8 +4,8 @@
 import 'package:dartastic_opentelemetry_api/dartastic_opentelemetry_api.dart';
 
 /// Example-only attribute keys used in this file. Prefer enums over raw
-/// strings — the API's built-in semantic-convention enums (UserSemantics,
-/// HttpResource, DatabaseResource, etc.) cover the OTel-defined keys; this
+/// strings — the API's built-in semantic-convention enums (User,
+/// Http, Database, etc.) cover the OTel-defined keys; this
 /// enum holds the keys that aren't in any convention. In your own app,
 /// rename this to something domain-specific (e.g. `CheckoutAttribute`).
 enum ExampleAttribute implements OTelSemantic {
@@ -132,7 +132,7 @@ void main() {
       severityNumber: Severity.INFO,
       body: 'User successfully logged in.',
       attributes: OTelAPI.attributesFromSemanticMap({
-        UserSemantics.userId: 42,
+        User.userId: 42,
         ExampleAttribute.authMethod: 'password',
       }),
     );
@@ -148,9 +148,9 @@ void main() {
     );
 
     final attrs = OTelAPI.attributesFromSemanticMap({
-      DatabaseResource.dbOperation: 'update',
-      DatabaseResource.dbCollectionName: 'orders',
-      DatabaseResource.dbResponseReturnedRows: 3,
+      Database.dbOperation: 'update',
+      Database.dbCollectionName: 'orders',
+      Database.dbResponseReturnedRows: 3,
     });
 
     logger.emit(

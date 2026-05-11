@@ -218,32 +218,33 @@ void main() {
           equals('network.request.duration'));
     });
 
-    test('SessionViewSemantics toString returns key', () {
-      expect(SessionViewSemantics.sessionId.toString(), equals('session.id'));
+    test('Session (OTel spec) toString returns key', () {
+      expect(Session.sessionId.toString(), equals('session.id'));
       expect(
-          SessionViewSemantics.rumSessionId.toString(), equals('session_id'));
-      expect(SessionViewSemantics.sessionStart.toString(),
-          equals('session.start'));
-      expect(SessionViewSemantics.sessionDuration.toString(),
+          Session.sessionPreviousId.toString(), equals('session.previous_id'));
+    });
+
+    test('RumSessionView (non-spec) toString returns key', () {
+      expect(RumSessionView.rumSessionId.toString(), equals('session_id'));
+      expect(RumSessionView.sessionStart.toString(), equals('session.start'));
+      expect(RumSessionView.sessionDuration.toString(),
           equals('session.duration'));
-      expect(SessionViewSemantics.viewName.toString(), equals('view.name'));
-      expect(SessionViewSemantics.rumViewName.toString(), equals('view_name'));
-      expect(SessionViewSemantics.rumViewId.toString(), equals('view_id'));
-      expect(SessionViewSemantics.viewStart.toString(), equals('view.start'));
-      expect(SessionViewSemantics.viewDuration.toString(),
-          equals('view.duration'));
-      expect(SessionViewSemantics.rumViewLoadTime.toString(),
-          equals('view_load_time'));
-      expect(SessionViewSemantics.rumActionCount.toString(),
-          equals('action.count'));
-      expect(SessionViewSemantics.rumUserSatisfactionScore.toString(),
+      expect(RumSessionView.viewName.toString(), equals('view.name'));
+      expect(RumSessionView.rumViewName.toString(), equals('view_name'));
+      expect(RumSessionView.rumViewId.toString(), equals('view_id'));
+      expect(RumSessionView.viewStart.toString(), equals('view.start'));
+      expect(RumSessionView.viewDuration.toString(), equals('view.duration'));
+      expect(
+          RumSessionView.rumViewLoadTime.toString(), equals('view_load_time'));
+      expect(RumSessionView.rumActionCount.toString(), equals('action.count'));
+      expect(RumSessionView.rumUserSatisfactionScore.toString(),
           equals('user_satisfaction_score'));
     });
 
-    test('UserSemantics toString returns key', () {
-      expect(UserSemantics.userId.toString(), equals('user.id'));
-      expect(UserSemantics.userRoles.toString(), equals('user.roles'));
-      expect(UserSemantics.userSession.toString(), equals('user.session'));
+    test('User (OTel spec) toString returns key', () {
+      expect(User.userId.toString(), equals('user.id'));
+      expect(User.userRoles.toString(), equals('user.roles'));
+      expect(User.userSession.toString(), equals('user.session'));
     });
   });
 }
