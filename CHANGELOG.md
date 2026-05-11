@@ -22,6 +22,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `OTelAPI.isInitialized` static getter — `true` if `initialize` has been called explicitly, `false` if only the 
    auto-installed noop default is in place. Lets library code that owns its own initialization guard against 
    double-init without try/catch.
+- `OTelAPI.ensureFactoryInstalled()` — public helper that triggers the API's lazy-install logic without
+   exposing the private `_getAndCacheOtelFactory`. The SDK uses this from its own factory-cache code so the
+   spec-mandated noop default gets installed exactly once, regardless of which side of the API/SDK boundary
+   touches the factory first.
+
+   **Why this matters for the SDK's late-binding proxies.** The Dartastic SDK's `OTel.tracerProvider()` / 
+   `OTel.tracer()` (and the logger / meter-provider equivalents) return *late-binding proxy* objects whose 
+   identity is stable across `OTel.initialize`. Each proxy method re-resolves the current underlying real 
+   provider on every call — pre-init that's a noop SDK wrapper around the API noop factory, post-init it's 
+   the real SDK provider. For the proxy to resolve correctly when an SDK call comes in before any API call 
+   has touched the factory, the SDK needs a way to ask the API "install your noop default if you haven't 
+   already, then hand me the current factory". `ensureFactoryInstalled` is that hook. See the SDK CHANGELOG 
+   for the full proxy design rationale and the file-level docstring in `lib/src/trace/late_binding_tracer.dart`.
 
 ### Added
 - **Pluggable `TimeProvider` for span timestamps.** New abstraction with three pieces:

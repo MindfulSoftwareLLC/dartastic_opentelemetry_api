@@ -708,6 +708,18 @@ class OTelAPI {
     return OTelFactory.otelFactory!.createMeasurement(value, attributes);
   }
 
+  /// Ensures a factory is installed in `OTelFactory.otelFactory`. If
+  /// the SDK has not registered one and the API hasn't lazily installed
+  /// the noop yet, this triggers the lazy install. After this returns,
+  /// `OTelFactory.otelFactory` is non-null.
+  ///
+  /// Public so SDK-side code (e.g. `OTel._getAndCacheOtelFactory`) can
+  /// rely on the canonical install path instead of duplicating it.
+  /// Idempotent — safe to call repeatedly.
+  static void ensureFactoryInstalled() {
+    _getAndCacheOtelFactory();
+  }
+
   static OTelFactory _getAndCacheOtelFactory() {
     // Always check if a new (potentially better) factory has been installed
     if (OTelFactory.otelFactory != null) {
