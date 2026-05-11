@@ -27,7 +27,6 @@ import 'metrics/observable_counter.dart';
 import 'metrics/observable_gauge.dart';
 import 'metrics/observable_up_down_counter.dart';
 import 'metrics/up_down_counter.dart';
-import 'semantics/resource_semantics.dart';
 import 'semantics/semantics.dart';
 import 'trace/span_context.dart';
 import 'trace/span_event.dart';
@@ -442,6 +441,33 @@ class OTelAPI {
     return attributesFromMap(
         semanticMap.map((key, value) => key.toMapEntry(value)));
   }
+
+  /// Like [attributesFromSemanticMap], but parameterized on a single
+  /// concrete semconv enum [E]. Dart 3.10's static dot-shorthand
+  /// resolves through the concrete key type, so this call site lets
+  /// you drop the enum prefix on every entry:
+  ///
+  /// ```dart
+  /// // Today (and forever):
+  /// OTelAPI.attributesOf<Http>({
+  ///   Http.requestMethod: 'GET',
+  ///   Http.responseStatusCode: 200,
+  /// });
+  ///
+  /// // With Dart 3.10+ static dot-shorthand enabled:
+  /// OTelAPI.attributesOf<Http>({
+  ///   .requestMethod: 'GET',
+  ///   .responseStatusCode: 200,
+  /// });
+  /// ```
+  ///
+  /// The single-type constraint is the trade-off — [attributesFromSemanticMap]
+  /// stays the right call site when you need to mix multiple semconv
+  /// enums or your own [OTelSemantic]-implementing enums in one map.
+  static Attributes attributesOf<E extends OTelSemantic>(
+    Map<E, Object> typedMap,
+  ) =>
+      attributesFromSemanticMap(typedMap.cast<OTelSemantic, Object>());
 
   /// Creates an empty `Attributes` collection from a named set of values.
   /// String, bool, int and double or Lists of those types get turned into

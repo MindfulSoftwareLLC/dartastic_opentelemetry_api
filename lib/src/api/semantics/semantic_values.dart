@@ -3,7 +3,7 @@
 
 /// OpenTelemetry Semantic Conventions — typed value enums.
 ///
-/// The enums in [resource_semantics.dart] type-check attribute *keys*
+/// The enums in `semantics.dart` type-check attribute *keys*
 /// against the OTel spec. This file does the same for the *values* of
 /// attributes whose spec entry defines a closed set of valid strings
 /// (e.g. `db.system.name` must be `postgresql` | `mysql` | …).
