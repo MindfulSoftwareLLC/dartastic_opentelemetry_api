@@ -99,6 +99,8 @@ Future<void> main(List<String> args) async {
     }
   }
 
+  final packageName = _readPackageName();
+
   try {
     // ---- release commit ----
     _replaceVersionLine(from: current, to: release);
@@ -106,6 +108,8 @@ Future<void> main(List<String> args) async {
       from: current,
       newHeader: '## [$release] - ${_today()}',
     );
+    final readmeRefs =
+        _replaceReadmeVersion(packageName: packageName, to: release);
     _runOrThrow('dart', ['pub', 'get'], silent: true);
     _runOrThrow('dart', ['analyze']);
     if (flags.skipTests) {
@@ -120,7 +124,12 @@ Future<void> main(List<String> args) async {
     } else {
       _runOrThrow('dart', ['test']);
     }
-    _runOrThrow('git', ['add', _pubspecPath, _changelogPath]);
+    _runOrThrow('git', [
+      'add',
+      _pubspecPath,
+      _changelogPath,
+      if (readmeRefs > 0) _readmePath,
+    ]);
     _runOrThrow('git', ['commit', '-m', 'Release $release']);
     _runOrThrow('git', ['tag', 'v$release']);
     stdout.writeln('✓ tagged v$release');
@@ -393,6 +402,16 @@ void _printUsage() {
 /// Reads pubspec.yaml via `pubspec_parse`, validates the version exists
 /// and is semver, asserts it ends in `-wip`, returns the version string.
 String _readWipVersion() {
+  return _readPubspec().version;
+}
+
+/// Returns the package name from pubspec.yaml.
+String _readPackageName() => _readPubspec().name;
+
+/// Minimal pubspec accessor used by [_readWipVersion] and
+/// [_readPackageName]. Parses once per call; that's plenty fast and
+/// keeps the entry points stateless.
+({String name, String version}) _readPubspec() {
   final text = File(_pubspecPath).readAsStringSync();
   final Pubspec pubspec;
   try {
@@ -409,7 +428,7 @@ String _readWipVersion() {
     _die('pubspec.yaml version is "$str" — expected to end in $_wipSuffix.\n'
         '       did you already release? bump to the next $_wipSuffix version.');
   }
-  return str;
+  return (name: pubspec.name, version: str);
 }
 
 /// Strips the `-wip` suffix from [version] and validates the result is
@@ -470,6 +489,52 @@ void _replaceVersionLine({required String from, required String to}) {
   // readAsLinesSync drops line terminators; rejoin with \n and add a
   // trailing newline so we don't end the file abruptly.
   f.writeAsStringSync('${lines.join('\n')}\n');
+}
+
+// ---------------------------------------------------------------------------
+// README read / write
+// ---------------------------------------------------------------------------
+
+const _readmePath = 'README.md';
+
+/// Bumps every `<packageName>: ^X.Y.Z[…]` reference in README.md to
+/// match the [to] version. Leaves the file alone if it's missing or
+/// has no such references. Returns the number of references rewritten.
+///
+/// We intentionally match by the package name + a caret instead of
+/// asking the caller for the old version — the README usually lags
+/// behind by a few patch versions and the previously-released version
+/// in the README is whatever lives there now.
+int _replaceReadmeVersion({
+  required String packageName,
+  required String to,
+}) {
+  final f = File(_readmePath);
+  if (!f.existsSync()) {
+    stdout.writeln('(no README.md — skipping README version bump)');
+    return 0;
+  }
+  final original = f.readAsStringSync();
+  // Match `<name>: ^<anything-not-whitespace>` so we preserve the
+  // caret and any indent. The trailing version token is anything
+  // non-whitespace, which covers `1.2.3`, `1.2.3-beta.4`, `1.2.3+1`.
+  final pattern = RegExp(
+    r'(\b' + RegExp.escape(packageName) + r':\s*\^)\S+',
+  );
+  var count = 0;
+  final updated = original.replaceAllMapped(pattern, (m) {
+    count++;
+    return '${m.group(1)}$to';
+  });
+  if (count == 0) {
+    stdout.writeln('(README has no `$packageName: ^...` references)');
+    return 0;
+  }
+  if (updated != original) {
+    f.writeAsStringSync(updated);
+  }
+  stdout.writeln('✓ updated $count README reference(s) to ^$to');
+  return count;
 }
 
 // ---------------------------------------------------------------------------

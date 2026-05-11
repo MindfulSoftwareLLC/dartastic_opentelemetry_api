@@ -26,19 +26,18 @@ and web vitals metrics and much more.
 
 ## Commercial Support
 
-[Dartastic.io](https://dartastic.io) provides:
-- Dartastic Cloud - an OpenTelemetry Observability platform integrated with Dart backends and Flutter apps.
-  - Facilities to get a source stack trace from production errors including Flutter mobile and web.
-  - Custom dashboards for Flutter OTel
-- Dartastic Pub Dev - a private pub dev server
-  - access Dartastic releases available to subscribers
-    - access to packages with advanced features not available in the open source offering
-    - access instrumented versions of Dart and Flutter libraries, such as Dio
-  - integrated with Dart build systems and Dartastic Cloud to show Dart source code lines and function calls from production error logs.
-  - allows you to share your packages and plugins privately, within your team or with your partners or customers.
-- Various levels of free, paid, and enterprise support.
-- Training on OTel for Dart and Flutter apps.
-- Professional consulting in Dart, Flutter and Observability.
+[Dartastic.io](https://dartastic.io) tools and services for Dart and Flutter teams shipping to production.
+* **Dartastic.io Pro OTel**
+  * Professionally supported version of this open source dartastic_opentelemetry package and dartastic_opentelemetry_api - and their future CNCF equivalents.
+  * Professional OpenTelemetry libraries for Dart and Flutter
+    * Keep PII out of your observability data.
+    * Integrate OTel observability into common Dart and Flutter like shelf, dio and go_router.
+* **Dartastic.io Pub Dev** [pub.dartastic.io](pub.dartastic.io) Privately share your packages and plugins with your team,
+  partners and customers.
+* **Dartastic.io Symbolizer** [symbolizer.dartastic.io](symbolizer.dartastic.io) Turn production errors into
+  source code lines with a Web API call. Squash Dart and Flutter bugs fast and keep your source code artifacts private.
+* **Dartastic.io Observability Cloud** - observability backends, customized for Dart and Flutter and integrated with Dartastic.io Symbolizer.
+* Dart and Flutter OpenTelemetry support, training, consulting, integrations and upgrades.
 
 ## About the API - use the SDK
 
