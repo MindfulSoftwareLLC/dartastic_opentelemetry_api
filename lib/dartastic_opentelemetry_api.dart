@@ -49,6 +49,7 @@ export 'src/api/metrics/observable_up_down_counter.dart';
 export 'src/api/metrics/up_down_counter.dart';
 // API
 export 'src/api/otel_api.dart';
+export 'src/api/semantics/gen_ai_semantics.dart';
 export 'src/api/semantics/lifecycle_state.dart';
 export 'src/api/semantics/navigation_action.dart';
 // Semantics
