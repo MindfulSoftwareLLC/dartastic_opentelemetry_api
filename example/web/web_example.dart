@@ -11,8 +11,9 @@ import 'package:web/web.dart';
 /// Note that this uses the API only (which is a no-op), in a real application,
 /// you would typically also use the SDK to export telemetry data.
 void main() {
-  // Initialize the API with a default endpoint (will be ignored as API-only)
-  OTelAPI.initialize(endpoint: 'http://localhost:4317');
+  // Uses the OTLP/HTTP default endpoint (`http://localhost:4318`).
+  // The API is noop-only, so the endpoint never hits the wire.
+  OTelAPI.initialize();
 
   // Get the output div using package:web's document.querySelector
   final outputDiv = document.querySelector('#output');

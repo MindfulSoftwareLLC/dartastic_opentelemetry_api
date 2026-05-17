@@ -66,8 +66,10 @@ class OTelAPI {
   ///
   /// The global default TracerProvider and it's tracers will use the provided
   /// parameters.
-  /// [endpoint] is a url, http://localhost:4317 uses the default port for
-  /// the default gRPC protocol on a local host, http://localhost:4318 for http.
+  /// [endpoint] is a URL. The OTel spec's default exporter protocol is
+  /// `http/protobuf` (OTLP/HTTP) on port `4318`, so `http://localhost:4318`
+  /// is the local-collector default. Use `http://localhost:4317` only when
+  /// you've explicitly switched to the gRPC protocol.
   /// [serviceName] SHOULD uniquely identify the instrumentation scope, such as
   /// the instrumentation library (e.g. @dart/dartastic_opentelemetry_api),
   /// package, module or class name.
@@ -90,7 +92,7 @@ class OTelAPI {
     }
     if (endpoint.isEmpty) {
       throw ArgumentError(
-          'endpoint must not be empty.  Since the API (but not the SDK) uses noop processors by default, this can be any url for the API such as http://localhost:4317.');
+          'endpoint must not be empty.  Since the API (but not the SDK) uses noop processors by default, this can be any url for the API such as http://localhost:4318.');
     }
     if (serviceName == null || serviceName.isEmpty) {
       throw ArgumentError('serviceName must not be null or the empty string.');

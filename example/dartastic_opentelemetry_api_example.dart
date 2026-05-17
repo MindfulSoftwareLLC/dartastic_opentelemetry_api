@@ -44,7 +44,9 @@ enum ExampleAttribute implements OTelSemantic {
 /// However, as required by the OpenTelemetry Specification, the API
 /// works (as a no-op) without the SDK installed.
 void main() {
-  OTelAPI.initialize(endpoint: 'http://localhost:4317');
+  // Uses the OTLP/HTTP default endpoint (`http://localhost:4318`).
+  // The API is noop-only, so the endpoint never hits the wire.
+  OTelAPI.initialize();
   // Use typed enum keys — never raw strings.
   final stringAttribute =
       OTelAPI.attributeString(ExampleAttribute.exampleString.key, 'foo');
