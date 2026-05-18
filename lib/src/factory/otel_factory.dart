@@ -42,8 +42,10 @@ typedef OTelFactoryCreationFunction = OTelFactory Function(
 /// SDK installed.  The API uses the `OTelAPIFactory` as a default.
 /// SDKs override this default by registering their own APIFactory
 abstract class OTelFactory {
-  /// Default OTel endpoint url
-  static const defaultEndpoint = 'http://localhost:4317';
+  /// Default OTel endpoint URL. Matches the OTel spec's default for the
+  /// default `http/protobuf` exporter protocol (OTLP/HTTP on port 4318).
+  /// For gRPC, callers must pass `http://localhost:4317` explicitly.
+  static const defaultEndpoint = 'http://localhost:4318';
 
   /// SDKs must replace this otelFactory with their own to get the SDK
   /// object created instead of the API default implementation

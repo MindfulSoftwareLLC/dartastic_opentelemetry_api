@@ -26,19 +26,23 @@ and web vitals metrics and much more.
 
 ## Commercial Support
 
-[Dartastic.io](https://dartastic.io) provides:
-- Dartastic Cloud - an OpenTelemetry Observability platform integrated with Dart backends and Flutter apps.
-  - Facilities to get a source stack trace from production errors including Flutter mobile and web.
-  - Custom dashboards for Flutter OTel
-- Dartastic Pub Dev - a private pub dev server
-  - access Dartastic releases available to subscribers
-    - access to packages with advanced features not available in the open source offering
-    - access instrumented versions of Dart and Flutter libraries, such as Dio
-  - integrated with Dart build systems and Dartastic Cloud to show Dart source code lines and function calls from production error logs.
-  - allows you to share your packages and plugins privately, within your team or with your partners or customers.
-- Various levels of free, paid, and enterprise support.
-- Training on OTel for Dart and Flutter apps.
-- Professional consulting in Dart, Flutter and Observability.
+[Dartastic.io](https://dartastic.io) tools and services for Dart and Flutter teams shipping to production.
+* **Dartastic Pro OTel Runtime**
+  * Native OTel runtime that takes OTel of the UI thread or server threads.
+    * Detects native crashes
+    * Identifies the janky widget
+    * Strips PII out of your data on the fly.
+    * Sends source code lines with error spans with Symbolizer.
+    * Metrics from iOS, Android and Linux, standard and beyond the standard.
+    * Use with any o11y backend.
+  * Professionally supported version of this open source dartastic_opentelemetry package and dartastic_opentelemetry_api - and their future CNCF equivalents.
+  * Over 50 OSS OpenTelemetry integration libraries for Dart and Flutter - dio, shelf, logger...
+  * Over 600 Pro OpenTelemetry integration libraries for Dart and Flutter - anthropic, aws, azure, stripe...
+* **Dartastic Pub** [pub.dartastic.io](pub.dartastic.io) Privately share your packages and plugins with your team,
+  partners and customers.
+* **Dartastic Symbolizer** [symbolizer.dartastic.io](symbolizer.dartastic.io) Turn production errors into
+  source code lines with a Web API call. Squash Dart and Flutter bugs fast and keep your source code artifacts private.
+* **Dartastic Hosted** - spin up a private observability ecosystem customized for Flutter and Dart - private pub server, private unlimited Symbolizer, custom dashboards for Dart and Flutter.
 
 ## About the API - use the SDK
 
@@ -83,7 +87,7 @@ Add the package to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  dartastic_opentelemetry_api: ^1.0.0-beta.4
+  dartastic_opentelemetry_api: ^1.0.0-beta.7
 ```
 
 Then run:
@@ -116,7 +120,7 @@ If you need a no-op OpenTelemetry implementation (unusual but compliant with the
 
 ```yaml
 dependencies:
-  dartastic_opentelemetry_api: ^1.0.0-beta.4
+  dartastic_opentelemetry_api: ^1.0.0-beta.7
 ```
 
 ## Usage

@@ -27,7 +27,6 @@ import 'metrics/observable_counter.dart';
 import 'metrics/observable_gauge.dart';
 import 'metrics/observable_up_down_counter.dart';
 import 'metrics/up_down_counter.dart';
-import 'semantics/resource_semantics.dart';
 import 'semantics/semantics.dart';
 import 'trace/span_context.dart';
 import 'trace/span_event.dart';
@@ -83,8 +82,10 @@ class OTelAPI {
   ///
   /// The global default TracerProvider and it's tracers will use the provided
   /// parameters.
-  /// [endpoint] is a url, http://localhost:4317 uses the default port for
-  /// the default gRPC protocol on a local host, http://localhost:4318 for http.
+  /// [endpoint] is a URL. The OTel spec's default exporter protocol is
+  /// `http/protobuf` (OTLP/HTTP) on port `4318`, so `http://localhost:4318`
+  /// is the local-collector default. Use `http://localhost:4317` only when
+  /// you've explicitly switched to the gRPC protocol.
   /// [serviceName] SHOULD uniquely identify the instrumentation scope, such as
   /// the instrumentation library (e.g. @dart/dartastic_opentelemetry_api),
   /// package, module or class name.
@@ -107,7 +108,7 @@ class OTelAPI {
     }
     if (endpoint.isEmpty) {
       throw ArgumentError(
-          'endpoint must not be empty.  Since the API (but not the SDK) uses noop processors by default, this can be any url for the API such as http://localhost:4317.');
+          'endpoint must not be empty.  Since the API (but not the SDK) uses noop processors by default, this can be any url for the API such as http://localhost:4318.');
     }
     if (serviceName == null || serviceName.isEmpty) {
       throw ArgumentError('serviceName must not be null or the empty string.');
@@ -466,6 +467,33 @@ class OTelAPI {
     return attributesFromMap(
         semanticMap.map((key, value) => key.toMapEntry(value)));
   }
+
+  /// Like [attributesFromSemanticMap], but parameterized on a single
+  /// concrete semconv enum [E]. Dart 3.10's static dot-shorthand
+  /// resolves through the concrete key type, so this call site lets
+  /// you drop the enum prefix on every entry:
+  ///
+  /// ```dart
+  /// // Today (and forever):
+  /// OTelAPI.attributesOf<Http>({
+  ///   Http.requestMethod: 'GET',
+  ///   Http.responseStatusCode: 200,
+  /// });
+  ///
+  /// // With Dart 3.10+ static dot-shorthand enabled:
+  /// OTelAPI.attributesOf<Http>({
+  ///   .requestMethod: 'GET',
+  ///   .responseStatusCode: 200,
+  /// });
+  /// ```
+  ///
+  /// The single-type constraint is the trade-off — [attributesFromSemanticMap]
+  /// stays the right call site when you need to mix multiple semconv
+  /// enums or your own [OTelSemantic]-implementing enums in one map.
+  static Attributes attributesOf<E extends OTelSemantic>(
+    Map<E, Object> typedMap,
+  ) =>
+      attributesFromSemanticMap(typedMap.cast<OTelSemantic, Object>());
 
   /// Creates an empty `Attributes` collection from a named set of values.
   /// String, bool, int and double or Lists of those types get turned into
