@@ -370,4 +370,4 @@ Apache 2.0 - See the [LICENSE](LICENSE) file for details.
 
 ## Acknowledgements
 
-This Dart API, the Dartastic SDK, and Flutterific OTel are made with 💙 by Michael Bushe at [Mindful Software](https://mindfulsoftware.com).
+This Dart API, the Dartastic SDK, and Flutterific OTel are made with 💙 by Michael Bushe at [Dartastic.io](https://dartastic.io).
