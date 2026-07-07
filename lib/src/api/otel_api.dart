@@ -713,28 +713,11 @@ class OTelAPI {
   }
 
   static OTelFactory _getAndCacheOtelFactory() {
-    // Always check if a new (potentially better) factory has been installed
-    if (OTelFactory.otelFactory != null) {
-      // If we have a cached factory but a new one is available, update the cache
-      if (_otelFactory != OTelFactory.otelFactory) {
-        _otelFactory = OTelFactory.otelFactory;
-      }
-      return _otelFactory!;
-    }
-
-    // If no factory is installed, create the API factory (NoOp implementations)
-    if (_otelFactory == null) {
-      // According to OpenTelemetry spec, when no SDK is installed,
-      // the API should provide NoOp implementations automatically
-      OTelFactory.otelFactory = otelApiFactoryFactoryFunction(
-        apiEndpoint: OTelFactory.defaultEndpoint,
-        apiServiceName: defaultServiceName,
-        apiServiceVersion: defaultServiceVersion,
-      );
-      _otelFactory = OTelFactory.otelFactory;
-    }
-
-    return _otelFactory!;
+    // According to OpenTelemetry spec, when no SDK is installed, the API
+    // must provide NoOp implementations automatically rather than throwing.
+    // Always re-check the global in case a (potentially better) factory has
+    // since been installed by an SDK.
+    return _otelFactory = OTelFactory.getOrCreateDefault();
   }
 
   /// Reset API state (only public for testing)

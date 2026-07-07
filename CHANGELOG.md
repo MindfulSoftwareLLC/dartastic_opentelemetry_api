@@ -15,6 +15,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   factory installed when API code runs first, instead of relying on
   `runtimeType` checks (see dartastic_opentelemetry #50 / PR #53).
 
+### Fixed
+- `Context.root` / `Context.current` (and other Context APIs) threw
+  `StateError('Call initialize() first.')` when accessed before
+  `OTelAPI.initialize()`, violating the OTel spec requirement that the API
+  operate as a no-op without an SDK installed. They now lazily install the
+  No-Op API factory, matching `OTelAPI`'s existing behavior.
+
 ## [1.0.0-beta.7] - 2026-05-18
 
 ## [1.0.0-beta.6] - 2026-05-11
