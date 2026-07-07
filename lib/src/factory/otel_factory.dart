@@ -10,6 +10,7 @@ import '../api/common/attributes.dart';
 import '../api/common/instrumentation_scope.dart';
 import '../api/context/context.dart';
 import '../api/context/context_key.dart';
+import '../api/factory/otel_api_factory.dart';
 import '../api/logs/logger_provider.dart';
 import '../api/metrics/counter.dart';
 import '../api/metrics/gauge.dart';
@@ -50,6 +51,7 @@ abstract class OTelFactory {
   /// SDKs must replace this otelFactory with their own to get the SDK
   /// object created instead of the API default implementation
   static OTelFactory? otelFactory;
+
   String _apiEndpoint;
   String _apiServiceName;
   String _apiServiceVersion;
@@ -81,6 +83,21 @@ abstract class OTelFactory {
       : _apiServiceVersion = apiServiceVersion,
         _apiServiceName = apiServiceName,
         _apiEndpoint = apiEndpoint;
+
+  /// Returns the installed [otelFactory], lazily installing the No-Op API
+  /// factory if none has been installed yet.
+  ///
+  /// Per the OpenTelemetry specification, the API MUST NOT require explicit
+  /// initialization: calls made before an SDK is installed must operate as
+  /// no-ops rather than throwing. This is the single choke point that both
+  /// [OTelAPI] and [Context] rely on to satisfy that requirement.
+  static OTelFactory getOrCreateDefault() {
+    return otelFactory ??= otelApiFactoryFactoryFunction(
+      apiEndpoint: defaultEndpoint,
+      apiServiceName: OTelAPI.defaultServiceName,
+      apiServiceVersion: OTelAPI.defaultServiceVersion,
+    );
+  }
 
   /// Sets the API endpoint for this factory.
   ///

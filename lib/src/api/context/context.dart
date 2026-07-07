@@ -40,16 +40,12 @@ class Context {
 
   /// Gets and caches the OTelFactory instance.
   ///
-  /// Retrieves the global OTelFactory instance and caches it for future use.
-  /// Throws a StateError if OpenTelemetry has not been initialized.
+  /// Retrieves the global OTelFactory instance, lazily installing the No-Op
+  /// API factory if no SDK has installed one yet, and caches it for future
+  /// use. Per the OpenTelemetry specification, the API MUST NOT require
+  /// explicit initialization, so this never throws.
   static OTelFactory _getAndCacheOTelFactory() {
-    if (_otelFactory != null) {
-      return _otelFactory!;
-    }
-    if (OTelFactory.otelFactory == null) {
-      throw StateError('Call initialize() first.');
-    }
-    return _otelFactory = OTelFactory.otelFactory!;
+    return _otelFactory ??= OTelFactory.getOrCreateDefault();
   }
 
   /// Gets the current Context from the current Zone, or the global Context if none exists.
