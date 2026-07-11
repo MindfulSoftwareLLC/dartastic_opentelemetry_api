@@ -48,8 +48,7 @@ void main() {
       expect(direct.isAPIFactory, isTrue);
     });
 
-    test('isAPIFactory can be overridden to false by SDK-style subclasses',
-        () {
+    test('isAPIFactory can be overridden to false by SDK-style subclasses', () {
       final sdkStyle = _FakeSDKFactory(
         apiEndpoint: 'http://localhost:4317',
         apiServiceName: 'test-service',
