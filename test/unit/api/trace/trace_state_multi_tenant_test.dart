@@ -69,8 +69,8 @@ void main() {
 
     test('is unmodifiable', () {
       final ts = OTelAPI.traceState({}).putMultiTenant('acme', 'dt', 'v');
-      expect(() => ts.tenantsForSystem('dt')['x'] = 'y',
-          throwsUnsupportedError);
+      expect(
+          () => ts.tenantsForSystem('dt')['x'] = 'y', throwsUnsupportedError);
     });
   });
 }
