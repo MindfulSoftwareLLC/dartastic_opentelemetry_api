@@ -41,11 +41,13 @@ class Context {
   /// Gets and caches the OTelFactory instance.
   ///
   /// Retrieves the global OTelFactory instance, lazily installing the No-Op
-  /// API factory if no SDK has installed one yet, and caches it for future
-  /// use. Per the OpenTelemetry specification, the API MUST NOT require
-  /// explicit initialization, so this never throws.
+  /// API factory if no SDK has installed one yet. Per the OpenTelemetry
+  /// specification, the API MUST NOT require explicit initialization, so this
+  /// never throws. The global is re-read on every call — like [OTelAPI] —
+  /// so a factory installed later (e.g. by an SDK's initialize()) replaces
+  /// any no-op cached before initialization.
   static OTelFactory _getAndCacheOTelFactory() {
-    return _otelFactory ??= OTelFactory.getOrCreateDefault();
+    return _otelFactory = OTelFactory.getOrCreateDefault();
   }
 
   /// Gets the current Context from the current Zone, or the global Context if none exists.

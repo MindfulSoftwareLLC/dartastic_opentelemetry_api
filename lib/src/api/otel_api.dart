@@ -6,6 +6,7 @@ import 'dart:typed_data';
 import 'package:meta/meta.dart';
 
 import '../factory/otel_factory.dart';
+import '../util/otel_log.dart';
 import 'baggage/baggage.dart';
 import 'baggage/baggage_entry.dart';
 import 'common/attribute.dart';
@@ -86,9 +87,20 @@ class OTelAPI {
       String? serviceName = OTelAPI.defaultServiceName,
       String? serviceVersion = OTelAPI.defaultServiceVersion,
       OTelFactoryCreationFunction? oTelFactoryCreationFunction}) {
-    if (OTelFactory.otelFactory != null) {
+    // The no-op API factory auto-installs when API code (e.g. Context.current)
+    // runs before initialize(), per spec. An installed API factory is
+    // replaceable — only a real (SDK) factory means initialization already
+    // happened and must not be silently discarded.
+    final existingFactory = OTelFactory.otelFactory;
+    if (existingFactory != null && !existingFactory.isAPIFactory) {
       throw StateError(
           'OTelAPI can only be initialized once. If you need multiple endpoints or service names or versions create a named TracerProvider');
+    }
+    if (existingFactory != null && OTelLog.isDebug()) {
+      OTelLog.debug(
+          'OTelAPI.initialize: replacing the installed no-op API factory '
+          'with the configured API factory. API objects obtained before '
+          'initialize() remain no-ops.');
     }
     if (endpoint.isEmpty) {
       throw ArgumentError(

@@ -102,6 +102,10 @@ abstract class OTelFactory {
   /// initialization: calls made before an SDK is installed must operate as
   /// no-ops rather than throwing. This is the single choke point that both
   /// [OTelAPI] and [Context] rely on to satisfy that requirement.
+  ///
+  /// The lazily created factory reports [isAPIFactory] as `true`, so a later
+  /// explicit initialization (API or SDK) recognizes it as replaceable and
+  /// upgrades it rather than failing as a double-initialization.
   static OTelFactory getOrCreateDefault() {
     return otelFactory ??= otelApiFactoryFactoryFunction(
       apiEndpoint: defaultEndpoint,

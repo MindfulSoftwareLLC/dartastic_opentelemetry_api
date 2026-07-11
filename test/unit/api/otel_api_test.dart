@@ -343,8 +343,30 @@ void main() {
       expect(OTelAPI.meterProviders(), isEmpty);
     });
 
-    test('initialize throws when called twice', () {
-      // Already initialized in setUp, so calling again should throw
+    test('initialize replaces an installed API factory instead of throwing',
+        () {
+      // The API factory is the spec-mandated no-op — whether auto-installed
+      // by early API use or installed by a prior initialize(), it is
+      // replaceable; re-initializing applies the new configuration.
+      expect(OTelFactory.otelFactory!.isAPIFactory, isTrue);
+      OTelAPI.initialize(
+        endpoint: 'http://localhost:4317',
+        serviceName: 'replacement-service',
+        serviceVersion: '2.0.0',
+      );
+      expect(OTelFactory.otelFactory!.serialize()['apiServiceName'],
+          equals('replacement-service'));
+    });
+
+    test('initialize throws when a real (non-API) factory is installed', () {
+      // A factory that is not the no-op API factory means initialization
+      // already happened (e.g. an SDK installed itself) and must not be
+      // silently discarded.
+      OTelFactory.otelFactory = _FakeSDKFactory(
+        apiEndpoint: 'http://localhost:4317',
+        apiServiceName: 'sdk-service',
+        apiServiceVersion: '1.0.0',
+      );
       expect(() {
         OTelAPI.initialize(
           endpoint: 'http://localhost:4317',
@@ -387,4 +409,18 @@ void main() {
       }, throwsA(isA<ArgumentError>()));
     });
   });
+}
+
+/// Stands in for an SDK factory: extends [OTelAPIFactory] (as all SDK
+/// factories do) and reports itself as a real implementation, so
+/// initialization must refuse to replace it.
+class _FakeSDKFactory extends OTelAPIFactory {
+  _FakeSDKFactory({
+    required super.apiEndpoint,
+    required super.apiServiceName,
+    required super.apiServiceVersion,
+  });
+
+  @override
+  bool get isAPIFactory => false;
 }

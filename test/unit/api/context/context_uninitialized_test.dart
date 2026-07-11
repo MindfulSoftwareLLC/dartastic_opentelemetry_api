@@ -20,13 +20,11 @@ void main() {
     expect(Context.current.baggage, isNull);
   });
 
-  test('Context.root does not throw before OTelAPI.initialize() is called',
-      () {
+  test('Context.root does not throw before OTelAPI.initialize() is called', () {
     expect(() => Context.root, returnsNormally);
   });
 
-  test('Context.current.withBaggage does not throw before initialization',
-      () {
+  test('Context.current.withBaggage does not throw before initialization', () {
     final baggage = OTelAPI.baggageForMap({'key': 'value'});
     expect(() => Context.current.withBaggage(baggage), returnsNormally);
   });
