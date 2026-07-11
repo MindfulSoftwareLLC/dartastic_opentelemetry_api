@@ -1,6 +1,7 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
+import 'package:meta/meta.dart';
 import 'span_context.dart' show SpanContext;
 
 part 'trace_flags_create.dart';

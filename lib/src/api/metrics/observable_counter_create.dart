@@ -5,6 +5,7 @@ part of 'observable_counter.dart';
 
 /// Factory methods for creating [APIObservableCounter] instances.
 /// This is part of the observable_counter.dart file to keep related code together.
+@internal
 class ObservableCounterCreate {
   /// Creates a new [APIObservableCounter] instance.
   /// This is an implementation detail and should not be used directly.

@@ -7,6 +7,7 @@ part of 'span_event.dart';
 ///
 /// This is a part of the OpenTelemetry API implementation and not meant
 /// to be used directly by application code.
+@internal
 class SpanEventCreate {
   /// Creates a new SpanEvent with the given parameters.
   ///

@@ -6,6 +6,7 @@ part of 'context_key.dart';
 /// Factory class for creating ContextKey instances.
 ///
 /// This is a part of the Context library and not meant to be used directly.
+@internal
 class ContextKeyCreate<T> {
   /// Creates a new ContextKey with the specified name and unique identifier.
   ///

@@ -3,6 +3,7 @@
 
 // ignore_for_file: unnecessary_getters_setters
 
+import 'package:meta/meta.dart';
 import '../../util/otel_log.dart';
 import '../common/attributes.dart';
 import '../common/signal_instance_key.dart';

@@ -5,6 +5,7 @@ part of 'up_down_counter.dart';
 
 /// Factory methods for creating [APIUpDownCounter] instances.
 /// This is part of the up_down_counter.dart file to keep related code together.
+@internal
 class UpDownCounterCreate {
   /// Creates a new [APIUpDownCounter] instance.
   /// This is an implementation detail and should not be used directly.

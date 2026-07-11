@@ -4,6 +4,7 @@
 part of 'span_link.dart';
 
 /// Internal constructor access for SpanLink
+@internal
 class SpanLinkCreate {
   /// Creates a SpanLink, only accessible within library
   static SpanLink create({

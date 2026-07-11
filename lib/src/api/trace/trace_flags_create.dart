@@ -4,6 +4,7 @@
 part of 'trace_flags.dart';
 
 /// Internal constructor access for TraceFlags
+@internal
 class TraceFlagsCreate {
   /// Creates a TraceFlags, only accessible within library
   static TraceFlags create([int? flags]) {

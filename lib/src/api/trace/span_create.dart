@@ -4,6 +4,7 @@
 part of 'span.dart';
 
 /// Internal constructor access for Span
+@internal
 class APISpanCreate {
   /// Creates a new APISpan instance with the specified parameters.
   /// This constructor is only accessible within the library and is used by the internal factory methods.

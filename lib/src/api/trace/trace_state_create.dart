@@ -4,6 +4,7 @@
 part of 'trace_state.dart';
 
 /// Internal constructor access for TraceState
+@internal
 class TraceStateCreate {
   /// Creates a TraceState, only accessible within library
   /// Enforces 32 key-value pair limit per W3C spec

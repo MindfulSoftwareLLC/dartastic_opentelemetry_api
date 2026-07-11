@@ -7,6 +7,7 @@ part of 'instrumentation_scope.dart';
 /// Used internally and not exported to respect factories.
 /// This class is not intended to be used directly by users.
 /// Instead, use the methods provided by the [OTelAPI].
+@internal
 class InstrumentationScopeCreate {
   /// Creates a new InstrumentationScope instance containing the specified attributes.
   /// [name] is required and represents the instrumentation scope name (e.g. 'io.opentelemetry.contrib.mongodb')

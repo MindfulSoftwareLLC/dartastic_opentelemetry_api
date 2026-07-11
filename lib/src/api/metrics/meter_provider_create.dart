@@ -4,6 +4,7 @@
 part of 'meter_provider.dart';
 
 /// Factory methods for creating [APIMeterProvider] instances.
+@internal
 class MeterProviderCreate {
   /// Creates a new [APIMeterProvider] instance.
   /// This is an implementation detail and should not be used directly.

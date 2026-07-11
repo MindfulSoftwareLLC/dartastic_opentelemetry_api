@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **`*Create` classes are now `@internal` and hidden from the public library.**
+  They were internal by doc-comment convention only; the barrel exported them,
+  so `AttributesCreate.create()` etc. were callable by any consumer — an open
+  factory-bypass door, contradicting the beta.8/9 removal of factory cheat
+  paths. The analyzer now rejects outside-package use
+  (`invalid_use_of_internal_member`). Factories and same-package code are
+  unaffected. Consumers constructing objects must go through `OTelAPI` or the
+  installed `OTelFactory`. Covers all 29 `*Create` classes, including the
+  new `CompositePropagatorCreate`.
+
 - **Breaking: the semantic-convention enums are now generated from the
   OpenTelemetry registry with OTel Weaver, one file per registry
   namespace** (#50, #51). The hand-written `semantics.dart`,

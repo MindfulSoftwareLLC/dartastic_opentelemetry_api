@@ -3,6 +3,7 @@
 
 part of 'logger_provider.dart';
 
+@internal
 class LogProviderCreate {
   /// Creates a new [APIMeterProvider] instance.
   /// This is an implementation detail and should not be used directly.

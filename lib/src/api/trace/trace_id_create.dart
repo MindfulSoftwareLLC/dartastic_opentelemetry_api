@@ -7,6 +7,7 @@ part of 'trace_id.dart';
 ///
 /// This is a part of the OpenTelemetry API implementation and not meant
 /// to be used directly by application code.
+@internal
 class TraceIdCreate {
   /// Creates a new TraceId from the provided bytes.
   ///

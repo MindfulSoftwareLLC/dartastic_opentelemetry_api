@@ -7,6 +7,7 @@ part of 'span_id.dart';
 ///
 /// This is a part of the OpenTelemetry API implementation and not meant
 /// to be used directly by application code.
+@internal
 class SpanIdCreate {
   /// Creates a new SpanId from the provided bytes.
   ///

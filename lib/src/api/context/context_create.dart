@@ -6,6 +6,7 @@ part of 'context.dart';
 /// Factory class for creating Context instances.
 ///
 /// This is a part of the Context library and not meant to be used directly.
+@internal
 class ContextCreate {
   /// Creates a new Context with the given context map and optional baggage.
   ///

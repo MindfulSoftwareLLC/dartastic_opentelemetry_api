@@ -6,6 +6,7 @@ part of 'attribute.dart';
 /// Factory class for creating Attribute instances.
 /// This class is not intended to be used directly by users.
 /// Instead, use the methods provided by the OpenTelemetry API.
+@internal
 class AttributeCreate {
   /// Creates a new Attribute with the specified name and value.
   ///

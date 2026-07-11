@@ -7,6 +7,7 @@ part of 'attributes.dart';
 /// Used internally and not exported to respect factories.
 /// This class is not intended to be used directly by users.
 /// Instead, use the methods provided by the OpenTelemetry API.
+@internal
 class AttributesCreate {
   /// Creates a new Attributes instance containing the specified attributes.
   ///

@@ -5,6 +5,7 @@ part of 'baggage.dart';
 
 /// Factory for creating Baggage instances.
 /// This is used internally by the OpenTelemetry API implementation.
+@internal
 class BaggageCreate {
   /// Creates a new Baggage instance with the specified entries.
   ///
