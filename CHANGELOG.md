@@ -27,6 +27,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   longer bypass the factory via the static `attrsFromMap` "cheat" (obsolete
   since the beta.8 lazy-install lifecycle); a factory that overrides
   `attributesFromMap` is now respected on all three paths (#33).
+- `TraceState` multi-tenant `tracestate` keys (`tenant-id@system-id`) now
+  match the W3C Trace Context key grammar: a `tenant-id` may start with a
+  digit, and `tenant-id`/`system-id` are length-capped (241/14 chars).
+  Previously a digit-leading tenant was rejected and over-long ids
+  accepted (#38).
 
 ## [1.0.0-beta.8] - 2026-07-11
 
