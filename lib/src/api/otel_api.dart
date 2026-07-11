@@ -160,19 +160,19 @@ class OTelAPI {
   /// returns a list of [APITracerProvider]s including the the global default
   /// and any named providers added.
   static List<APITracerProvider> tracerProviders() {
-    return _otelFactory == null ? [] : _otelFactory!.getTracerProviders();
+    return OTelFactory.otelFactory?.getTracerProviders() ?? [];
   }
 
-  /// returns a list of [APITracerProvider]s including the the global default
+  /// returns a list of [APIMeterProvider]s including the the global default
   /// and any named providers added.
   static List<APIMeterProvider> meterProviders() {
-    return _otelFactory == null ? [] : _otelFactory!.getMeterProviders();
+    return OTelFactory.otelFactory?.getMeterProviders() ?? [];
   }
 
   /// returns a list of [APILoggerProvider]s including the global default
   /// and any named providers added.
   static List<APILoggerProvider> loggerProviders() {
-    return _otelFactory == null ? [] : _otelFactory!.getLoggerProviders();
+    return OTelFactory.otelFactory?.getLoggerProviders() ?? [];
   }
 
   /// Gets a TracerProvider.  If name is null, this returns
@@ -487,9 +487,8 @@ class OTelAPI {
   /// Attributes get added as-is (note - that would be unnecessary code)
   /// Anything else gets converted to an Attribute\<String> via its toString.
   static Attributes attributesFromMap(Map<String, Object> namedMap) {
-    // Cheating a bit since Attributes is unlikley to get overridden
-    // and are often used before initialize() _getAndCacheOtelFactory();
-    return OTelAPIFactory.attrsFromMap(namedMap);
+    _getAndCacheOtelFactory();
+    return OTelFactory.otelFactory!.attributesFromMap(namedMap);
   }
 
   /// Creates attributes from a list of individual attribute objects.

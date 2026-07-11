@@ -213,14 +213,17 @@ void main() {
       }, throwsArgumentError);
     });
 
-    test('fromJson throws when OTelFactory not initialized', () {
+    test('fromJson lazily installs the no-op factory when uninitialized', () {
+      // Pre-beta.9 this threw StateError('Call initialize() first.'); per
+      // the OTel spec the API must work without explicit initialization
+      // (#33).
       OTelAPI.reset();
 
-      expect(() {
-        Baggage.fromJson({
-          'key': {'value': 'value'}
-        });
-      }, throwsStateError);
+      final baggage = Baggage.fromJson({
+        'key': {'value': 'value'}
+      });
+      expect(baggage.getEntry('key')?.value, equals('value'));
+      expect(OTelFactory.otelFactory!.isAPIFactory, isTrue);
     });
 
     test('copyWith throws when OTelFactory not initialized', () {

@@ -22,11 +22,9 @@ class TraceState {
 
   /// Create TraceState from a W3C trace context header string
   factory TraceState.fromString(String? headerValue) {
-    if (OTelFactory.otelFactory == null) {
-      throw StateError('Call initialize() first.');
-    }
+    final factory = OTelFactory.getOrCreateDefault();
     if (headerValue == null || headerValue.isEmpty) {
-      return OTelFactory.otelFactory!.traceState({});
+      return factory.traceState({});
     }
 
     final entries = <String, String>{};
@@ -42,23 +40,17 @@ class TraceState {
       }
     }
 
-    return OTelFactory.otelFactory!.traceState(entries);
+    return factory.traceState(entries);
   }
 
   /// Creates a new [TraceState] from a list of key-value pairs.
   factory TraceState.fromMap(Map<String, String> entries) {
-    if (OTelFactory.otelFactory == null) {
-      throw StateError('Call initialize() first.');
-    }
-    return OTelFactory.otelFactory!.traceState(entries);
+    return OTelFactory.getOrCreateDefault().traceState(entries);
   }
 
   /// Creates an empty [TraceState].
   factory TraceState.empty() {
-    if (OTelFactory.otelFactory == null) {
-      throw StateError('Call initialize() first.');
-    }
-    return OTelFactory.otelFactory!.traceState({});
+    return OTelFactory.getOrCreateDefault().traceState({});
   }
 
   /// Returns an unmodifiable view of all key-value entries in this trace state.
