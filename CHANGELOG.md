@@ -334,6 +334,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the API minted random valid IDs and returned recording spans (#40).
   SDK span creation is unaffected: the no-op behavior applies only when
   the installed factory `isAPIFactory`.
+- **`Baggage` now follows the spec for values, names, and no-SDK use.**
+  Per the Baggage API spec, values are any valid UTF-8 string — the empty
+  string is accepted (previously `ArgumentError`) and survives `Set`/`Get`
+  and both `fromJson` paths (previously dropped). Invalid (empty) names are
+  ignored with a warning instead of throwing. `copyWith` / `copyWithout` /
+  `copyWithBaggage` work without an installed SDK (previously `StateError`),
+  per "The Baggage API MUST be fully functional in the absence of an
+  installed SDK."
 
 ## [1.0.0-beta.9] - 2026-07-11
 

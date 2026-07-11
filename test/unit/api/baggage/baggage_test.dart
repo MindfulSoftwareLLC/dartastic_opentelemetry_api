@@ -145,11 +145,11 @@ void main() {
       final json = {
         'key1': {'value': 'value1', 'metadata': 'metadata1'},
         'key2': {'value': 'value2'},
+        'empty': {'value': '', 'metadata': 'metadata'}, // Valid per spec
         'invalid1': 'not a map',
         'invalid2': {'not-value': 'missing-value-key'},
         'invalid3': {'value': 42}, // Non-string value
-        'invalid4': {'value': '', 'metadata': 'metadata'}, // Empty value
-        'invalid5': {'value': 'value5', 'metadata': 42}, // Non-string metadata
+        'invalid4': {'value': 'value4', 'metadata': 42}, // Non-string metadata
       };
 
       final baggage = Baggage.fromJson(json);
@@ -159,12 +159,14 @@ void main() {
       expect(baggage.getEntry('key2')?.value, equals('value2'));
       expect(baggage.getEntry('key2')?.metadata, isNull);
 
+      // Empty values are valid UTF-8 strings and must be kept
+      expect(baggage.getEntry('empty')?.value, equals(''));
+
       // Invalid entries should be skipped
       expect(baggage.getEntry('invalid1'), isNull);
       expect(baggage.getEntry('invalid2'), isNull);
       expect(baggage.getEntry('invalid3'), isNull);
       expect(baggage.getEntry('invalid4'), isNull);
-      expect(baggage.getEntry('invalid5'), isNull);
     });
 
     test('equals and hashCode work correctly', () {
@@ -199,18 +201,14 @@ void main() {
       expect(baggage.toString(), contains('value1'));
     });
 
-    test('throws when creating with empty key', () {
-      expect(() {
-        final baggage = OTelAPI.baggage();
-        baggage.copyWith('', 'value');
-      }, throwsArgumentError);
+    test('ignores an empty name instead of throwing', () {
+      final baggage = OTelAPI.baggage().copyWith('', 'value');
+      expect(baggage.isEmpty, isTrue);
     });
 
-    test('throws when creating with empty value', () {
-      expect(() {
-        final baggage = OTelAPI.baggage();
-        baggage.copyWith('key', '');
-      }, throwsArgumentError);
+    test('accepts an empty value', () {
+      final baggage = OTelAPI.baggage().copyWith('key', '');
+      expect(baggage.getValue('key'), equals(''));
     });
 
     test('fromJson lazily installs the no-op factory when uninitialized', () {
@@ -226,19 +224,17 @@ void main() {
       expect(OTelFactory.otelFactory!.isAPIFactory, isTrue);
     });
 
-    test('copyWith throws when OTelFactory not initialized', () {
+    test('copyWith works when OTelFactory not initialized', () {
       // Create baggage with initialized factory
       final baggage = OTelAPI.baggage();
 
       // Reset to clear factory
       OTelAPI.reset();
 
-      expect(() {
-        baggage.copyWith('key', 'value');
-      }, throwsStateError);
+      expect(baggage.copyWith('key', 'value').getValue('key'), equals('value'));
     });
 
-    test('copyWithout throws when OTelFactory not initialized', () {
+    test('copyWithout works when OTelFactory not initialized', () {
       // Create baggage with initialized factory
       final entry = OTelAPI.baggageEntry('value', 'metadata');
       final baggage = OTelAPI.baggage({'key': entry});
@@ -246,9 +242,7 @@ void main() {
       // Reset to clear factory
       OTelAPI.reset();
 
-      expect(() {
-        baggage.copyWithout('key');
-      }, throwsStateError);
+      expect(baggage.copyWithout('key').getEntry('key'), isNull);
     });
 
     test('baggage creation and manipulation', () {
