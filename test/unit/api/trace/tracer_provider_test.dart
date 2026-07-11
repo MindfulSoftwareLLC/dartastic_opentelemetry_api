@@ -1,5 +1,4 @@
 // Licensed under the Apache License, Version 2.0
-// Copyright 2025, Michael Bushe, All rights reserved.
 
 import 'package:dartastic_opentelemetry_api/src/api/common/attributes.dart';
 import 'package:dartastic_opentelemetry_api/src/api/otel_api.dart';
