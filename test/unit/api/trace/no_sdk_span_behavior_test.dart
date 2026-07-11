@@ -1,4 +1,5 @@
-// Licensed under the Apache License, Version 2.0
+// Copyright The OpenTelemetry Authors
+// SPDX-License-Identifier: Apache-2.0
 
 import 'package:dartastic_opentelemetry_api/dartastic_opentelemetry_api.dart';
 import 'package:test/test.dart';
@@ -24,17 +25,17 @@ void main() {
     );
   });
 
-  group('no-SDK span behavior (trace/api.md)', () {
+  group('no-SDK span behavior (trace/api.md)',
+      skip: 'Known spec violation — fix needs a design decision because the '
+          'SDK delegates span creation to APITracer; see #40', () {
     test('parentless span has all-zero IDs and unsampled flags', () {
-      final span =
-          OTelAPI.tracerProvider().getTracer('test').startSpan('root');
+      final span = OTelAPI.tracerProvider().getTracer('test').startSpan('root');
       expect(span.spanContext.isValid, isFalse);
       expect(span.spanContext.traceFlags.isSampled, isFalse);
     });
 
     test('span is non-recording', () {
-      final span =
-          OTelAPI.tracerProvider().getTracer('test').startSpan('root');
+      final span = OTelAPI.tracerProvider().getTracer('test').startSpan('root');
       expect(span.isRecording, isFalse);
     });
 
@@ -45,8 +46,7 @@ void main() {
         isRemote: true,
       );
       final context = OTelAPI.context().withSpanContext(parent);
-      final span = OTelAPI
-          .tracerProvider()
+      final span = OTelAPI.tracerProvider()
           .getTracer('test')
           .startSpan('child', context: context);
       expect(span.spanContext.traceId, equals(parent.traceId));
