@@ -102,6 +102,54 @@ class TraceState {
     return OTelFactory.otelFactory!.traceState(newEntries);
   }
 
+  // ── W3C multi-tenant keys ─────────────────────────────────────────────
+  // The W3C Trace Context spec defines a SECOND key form for tracestate
+  // list members: `{tenant-id}@{system-id}` — "in the case of multi-tenant
+  // vendors, the key SHOULD be in this format". OpenTelemetry surfaces no
+  // API for it anywhere (upstream gap); these helpers make the standard
+  // form first-class while staying vendor-neutral: any (tenant, system)
+  // pair, no Dartastic-specific behavior.
+
+  /// The W3C multi-tenant tracestate key for ([tenantId], [systemId]) —
+  /// `tenant-id@system-id`. Throws [ArgumentError] when either part
+  /// violates the spec grammar (tenant-id: `(lcalpha / DIGIT)` then up to
+  /// 240 of `lcalpha / DIGIT / "_" / "-" / "*" / "/"`; system-id: `lcalpha`
+  /// then up to 13 of the same set).
+  static String multiTenantKey(String tenantId, String systemId) {
+    if (!_tenantIdFormat.hasMatch(tenantId)) {
+      throw ArgumentError.value(
+          tenantId, 'tenantId', 'Invalid W3C tracestate tenant-id');
+    }
+    if (!_systemIdFormat.hasMatch(systemId)) {
+      throw ArgumentError.value(
+          systemId, 'systemId', 'Invalid W3C tracestate system-id');
+    }
+    return '$tenantId@$systemId';
+  }
+
+  /// Creates a new [TraceState] with the multi-tenant entry
+  /// `tenantId@systemId=value` added (or updated), per the W3C
+  /// multi-tenant key form. Same freshness/limit semantics as [put].
+  TraceState putMultiTenant(String tenantId, String systemId, String value) =>
+      put(multiTenantKey(tenantId, systemId), value);
+
+  /// The value of the multi-tenant entry for ([tenantId], [systemId]),
+  /// or null when absent.
+  String? getMultiTenant(String tenantId, String systemId) =>
+      _entries['$tenantId@$systemId'];
+
+  /// Every multi-tenant entry belonging to [systemId], as tenant-id → value.
+  /// Empty when the system has no entries (never null).
+  Map<String, String> tenantsForSystem(String systemId) {
+    final suffix = '@$systemId';
+    return Map.unmodifiable({
+      for (final e in _entries.entries)
+        if (e.key.endsWith(suffix) &&
+            e.key.indexOf('@') == e.key.length - suffix.length)
+          e.key.substring(0, e.key.length - suffix.length): e.value,
+    });
+  }
+
   ///  Creates a new [TraceState] with the given [key] removed.
   TraceState remove(String key) {
     if (OTelFactory.otelFactory == null) {
