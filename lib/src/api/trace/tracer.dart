@@ -1,5 +1,4 @@
 // Licensed under the Apache License, Version 2.0
-// Copyright 2025, Michael Bushe, All rights reserved.
 
 import '../../factory/otel_factory.dart';
 import '../../util/default_time_provider.dart';

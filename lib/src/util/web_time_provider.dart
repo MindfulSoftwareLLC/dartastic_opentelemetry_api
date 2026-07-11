@@ -1,5 +1,4 @@
 // Licensed under the Apache License, Version 2.0
-// Copyright 2025, Michael Bushe, All rights reserved.
 
 // Conditional facade for `WebTimeProvider`. On web targets (Dart-on-JS or
 // Wasm) this exports an implementation backed by `window.performance.now()`

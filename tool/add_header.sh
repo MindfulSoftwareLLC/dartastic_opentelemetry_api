@@ -5,7 +5,6 @@
 # Define the header using a here-document that includes an extra blank line.
 read -r -d '' HEADER << 'EOF'
 // Licensed under the Apache License, Version 2.0
-// Copyright 2025, Michael Bushe, All rights reserved.
 
 
 EOF
