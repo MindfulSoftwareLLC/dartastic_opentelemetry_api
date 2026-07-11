@@ -14,6 +14,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   @kevmoo.
 - `OTelAPI.tracer()` and `OTelAPI.logger()` threw a null-check error before
   initialization instead of lazily installing the no-op API factory (#27).
+- `TraceState.fromString` / `fromMap` / `empty`, `SpanContext.fromJson`, and
+  `Baggage.fromJson` threw `StateError('Call initialize() first.')` instead
+  of lazily installing the no-op API factory — `fromString` parses the W3C
+  `tracestate` header (a propagator path) and the `fromJson`s run in fresh
+  isolates during deserialization, both classic pre-init calls (#33).
+- `OTelAPI.tracerProviders()` / `meterProviders()` / `loggerProviders()`
+  read OTelAPI's private factory cache instead of the global factory, so
+  providers of a factory installed by an SDK were invisible until some
+  OTelAPI accessor ran (#33).
+- `OTelAPI.attributesFromMap`, `Attributes.of`, and `Map.toAttributes()` no
+  longer bypass the factory via the static `attrsFromMap` "cheat" (obsolete
+  since the beta.8 lazy-install lifecycle); a factory that overrides
+  `attributesFromMap` is now respected on all three paths (#33).
 
 ## [1.0.0-beta.8] - 2026-07-11
 

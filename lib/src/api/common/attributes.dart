@@ -10,8 +10,6 @@ import 'package:meta/meta.dart';
 
 import '../../factory/otel_factory.dart';
 import '../../util/otel_log.dart';
-import '../factory/otel_api_factory.dart';
-import '../otel_api.dart';
 import 'attribute.dart';
 
 part 'attributes_create.dart';
@@ -28,12 +26,10 @@ class Attributes {
   /// @param map The map of key-value pairs to convert to attributes
   /// @return A new Attributes instance containing the converted attributes
   static Attributes of(Map<String, Object> map) {
-    // Directly use the API factory's attrsFromMap if not initialized
-    // This is to allow the creation of attributes for initialization and is
-    // Overrides would take effect after initialization.
-    return OTelFactory.otelFactory != null
-        ? OTelFactory.otelFactory!.attributesFromMap(map)
-        : OTelAPIFactory.attrsFromMap(map);
+    // Attributes are created during initialization (e.g. resource
+    // attributes); per the OTel spec this lazily installs the no-op API
+    // factory rather than throw, and initialize() upgrades it in place.
+    return OTelFactory.getOrCreateDefault().attributesFromMap(map);
   }
 
   /// Creates an Attributes instance from a JSON map.
@@ -334,11 +330,6 @@ extension AttributesExtension on Map<String, Object> {
   /// Convert this map to Attributes
   /// Empty string are not allowed and are skipped
   Attributes toAttributes() {
-    if (OTelFactory.otelFactory == null) {
-      // Cheating here since Attributes is unlikely to be overriden in a
-      // factory and is often called before initialize
-      return OTelAPI.attributesFromMap(this);
-    }
-    return OTelFactory.otelFactory!.attributesFromMap(this);
+    return OTelFactory.getOrCreateDefault().attributesFromMap(this);
   }
 }

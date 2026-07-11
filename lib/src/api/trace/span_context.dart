@@ -127,9 +127,10 @@ class SpanContext {
   /// [json] A map containing the serialized SpanContext properties.
   /// Returns a new SpanContext initialized with the values from the JSON map.
   factory SpanContext.fromJson(Map<String, dynamic> json) {
-    if (OTelFactory.otelFactory == null) {
-      throw StateError('Call initialize() first.');
-    }
+    // Deserialization often runs in a fresh isolate with pristine statics;
+    // per the OTel spec this lazily installs the no-op API factory rather
+    // than throw.
+    final factory = OTelFactory.getOrCreateDefault();
 
     SpanId? parentSpanId;
     if (json['parentSpanId'] != null) {
@@ -144,10 +145,9 @@ class SpanContext {
       traceId: OTelAPI.traceIdFrom(json['traceId'] as String),
       spanId: OTelAPI.spanIdFrom(json['spanId'] as String),
       parentSpanId: parentSpanId,
-      traceFlags:
-          OTelFactory.otelFactory!.traceFlags(json['traceFlags'] as int),
-      traceState: OTelFactory.otelFactory!
-          .traceState(json['traceState'] as Map<String, String>? ?? {}),
+      traceFlags: factory.traceFlags(json['traceFlags'] as int),
+      traceState:
+          factory.traceState(json['traceState'] as Map<String, String>? ?? {}),
       isRemote: json['isRemote'] as bool,
     );
   }

@@ -94,9 +94,10 @@ class Baggage {
   /// Creates a baggage instance from a JSON representation.
   /// JSON format must be: { key: { value: string, metadata?: string } }
   factory Baggage.fromJson(Map<String, dynamic> json) {
-    if (OTelFactory.otelFactory == null) {
-      throw StateError('Call initialize() first.');
-    }
+    // Deserialization often runs in a fresh isolate with pristine statics;
+    // per the OTel spec this lazily installs the no-op API factory rather
+    // than throw.
+    final factory = OTelFactory.getOrCreateDefault();
     final entries = <String, BaggageEntry>{};
     for (final entry in json.entries) {
       if (entry.value is Map) {
@@ -110,13 +111,13 @@ class Baggage {
         if (metadata != null && metadata is! String) {
           continue; // Skip entries with non-string metadata
         }
-        entries[entry.key] = OTelFactory.otelFactory!.baggageEntry(
+        entries[entry.key] = factory.baggageEntry(
           rawValue,
           metadata as String?,
         );
       }
     }
-    return OTelFactory.otelFactory!.baggage(entries);
+    return factory.baggage(entries);
   }
 
   @override
