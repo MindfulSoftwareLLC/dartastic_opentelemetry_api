@@ -159,27 +159,18 @@ class OTelAPI {
 
   /// returns a list of [APITracerProvider]s including the the global default
   /// and any named providers added.
-  ///
-  /// Reads the global factory — not OTelAPI's cache — so providers of a
-  /// factory installed by an SDK are visible even if no OTelAPI accessor has
-  /// run yet. A list query is a read, so no factory is lazily installed;
-  /// with no factory there are no providers and the list is empty.
   static List<APITracerProvider> tracerProviders() {
     return OTelFactory.otelFactory?.getTracerProviders() ?? [];
   }
 
   /// returns a list of [APIMeterProvider]s including the the global default
   /// and any named providers added.
-  ///
-  /// Reads the global factory — not OTelAPI's cache — like [tracerProviders].
   static List<APIMeterProvider> meterProviders() {
     return OTelFactory.otelFactory?.getMeterProviders() ?? [];
   }
 
   /// returns a list of [APILoggerProvider]s including the global default
   /// and any named providers added.
-  ///
-  /// Reads the global factory — not OTelAPI's cache — like [tracerProviders].
   static List<APILoggerProvider> loggerProviders() {
     return OTelFactory.otelFactory?.getLoggerProviders() ?? [];
   }

@@ -94,9 +94,6 @@ class Baggage {
   /// Creates a baggage instance from a JSON representation.
   /// JSON format must be: { key: { value: string, metadata?: string } }
   factory Baggage.fromJson(Map<String, dynamic> json) {
-    // Deserialization often runs in a fresh isolate with pristine statics;
-    // per the OTel spec this lazily installs the no-op API factory rather
-    // than throw.
     final factory = OTelFactory.getOrCreateDefault();
     final entries = <String, BaggageEntry>{};
     for (final entry in json.entries) {

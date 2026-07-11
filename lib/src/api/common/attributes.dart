@@ -26,9 +26,6 @@ class Attributes {
   /// @param map The map of key-value pairs to convert to attributes
   /// @return A new Attributes instance containing the converted attributes
   static Attributes of(Map<String, Object> map) {
-    // Attributes are created during initialization (e.g. resource
-    // attributes); per the OTel spec this lazily installs the no-op API
-    // factory rather than throw, and initialize() upgrades it in place.
     return OTelFactory.getOrCreateDefault().attributesFromMap(map);
   }
 

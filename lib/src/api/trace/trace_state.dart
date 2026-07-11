@@ -20,10 +20,7 @@ class TraceState {
     _entries = entries ?? {};
   }
 
-  /// Create TraceState from a W3C trace context header string.
-  ///
-  /// Propagators parse `tracestate` headers before initialization; per the
-  /// OTel spec this lazily installs the no-op API factory rather than throw.
+  /// Create TraceState from a W3C trace context header string
   factory TraceState.fromString(String? headerValue) {
     final factory = OTelFactory.getOrCreateDefault();
     if (headerValue == null || headerValue.isEmpty) {

@@ -127,9 +127,6 @@ class SpanContext {
   /// [json] A map containing the serialized SpanContext properties.
   /// Returns a new SpanContext initialized with the values from the JSON map.
   factory SpanContext.fromJson(Map<String, dynamic> json) {
-    // Deserialization often runs in a fresh isolate with pristine statics;
-    // per the OTel spec this lazily installs the no-op API factory rather
-    // than throw.
     final factory = OTelFactory.getOrCreateDefault();
 
     SpanId? parentSpanId;
