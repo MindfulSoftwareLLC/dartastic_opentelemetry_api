@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.0.0-beta.9-wip]
 
+### Fixed
+- `OTelAPI.instrumentationScope()` recursed into itself when called before
+  initialization, causing an immediate `StackOverflowError`; it now lazily
+  installs the no-op API factory like the other accessors (#27). Thanks
+  @kevmoo.
+- `OTelAPI.tracer()` and `OTelAPI.logger()` threw a null-check error before
+  initialization instead of lazily installing the no-op API factory (#27).
+
 ## [1.0.0-beta.8] - 2026-07-11
 
 ### Added

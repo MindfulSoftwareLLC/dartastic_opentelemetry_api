@@ -149,17 +149,12 @@ class OTelAPI {
       String version = '1.0.0',
       String? schemaUrl,
       Attributes? attributes}) {
-    return OTelFactory.otelFactory == null
-        ? OTelAPI.instrumentationScope(
-            name: name,
-            version: version,
-            schemaUrl: schemaUrl,
-            attributes: attributes)
-        : OTelFactory.otelFactory!.instrumentationScope(
-            name: name,
-            version: version,
-            schemaUrl: schemaUrl,
-            attributes: attributes);
+    _getAndCacheOtelFactory();
+    return OTelFactory.otelFactory!.instrumentationScope(
+        name: name,
+        version: version,
+        schemaUrl: schemaUrl,
+        attributes: attributes);
   }
 
   /// returns a list of [APITracerProvider]s including the the global default
@@ -270,13 +265,15 @@ class OTelAPI {
 
   /// Get the default or named tracer from the global TracerProvider
   static APITracer tracer(String name) {
+    _getAndCacheOtelFactory();
     return OTelFactory.otelFactory!
         .globalDefaultTracerProvider()
         .getTracer(name);
   }
 
-  /// Get the default or named tracer from the global TracerProvider
+  /// Get the default or named logger from the global LoggerProvider
   static APILogger logger(String name) {
+    _getAndCacheOtelFactory();
     return OTelFactory.otelFactory!.globalDefaultLogProvider().getLogger(name);
   }
 
