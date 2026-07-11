@@ -1,3 +1,6 @@
+// Copyright The OpenTelemetry Authors
+// SPDX-License-Identifier: Apache-2.0
+
 // ignore_for_file: unnecessary_getters_setters
 
 import '../../util/otel_log.dart';

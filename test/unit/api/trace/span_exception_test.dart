@@ -1,4 +1,5 @@
-// Licensed under the Apache License, Version 2.0
+// Copyright The OpenTelemetry Authors
+// SPDX-License-Identifier: Apache-2.0
 
 import 'package:dartastic_opentelemetry_api/src/api/common/attributes.dart';
 import 'package:dartastic_opentelemetry_api/src/api/otel_api.dart';

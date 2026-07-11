@@ -1,4 +1,5 @@
-// Licensed under the Apache License, Version 2.0
+// Copyright The OpenTelemetry Authors
+// SPDX-License-Identifier: Apache-2.0
 
 /// Type of span. Can be used to specify additional relationships between spans
 /// in addition to a parent/child relationship.

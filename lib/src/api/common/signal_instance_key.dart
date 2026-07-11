@@ -1,3 +1,6 @@
+// Copyright The OpenTelemetry Authors
+// SPDX-License-Identifier: Apache-2.0
+
 import 'attributes.dart';
 
 enum Signal { traces, metrics, logs }

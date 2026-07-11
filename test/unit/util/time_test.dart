@@ -1,3 +1,6 @@
+// Copyright The OpenTelemetry Authors
+// SPDX-License-Identifier: Apache-2.0
+
 // dart
 import 'package:dartastic_opentelemetry_api/src/util/time.dart';
 import 'package:fixnum/fixnum.dart';

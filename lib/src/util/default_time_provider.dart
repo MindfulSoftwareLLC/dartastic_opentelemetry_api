@@ -1,4 +1,5 @@
-// Licensed under the Apache License, Version 2.0
+// Copyright The OpenTelemetry Authors
+// SPDX-License-Identifier: Apache-2.0
 
 // Conditional facade for the platform-default `TimeProvider`. Native
 // targets get `SystemTimeProvider` (DateTime.now); web targets (JS or Wasm)

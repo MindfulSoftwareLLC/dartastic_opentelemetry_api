@@ -1,4 +1,5 @@
-// Licensed under the Apache License, Version 2.0
+// Copyright The OpenTelemetry Authors
+// SPDX-License-Identifier: Apache-2.0
 
 // Conditional facade for `WebTimeProvider`. On web targets (Dart-on-JS or
 // Wasm) this exports an implementation backed by `window.performance.now()`

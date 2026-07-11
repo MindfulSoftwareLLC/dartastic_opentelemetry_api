@@ -1,3 +1,6 @@
+// Copyright The OpenTelemetry Authors
+// SPDX-License-Identifier: Apache-2.0
+
 enum Severity {
   UNSPECIFIED(0, SeverityLevel.UNSPECIFIED),
   TRACE(1, SeverityLevel.TRACE),
