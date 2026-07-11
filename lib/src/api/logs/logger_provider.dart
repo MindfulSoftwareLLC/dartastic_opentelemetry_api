@@ -73,7 +73,8 @@ class APILoggerProvider {
     Attributes? attributes,
   }) {
     if (_isShutdown) {
-      throw StateError('LogProvider has been shut down');
+      OTelLog.warn(
+          'getLogger called after shutdown; returning a no-op logger.');
     }
 
     // Validate the logger name; if invalid (empty), log a warning and use empty string.

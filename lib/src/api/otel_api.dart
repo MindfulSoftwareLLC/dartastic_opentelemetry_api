@@ -229,10 +229,9 @@ class OTelAPI {
   static APITracerProvider tracerProvider([String? name]) {
     _getAndCacheOtelFactory();
     if (name != null && name.isEmpty) {
-      throw ArgumentError(
-          'Name must not be empty. To retrieve the global default tracer provider, omit the name parameter.');
+      OTelLog.warn('Empty tracer provider name; returning the global default.');
     }
-    if (name == null) {
+    if (name == null || name.isEmpty) {
       return _otelFactory!.globalDefaultTracerProvider();
     } else {
       var tp = _otelFactory!.getNamedTracerProvider(name);
@@ -248,10 +247,9 @@ class OTelAPI {
   static APIMeterProvider meterProvider([String? name]) {
     _getAndCacheOtelFactory();
     if (name != null && name.isEmpty) {
-      throw ArgumentError(
-          'Name must not be empty. To retrieve the global default meter provider, omit the name parameter.');
+      OTelLog.warn('Empty meter provider name; returning the global default.');
     }
-    if (name == null) {
+    if (name == null || name.isEmpty) {
       return _otelFactory!.globalDefaultMeterProvider();
     } else {
       var mp = _otelFactory!.getNamedMeterProvider(name);
@@ -267,10 +265,9 @@ class OTelAPI {
   static APILoggerProvider loggerProvider([String? name]) {
     _getAndCacheOtelFactory();
     if (name != null && name.isEmpty) {
-      throw ArgumentError(
-          'Name must not be empty. To retrieve the global default tracer provider, omit the name parameter.');
+      OTelLog.warn('Empty logger provider name; returning the global default.');
     }
-    if (name == null) {
+    if (name == null || name.isEmpty) {
       return _otelFactory!.globalDefaultLogProvider();
     } else {
       var lp = _otelFactory!.getNamedLogProvider(name);

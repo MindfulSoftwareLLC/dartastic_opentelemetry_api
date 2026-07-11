@@ -77,12 +77,12 @@ void main() {
       expect(tracer.name, equals('test-tracer'));
     });
 
-    test('tracerProvider throws ArgumentError for empty name', () {
-      expect(() => OTelAPI.tracerProvider(''), throwsArgumentError);
+    test('tracerProvider falls back to the global default for empty name', () {
+      expect(OTelAPI.tracerProvider(''), same(OTelAPI.tracerProvider()));
     });
 
-    test('meterProvider throws ArgumentError for empty name', () {
-      expect(() => OTelAPI.meterProvider(''), throwsArgumentError);
+    test('meterProvider falls back to the global default for empty name', () {
+      expect(OTelAPI.meterProvider(''), same(OTelAPI.meterProvider()));
     });
 
     test('tracerProviders returns empty list initially', () {
