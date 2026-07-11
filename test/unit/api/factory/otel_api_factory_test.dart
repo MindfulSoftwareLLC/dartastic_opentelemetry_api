@@ -35,6 +35,28 @@ void main() {
       expect(factory, isA<OTelAPIFactory>());
     });
 
+    test('isAPIFactory is true for the installed API factory', () {
+      expect(factory.isAPIFactory, isTrue);
+    });
+
+    test('isAPIFactory is true for a directly-constructed OTelAPIFactory', () {
+      final direct = OTelAPIFactory(
+        apiEndpoint: 'http://localhost:4317',
+        apiServiceName: 'test-service',
+        apiServiceVersion: '1.0.0',
+      );
+      expect(direct.isAPIFactory, isTrue);
+    });
+
+    test('isAPIFactory can be overridden to false by SDK-style subclasses', () {
+      final sdkStyle = _FakeSDKFactory(
+        apiEndpoint: 'http://localhost:4317',
+        apiServiceName: 'test-service',
+        apiServiceVersion: '1.0.0',
+      );
+      expect(sdkStyle.isAPIFactory, isFalse);
+    });
+
     test('creates baggage entry', () {
       final entry = factory.baggageEntry('test-value', 'test-metadata');
       expect(entry.value, equals('test-value'));
@@ -480,4 +502,18 @@ void main() {
       expect(observableUpDownCounter.unit, equals('count'));
     });
   });
+}
+
+/// Simulates an SDK factory: real factories extend [OTelAPIFactory] and must
+/// override [OTelAPIFactory.isAPIFactory] so SDK initialization does not
+/// treat them as the replaceable no-op API factory.
+class _FakeSDKFactory extends OTelAPIFactory {
+  _FakeSDKFactory({
+    required super.apiEndpoint,
+    required super.apiServiceName,
+    required super.apiServiceVersion,
+  });
+
+  @override
+  bool get isAPIFactory => false;
 }

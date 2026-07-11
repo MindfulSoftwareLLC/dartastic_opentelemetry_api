@@ -82,6 +82,17 @@ abstract class OTelFactory {
         _apiServiceName = apiServiceName,
         _apiEndpoint = apiEndpoint;
 
+  /// Whether this factory is the API's no-op factory rather than a real
+  /// (SDK) implementation.
+  ///
+  /// The API auto-installs its no-op [OTelAPIFactory] when API code runs
+  /// before an SDK initializes (per the OpenTelemetry specification). SDKs
+  /// use this flag to recognize that auto-installed no-op factory and
+  /// replace it during SDK initialization, while refusing to replace a
+  /// real factory. Defaults to `false`: a factory is assumed to be a real
+  /// implementation unless it declares otherwise.
+  bool get isAPIFactory => false;
+
   /// Sets the API endpoint for this factory.
   ///
   /// This determines where telemetry data will be sent when using SDK implementations.
