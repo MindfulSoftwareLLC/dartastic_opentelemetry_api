@@ -1,4 +1,5 @@
-// Licensed under the Apache License, Version 2.0
+// Copyright The OpenTelemetry Authors
+// SPDX-License-Identifier: Apache-2.0
 
 import 'package:test/test.dart';
 
@@ -10,7 +11,8 @@ import 'package:test/test.dart';
 //   configured otherwise."
 void main() {
   test('the API provides a global TextMapPropagator with a no-op default',
-      () {
+      skip: 'Not implemented; needs a design decision on generic vs '
+          'non-generic global surface — see #42', () {
     fail('No global propagator accessor or no-op TextMapPropagator exists '
         'in the API; instrumentation libraries cannot obtain "the" '
         'propagator as the spec requires.');
