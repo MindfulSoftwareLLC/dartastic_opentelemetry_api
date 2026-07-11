@@ -342,6 +342,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `copyWithBaggage` work without an installed SDK (previously `StateError`),
   per "The Baggage API MUST be fully functional in the absence of an
   installed SDK."
+- **`TraceState.put` / `remove` never throw.** Per the trace API spec,
+  mutating operations validate input and "MUST NOT return `TraceState`
+  containing invalid data" while following the error-handling guidelines —
+  invalid keys/values are now ignored with a warning (previously
+  `ArgumentError`), and both operations work without an installed SDK
+  (previously `StateError`).
 
 ## [1.0.0-beta.9] - 2026-07-11
 

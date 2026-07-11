@@ -107,23 +107,25 @@ void main() {
       expect(identical(traceState, updatedState), isFalse);
     });
 
-    test('rejects invalid key and value', () {
+    test('ignores invalid key and value instead of throwing', () {
       final traceState = OTelAPI.traceState({'vendora': 'value1'});
 
       // Invalid key (uppercase)
-      expect(() => traceState.put('INVALID', 'value2'), throwsArgumentError);
+      expect(traceState.put('INVALID', 'value2').entries,
+          equals({'vendora': 'value1'}));
 
       // Invalid key (special char)
-      expect(() => traceState.put('invalid@', 'value2'), throwsArgumentError);
+      expect(traceState.put('invalid@', 'value2').entries,
+          equals({'vendora': 'value1'}));
 
       // Invalid value (contains invalid characters)
-      expect(
-          () => traceState.put('vendorb', 'value\u0000'), throwsArgumentError);
+      expect(traceState.put('vendorb', 'value\u0000').entries,
+          equals({'vendora': 'value1'}));
 
       // Invalid value (too long)
       final tooLongValue = 'x' * 257;
-      expect(
-          () => traceState.put('vendorb', tooLongValue), throwsArgumentError);
+      expect(traceState.put('vendorb', tooLongValue).entries,
+          equals({'vendora': 'value1'}));
     });
 
     test('updates existing value', () {
@@ -182,20 +184,19 @@ void main() {
       expect(state.get(key), equals('v'));
     });
 
-    test('put rejects a tenant id longer than 241 chars', () {
-      expect(() => OTelAPI.traceState({}).put('${'a' * 242}@acme', 'v'),
-          throwsArgumentError);
+    test('put ignores a tenant id longer than 241 chars', () {
+      expect(
+          OTelAPI.traceState({}).put('${'a' * 242}@acme', 'v').isEmpty, isTrue);
     });
 
-    test('put rejects a system id longer than 14 chars', () {
-      expect(() => OTelAPI.traceState({}).put('acme@${'a' * 15}', 'v'),
-          throwsArgumentError);
+    test('put ignores a system id longer than 14 chars', () {
+      expect(
+          OTelAPI.traceState({}).put('acme@${'a' * 15}', 'v').isEmpty, isTrue);
     });
 
-    test('put rejects a system id that starts with a digit', () {
+    test('put ignores a system id that starts with a digit', () {
       // W3C system-id = lcalpha ...
-      expect(() => OTelAPI.traceState({}).put('acme@9vendor', 'v'),
-          throwsArgumentError);
+      expect(OTelAPI.traceState({}).put('acme@9vendor', 'v').isEmpty, isTrue);
     });
 
     test('maintains immutability', () {
