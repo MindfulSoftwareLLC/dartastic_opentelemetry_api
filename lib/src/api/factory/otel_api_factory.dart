@@ -72,6 +72,15 @@ class OTelAPIFactory extends OTelFactory {
           otelApiFactoryFactoryFunction})
       : super(factoryFactory: factoryFactory!);
 
+  /// The pure API factory is the spec-mandated no-op used when no SDK is
+  /// installed; SDK initialization may replace it.
+  ///
+  /// SDK factories extend [OTelAPIFactory], so a real implementation MUST
+  /// override this to return `false` — otherwise SDK initialization would
+  /// treat it as replaceable.
+  @override
+  bool get isAPIFactory => true;
+
   @override
   BaggageEntry baggageEntry(String value, [String? metadata]) {
     return BaggageEntryFactory.create<String>(value, metadata);

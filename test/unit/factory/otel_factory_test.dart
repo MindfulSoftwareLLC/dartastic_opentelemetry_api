@@ -15,6 +15,12 @@ void main() {
       );
     });
 
+    test('installed API factory reports isAPIFactory', () {
+      // The SDK's initialize() uses this flag to recognize the auto-installed
+      // no-op API factory as replaceable.
+      expect(OTelFactory.otelFactory!.isAPIFactory, isTrue);
+    });
+
     test('globalDefaultTracerProvider returns the same instance', () {
       final factory = OTelFactory.otelFactory!;
       final provider1 = factory.globalDefaultTracerProvider();
