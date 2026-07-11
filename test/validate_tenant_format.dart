@@ -1,4 +1,5 @@
-// Licensed under the Apache License, Version 2.0
+// Copyright The OpenTelemetry Authors
+// SPDX-License-Identifier: Apache-2.0
 
 // Test script to validate the tenant format implementation
 import 'package:dartastic_opentelemetry_api/dartastic_opentelemetry_api.dart';

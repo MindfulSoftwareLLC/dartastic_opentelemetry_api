@@ -1,3 +1,6 @@
+// Copyright The OpenTelemetry Authors
+// SPDX-License-Identifier: Apache-2.0
+
 // Helper function for getting current time in OTel nano format with microsecond precision
 import 'package:fixnum/fixnum.dart';
 

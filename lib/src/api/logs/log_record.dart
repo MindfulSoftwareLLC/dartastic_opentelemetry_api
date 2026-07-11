@@ -1,3 +1,6 @@
+// Copyright The OpenTelemetry Authors
+// SPDX-License-Identifier: Apache-2.0
+
 import 'package:fixnum/fixnum.dart';
 
 import '../common/attributes.dart';
