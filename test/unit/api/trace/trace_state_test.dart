@@ -163,6 +163,40 @@ void main() {
       expect(traceState.get('tenant@vendor'), equals('value'));
     });
 
+    test('put accepts a tenant id that starts with a digit', () {
+      // W3C tenant-id = ( lcalpha / DIGIT ) ...
+      final state = OTelAPI.traceState({}).put('9legacy@acme', 'v');
+      expect(state.get('9legacy@acme'), equals('v'));
+    });
+
+    test('fromString keeps a digit-leading multi-tenant key', () {
+      final state = TraceState.fromString('9legacy@acme=v');
+      expect(state.get('9legacy@acme'), equals('v'));
+    });
+
+    test('put accepts boundary-length tenant and system ids', () {
+      final key =
+          '${'a' * 241}@${'a' * 14}'; // tenant-id max 241, system-id max 14
+      final state = OTelAPI.traceState({}).put(key, 'v');
+      expect(state.get(key), equals('v'));
+    });
+
+    test('put rejects a tenant id longer than 241 chars', () {
+      expect(() => OTelAPI.traceState({}).put('${'a' * 242}@acme', 'v'),
+          throwsArgumentError);
+    });
+
+    test('put rejects a system id longer than 14 chars', () {
+      expect(() => OTelAPI.traceState({}).put('acme@${'a' * 15}', 'v'),
+          throwsArgumentError);
+    });
+
+    test('put rejects a system id that starts with a digit', () {
+      // W3C system-id = lcalpha ...
+      expect(() => OTelAPI.traceState({}).put('acme@9vendor', 'v'),
+          throwsArgumentError);
+    });
+
     test('maintains immutability', () {
       final traceState = OTelAPI.traceState({'key': 'value'});
       final updatedState = traceState.put('newkey', 'newvalue');
