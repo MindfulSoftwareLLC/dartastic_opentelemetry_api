@@ -8,8 +8,10 @@ part 'trace_state_create.dart';
 /// TraceState follows the W3C Trace Context specification.
 class TraceState {
   static const int _maxKeyValuePairs = 32;
-  // Allow tenant format with @ character (tenant@vendor)
-  static final RegExp _keyFormat = RegExp(r'^[a-z][a-z0-9_\-*/]*$');
+  static final RegExp _simpleKeyFormat = RegExp(r'^[a-z][a-z0-9_\-*/]{0,255}$');
+  static final RegExp _tenantIdFormat =
+      RegExp(r'^[a-z0-9][a-z0-9_\-*/]{0,240}$');
+  static final RegExp _systemIdFormat = RegExp(r'^[a-z][a-z0-9_\-*/]{0,13}$');
   static final RegExp _valueFormat = RegExp(
       r'^[\x20-\x2b\x2d-\x3c\x3e-\x7e]{0,255}[\x21-\x2b\x2d-\x3c\x3e-\x7e]$');
 
@@ -117,32 +119,18 @@ class TraceState {
     return _entries.entries.map((e) => '${e.key}=${e.value}').join(',');
   }
 
-  /// Validate key format, with explicit support for tenant format (tenant@vendor)
+  /// Validate a tracestate key: a simple key, or a multi-tenant
+  /// `tenant-id@system-id` key.
   static bool _isValidKey(String key) {
-    // If the key contains @, handle it as a tenant format key
-    if (key.contains('@')) {
-      // Tenant format can only have one @ symbol
-      if (key.indexOf('@') != key.lastIndexOf('@')) {
-        return false;
-      }
-
-      // Split the key into tenant and vendor parts
-      final parts = key.split('@');
-      if (parts.length != 2) return false;
-
-      // Validate each part separately
-      final tenant = parts[0];
-      final vendor = parts[1];
-
-      // Tenant and vendor must be lowercase letters or digits,
-      // and start with a lowercase letter
-      final simpleKeyFormat = RegExp(r'^[a-z][a-z0-9_\-*/]*$');
-      return simpleKeyFormat.hasMatch(tenant) &&
-          simpleKeyFormat.hasMatch(vendor);
+    final atIndex = key.indexOf('@');
+    if (atIndex != -1) {
+      if (atIndex != key.lastIndexOf('@')) return false;
+      final tenant = key.substring(0, atIndex);
+      final system = key.substring(atIndex + 1);
+      return _tenantIdFormat.hasMatch(tenant) &&
+          _systemIdFormat.hasMatch(system);
     }
-
-    // Non-tenant keys use the standard format
-    return _keyFormat.hasMatch(key);
+    return _simpleKeyFormat.hasMatch(key);
   }
 
   /// Validate value format
