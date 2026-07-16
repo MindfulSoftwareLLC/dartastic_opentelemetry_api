@@ -24,6 +24,10 @@ TEMPLATES_DIR="$PKG_ROOT/tool/semconv/templates"
 LIB_OUT="$PKG_ROOT/lib/src/api/semantics/semconv"
 TEST_OUT="$PKG_ROOT/test/unit/api/semantics/semconv"
 MODE="${1:-generate}" # generate | --check
+if [ "$MODE" != "generate" ] && [ "$MODE" != "--check" ]; then
+  echo "Usage: $0 [--check]" >&2
+  exit 2
+fi
 
 if [ ! -f "$SEMCONV_REPO/model/manifest.yaml" ]; then
   echo "SEMCONV_REPO does not look like a semantic-conventions checkout: $SEMCONV_REPO" >&2
@@ -43,7 +47,8 @@ DOCKER_USER_ARG=()
 run_weaver() { # $1 = target name (templates/registry/<target>), $2 = output dir
   local target="$1" out="$2"
   mkdir -p "$out"
-  docker run --rm "${DOCKER_USER_ARG[@]}" --network=none \
+  # ${arr[@]+...} keeps `set -u` happy on bash 3.2 when the array is empty.
+  docker run --rm ${DOCKER_USER_ARG[@]+"${DOCKER_USER_ARG[@]}"} --network=none \
     --mount "type=bind,source=$TEMPLATES_DIR,target=/home/weaver/templates,readonly" \
     --mount "type=bind,source=$SEMCONV_REPO/model,target=/home/weaver/source,readonly" \
     --mount "type=bind,source=$out,target=/home/weaver/target" \

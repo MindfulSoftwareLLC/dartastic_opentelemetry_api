@@ -28,6 +28,11 @@ text_maps:
     File: FileAttributes
     Process: ProcessAttributes
     State: StateAttributes
+  # Same idea for VALUE enums (named PascalCase of the full attribute
+  # id): the registry's bare legacy `state` attribute would otherwise
+  # emit `enum State`, colliding with Flutter's State<T>.
+  value_enum_name_overrides:
+    State: StateValue
   # Weaver instrument kind -> SemanticInstrument member.
   instrument_map:
     counter: counter

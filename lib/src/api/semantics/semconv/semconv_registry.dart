@@ -402,7 +402,7 @@ abstract final class SemconvRegistry {
     OtelSpanParentOrigin.values,
     OtelSpanSamplingResult.values,
     OtelStatusCode.values,
-    State.values,
+    StateValue.values,
     ProcessContextSwitchType.values,
     ProcessCpuState.values,
     ProcessPagingFaultType.values,

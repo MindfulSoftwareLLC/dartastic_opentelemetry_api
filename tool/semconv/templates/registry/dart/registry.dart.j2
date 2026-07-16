@@ -37,7 +37,7 @@ abstract final class SemconvRegistry {
 {% for attribute in g.attributes %}
 {% if attribute.type is mapping %}
 {% if attribute.type.members[0].value is not int %}
-    {{ attribute.name | pascal_case }}.values,
+    {{ attribute.name | pascal_case | map_text("value_enum_name_overrides") }}.values,
 {% endif %}
 {% endif %}
 {% endfor %}
@@ -50,7 +50,7 @@ abstract final class SemconvRegistry {
 {% for attribute in g.attributes %}
 {% if attribute.type is mapping %}
 {% if attribute.type.members[0].value is int %}
-    {{ attribute.name | pascal_case }}.values,
+    {{ attribute.name | pascal_case | map_text("value_enum_name_overrides") }}.values,
 {% endif %}
 {% endif %}
 {% endfor %}

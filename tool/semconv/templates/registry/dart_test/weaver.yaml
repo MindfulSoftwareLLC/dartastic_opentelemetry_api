@@ -25,6 +25,8 @@ text_maps:
     File: FileAttributes
     Process: ProcessAttributes
     State: StateAttributes
+  value_enum_name_overrides:
+    State: StateValue
   instrument_map:
     counter: counter
     updowncounter: upDownCounter

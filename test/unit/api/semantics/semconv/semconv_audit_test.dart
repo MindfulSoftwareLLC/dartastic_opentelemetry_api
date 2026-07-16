@@ -2495,9 +2495,9 @@ void main() {
       expect(Other.state.key, 'state');
     });
     test('state values', () {
-      expect(State.values.length, 2);
-      expect(State.idle.value, 'idle');
-      expect(State.used.value, 'used');
+      expect(StateValue.values.length, 2);
+      expect(StateValue.idle.value, 'idle');
+      expect(StateValue.used.value, 'used');
     });
   });
   group('peer', () {

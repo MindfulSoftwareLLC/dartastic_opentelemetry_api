@@ -8,8 +8,6 @@
 
 /// Semantic-convention attributes for the `other`
 /// registry namespace.
-///
-/// [Spec](https://opentelemetry.io/docs/specs/semconv/registry/attributes/other/)
 library;
 
 import '../semantics_base.dart';
@@ -38,7 +36,7 @@ enum Other implements OTelSemantic {
 ///
 /// Stability: development
 @Deprecated('Replaced by `db.client.connection.state`.')
-enum State implements OTelSemanticValue {
+enum StateValue implements OTelSemanticValue {
   /// Stability: development
   idle('idle'),
 
@@ -48,7 +46,7 @@ enum State implements OTelSemanticValue {
   @override
   final String value;
 
-  const State(this.value);
+  const StateValue(this.value);
 
   @override
   String toString() => value;

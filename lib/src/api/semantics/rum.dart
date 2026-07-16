@@ -302,9 +302,9 @@ enum NetworkSemantics implements OTelSemantic {
 
 /// RUM-style view + extended session attributes (not in OTel core
 /// semconv). The OTel-spec session keys (`session.id`,
-/// `session.previous_id`) live in `Session` in `semantics.dart`; the
+/// `session.previous_id`) live in the generated `Session` enum; the
 /// OTel-spec user keys (`user.id`, `user.email`, `user.full_name`,
-/// `user.name`, `user.roles`, `user.session`) live in `User`. This
+/// `user.hash`, `user.name`, `user.roles`) live in `User`. This
 /// enum keeps the Datadog/Dynatrace-style underscore variants and the
 /// view-duration metrics that aren't in the OTel registry.
 @Deprecated(

@@ -16,7 +16,7 @@ void main() {
 {% for metric in g.metrics %}
       expect({{ g.root_namespace | pascal_case }}Metric.{{ m.ident(metric.metric_name) }}.name, '{{ metric.metric_name }}');
       expect({{ g.root_namespace | pascal_case }}Metric.{{ m.ident(metric.metric_name) }}.instrument, SemanticInstrument.{{ metric.instrument | map_text("instrument_map") }});
-      expect({{ g.root_namespace | pascal_case }}Metric.{{ m.ident(metric.metric_name) }}.unit, '{{ metric.unit }}');
+      expect({{ g.root_namespace | pascal_case }}Metric.{{ m.ident(metric.metric_name) }}.unit, '{{ m.dart_str(metric.unit) }}');
 {% endfor %}
     });
 {% endfor %}

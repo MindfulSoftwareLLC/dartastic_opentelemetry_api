@@ -3,8 +3,10 @@
 
 /// Semantic-convention attributes for the `{{ ctx.root_namespace }}`
 /// registry namespace.
+{% if ctx.root_namespace != "other" %}
 ///
 /// [Spec](https://opentelemetry.io/docs/specs/semconv/registry/attributes/{{ ctx.root_namespace | kebab_case }}/)
+{% endif %}
 library;
 
 import '../semantics_base.dart';
@@ -26,7 +28,7 @@ enum {{ m.type_name(ctx.root_namespace) }} implements OTelSemantic {
 }
 {% for attribute in ctx.attributes %}
 {% if attribute.type is mapping %}
-{% set value_enum = attribute.name | pascal_case %}
+{% set value_enum = attribute.name | pascal_case | map_text("value_enum_name_overrides") %}
 {% set is_int = attribute.type.members[0].value is int %}
 
 /// Values for `{{ attribute.name }}`.
@@ -36,7 +38,7 @@ enum {{ m.type_name(ctx.root_namespace) }} implements OTelSemantic {
 {% endif %}
 {{ m.deprecated_annotation_top(attribute) }}enum {{ value_enum }} implements {{ "OTelSemanticIntValue" if is_int else "OTelSemanticValue" }} {
 {% for member in attribute.type.members %}
-{{ m.doc(member) }}{{ m.deprecated_annotation(member) }}  {{ m.ident(member.id) }}({{ member.value if is_int else "'" ~ member.value ~ "'" }}){{ "," if not loop.last else ";" }}
+{{ m.doc(member) }}{{ m.deprecated_annotation(member) }}  {{ m.ident(member.id) }}({{ member.value if is_int else "'" ~ m.dart_str(member.value) ~ "'" }}){{ "," if not loop.last else ";" }}
 {% endfor %}
 
   @override
