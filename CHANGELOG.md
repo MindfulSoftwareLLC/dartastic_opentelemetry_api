@@ -227,6 +227,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   event, and entity against the registry, plus source audits for
   `@Deprecated`/`Stability:` annotations.
 
+- `NonRecordingSpan` and `OTelAPI.nonRecordingSpan(SpanContext)` — the
+  spec's "Wrapping a SpanContext in a Span" operation: the wrapped
+  context is returned unchanged, `isRecording` is `false`, and all other
+  operations are no-ops (#40).
+
 ### Deprecated
 
 - **All vendor/RUM enums** — they are not OpenTelemetry semantic
@@ -301,6 +306,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   | `FeatureFlag.featureFlagProviderName` | `feature_flag.provider_name` | same identifier, now `feature_flag.provider.name` |
   | `CloudPlatform.azureVm`/`azureAks`/`azureFunctions`/`azureAppService`/`azureOpenshift`/`azureContainerApps`/`azureContainerInstances` | `azure_vm` etc. | same identifiers, now the registry's dotted values `azure.vm`, `azure.aks`, `azure.functions`, `azure.app_service`, `azure.openshift`, `azure.container_apps`, `azure.container_instances` |
   | `GenAiTokenType.completion` | `completion` | same identifier (`@Deprecated`), now emits `output`; new member `GenAiTokenType.output` |
+
+- **Breaking:** With only the API installed (no SDK), `startSpan`/`createSpan`
+  now follow trace/api.md's "Behavior of the API in the absence of an
+  installed SDK": the returned span is non-recording (`isRecording` is
+  `false` and every mutating operation is a no-op) and carries the
+  `SpanContext` from the parent `Context` — explicit or implicit —
+  unchanged; when the context has no span, it carries an empty
+  `SpanContext` (all-zero trace/span IDs, unsampled flags). Previously
+  the API minted random valid IDs and returned recording spans (#40).
+  SDK span creation is unaffected: the no-op behavior applies only when
+  the installed factory `isAPIFactory`.
 
 ## [1.0.0-beta.9] - 2026-07-11
 
