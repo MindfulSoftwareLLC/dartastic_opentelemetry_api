@@ -23,6 +23,7 @@ void main() {
         serviceName: 'test-service',
         serviceVersion: '1.0.0',
       );
+      installSdkLikeFactory();
 
       fullyTypesMapOfKVs = {
         'str': 'value',

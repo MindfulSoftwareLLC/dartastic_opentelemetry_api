@@ -4,6 +4,8 @@
 import 'package:dartastic_opentelemetry_api/dartastic_opentelemetry_api.dart';
 import 'package:test/test.dart';
 
+import '../../../test_util.dart';
+
 void main() {
   group('APISpan - Additional Coverage Tests', () {
     late OTelFactory originalFactory;
@@ -16,6 +18,7 @@ void main() {
         serviceName: 'test-service',
         serviceVersion: '1.0.0',
       );
+      installSdkLikeFactory();
 
       // Store the original factory
       originalFactory = OTelFactory.otelFactory!;
