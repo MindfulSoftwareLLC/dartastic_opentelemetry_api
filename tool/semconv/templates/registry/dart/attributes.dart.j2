@@ -1,0 +1,51 @@
+{%- import 'macros.j2' as m -%}
+{{ m.file_header() }}
+
+/// Semantic-convention attributes for the `{{ ctx.root_namespace }}`
+/// registry namespace.
+///
+/// [Spec](https://opentelemetry.io/docs/specs/semconv/registry/attributes/{{ ctx.root_namespace | kebab_case }}/)
+library;
+
+import '../semantics_base.dart';
+
+/// `{{ ctx.root_namespace }}.*` attribute keys from the OpenTelemetry
+/// semantic-conventions attribute registry.
+enum {{ m.type_name(ctx.root_namespace) }} implements OTelSemantic {
+{% for attribute in ctx.attributes %}
+{{ m.doc(attribute) }}{{ m.deprecated_annotation(attribute) }}  {{ m.ident(attribute.name) }}('{{ attribute.name }}'){{ "," if not loop.last else ";" }}
+{% endfor %}
+
+  @override
+  final String key;
+
+  const {{ m.type_name(ctx.root_namespace) }}(this.key);
+
+  @override
+  String toString() => key;
+}
+{% for attribute in ctx.attributes %}
+{% if attribute.type is mapping %}
+{% set value_enum = attribute.name | pascal_case %}
+{% set is_int = attribute.type.members[0].value is int %}
+
+/// Values for `{{ attribute.name }}`.
+{% if attribute.stability is defined and attribute.stability and attribute.stability != "stable" %}
+///
+/// Stability: {{ attribute.stability }}
+{% endif %}
+{{ m.deprecated_annotation_top(attribute) }}enum {{ value_enum }} implements {{ "OTelSemanticIntValue" if is_int else "OTelSemanticValue" }} {
+{% for member in attribute.type.members %}
+{{ m.doc(member) }}{{ m.deprecated_annotation(member) }}  {{ m.ident(member.id) }}({{ member.value if is_int else "'" ~ member.value ~ "'" }}){{ "," if not loop.last else ";" }}
+{% endfor %}
+
+  @override
+  final {{ "int" if is_int else "String" }} value;
+
+  const {{ value_enum }}(this.value);
+
+  @override
+  String toString() => {{ "value.toString()" if is_int else "value" }};
+}
+{% endif %}
+{% endfor %}

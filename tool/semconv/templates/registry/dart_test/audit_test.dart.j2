@@ -1,0 +1,31 @@
+{%- import 'macros.j2' as m -%}
+{{ m.file_header() }}
+
+// Generated audit: asserts every attribute key and every value-enum
+// literal against the registry it was generated from.
+
+import 'package:dartastic_opentelemetry_api/src/api/semantics/semconv/semconv.dart';
+import 'package:test/test.dart';
+
+void main() {
+{% for g in ctx %}
+  group('{{ g.root_namespace }}', () {
+    test('attribute keys', () {
+      expect({{ m.type_name(g.root_namespace) }}.values.length, {{ g.attributes | length }});
+{% for attribute in g.attributes %}
+      expect({{ m.type_name(g.root_namespace) }}.{{ m.ident(attribute.name) }}.key, '{{ attribute.name }}');
+{% endfor %}
+    });
+{% for attribute in g.attributes %}
+{% if attribute.type is mapping %}
+    test('{{ attribute.name }} values', () {
+      expect({{ attribute.name | pascal_case }}.values.length, {{ attribute.type.members | length }});
+{% for member in attribute.type.members %}
+      expect({{ attribute.name | pascal_case }}.{{ m.ident(member.id) }}.value, {{ member.value if attribute.type.members[0].value is int else "'" ~ m.dart_str(member.value) ~ "'" }});
+{% endfor %}
+    });
+{% endif %}
+{% endfor %}
+  });
+{% endfor %}
+}

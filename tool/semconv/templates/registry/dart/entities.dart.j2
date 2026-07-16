@@ -1,0 +1,42 @@
+{%- import 'macros.j2' as m -%}
+{{ m.file_header() }}
+
+/// Semantic-convention entities for the `{{ ctx.root_namespace }}`
+/// namespace.
+library;
+
+import '../../semantics_base.dart';
+{% for root in ctx.attr_roots %}
+import '../{{ root | snake_case }}.dart';
+{% endfor %}
+
+/// `{{ ctx.root_namespace }}` entities from the OpenTelemetry semantic
+/// conventions. Each member carries the entity type string plus the
+/// attribute keys that identify and describe it.
+enum {{ ctx.root_namespace | pascal_case }}Entity implements OTelEntity {
+{% for entity in ctx.entities %}
+{{ m.doc(entity) }}{{ m.deprecated_annotation(entity) }}  {{ m.ident(entity.name) }}(
+    '{{ entity.name }}',
+    identifying: [{% for a in entity.identifying %}{{ m.type_name(a | split_id | list | first) }}.{{ m.ident(a) }}{{ ", " if not loop.last }}{% endfor %}],
+    descriptive: [{% for a in entity.descriptive %}{{ m.type_name(a | split_id | list | first) }}.{{ m.ident(a) }}{{ ", " if not loop.last }}{% endfor %}],
+  ){{ "," if not loop.last else ";" }}
+{% endfor %}
+
+  @override
+  final String name;
+
+  @override
+  final List<OTelSemantic> identifying;
+
+  @override
+  final List<OTelSemantic> descriptive;
+
+  const {{ ctx.root_namespace | pascal_case }}Entity(
+    this.name, {
+    required this.identifying,
+    required this.descriptive,
+  });
+
+  @override
+  String toString() => name;
+}

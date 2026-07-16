@@ -1,0 +1,110 @@
+params:
+  semconv_version: unknown
+  registry_commit: unknown
+  registry_describe: unknown
+
+whitespace_control:
+  trim_blocks: true
+  lstrip_blocks: true
+
+comment_formats:
+  dart:
+    format: markdown
+    prefix: "/// "
+    trim: true
+    word_wrap:
+      line_length: 76
+default_comment_format: dart
+
+text_maps:
+  # PascalCase namespace names that clash with dart:core / dart:io /
+  # package:web / Flutter widgets types get an `Attributes` suffix.
+  # Unmapped names pass through unchanged.
+  enum_name_overrides:
+    Container: ContainerAttributes
+    Error: ErrorAttributes
+    Event: EventAttributes
+    Exception: ExceptionAttributes
+    File: FileAttributes
+    Process: ProcessAttributes
+    State: StateAttributes
+  # Weaver instrument kind -> SemanticInstrument member.
+  instrument_map:
+    counter: counter
+    updowncounter: upDownCounter
+    gauge: gauge
+    histogram: histogram
+  # Dart reserved words that occur as enum-member identifiers get a `$`
+  # suffix. `values`/`index` are defensive (illegal enum constants).
+  reserved_words:
+    default: default$
+    new: new$
+    in: in$
+    values: values$
+    index: index$
+
+templates:
+  - pattern: attributes.dart.j2
+    filter: semconv_grouped_attributes({})
+    application_mode: each
+    file_name: "{{ ctx.root_namespace | snake_case }}.dart"
+
+  - pattern: metrics.dart.j2
+    filter: semconv_grouped_metrics({})
+    application_mode: each
+    file_name: "metrics/{{ ctx.root_namespace | snake_case }}_metrics.dart"
+
+  - pattern: events.dart.j2
+    filter: >-
+      .groups
+      | map(select(.type == "event"))
+      | map(. + {root_namespace: (.name | split(".") | .[0])})
+      | group_by(.root_namespace)
+      | map({root_namespace: .[0].root_namespace, events: (. | sort_by(.name))})
+    application_mode: each
+    file_name: "events/{{ ctx.root_namespace | snake_case }}_events.dart"
+
+  - pattern: entities.dart.j2
+    filter: >-
+      .groups
+      | map(select(.type == "entity"))
+      | map(. + {root_namespace: (.name | split(".") | .[0]),
+                 identifying: [.attributes[]? | select(.role == "identifying") | .name],
+                 descriptive: [.attributes[]? | select((.role // "descriptive") != "identifying") | .name]})
+      | group_by(.root_namespace)
+      | map({root_namespace: .[0].root_namespace,
+             entities: (. | sort_by(.name)),
+             attr_roots: ([.[] | .attributes[]? | .name | split(".")[0]] | unique)})
+    application_mode: each
+    file_name: "entities/{{ ctx.root_namespace | snake_case }}_entities.dart"
+
+  - pattern: registry.dart.j2
+    filter: >-
+      {
+        attr_groups: semconv_grouped_attributes({}),
+        metric_roots: (semconv_grouped_metrics({}) | map(.root_namespace)),
+        event_roots: (.groups | map(select(.type == "event")) | map(.name | split(".") | .[0]) | unique),
+        entity_roots: (.groups | map(select(.type == "entity")) | map(.name | split(".") | .[0]) | unique)
+      }
+      | . + {imports: (((.attr_groups | map("\(.root_namespace).dart"))
+            + (.metric_roots | map("metrics/\(.)_metrics.dart"))
+            + (.event_roots | map("events/\(.)_events.dart"))
+            + (.entity_roots | map("entities/\(.)_entities.dart"))) | sort)}
+    application_mode: single
+    file_name: semconv_registry.dart
+
+  - pattern: barrel.dart.j2
+    filter: >-
+      {
+        attr_roots: (semconv_grouped_attributes({}) | map(.root_namespace)),
+        metric_roots: (semconv_grouped_metrics({}) | map(.root_namespace)),
+        event_roots: (.groups | map(select(.type == "event")) | map(.name | split(".") | .[0]) | unique),
+        entity_roots: (.groups | map(select(.type == "entity")) | map(.name | split(".") | .[0]) | unique)
+      }
+      | {exports: (((.attr_roots | map("\(.).dart"))
+            + (.metric_roots | map("metrics/\(.)_metrics.dart"))
+            + (.event_roots | map("events/\(.)_events.dart"))
+            + (.entity_roots | map("entities/\(.)_entities.dart"))
+            + ["semconv_registry.dart"]) | sort)}
+    application_mode: single
+    file_name: semconv.dart

@@ -1,0 +1,26 @@
+{%- import 'macros.j2' as m -%}
+{{ m.file_header() }}
+
+/// Generated fixture for the VM source audit: registry stability and
+/// deprecation facts, keyed by attribute key.
+library;
+
+/// Stability of every registry attribute, by key.
+const Map<String, String> semconvExpectedStabilityByKey = {
+{% for g in ctx %}
+{% for attribute in g.attributes %}
+  '{{ attribute.name }}': '{{ attribute.stability }}',
+{% endfor %}
+{% endfor %}
+};
+
+/// Every registry attribute that carries a `deprecated` block.
+const Set<String> semconvExpectedDeprecatedKeys = {
+{% for g in ctx %}
+{% for attribute in g.attributes %}
+{% if attribute.deprecated is defined and attribute.deprecated %}
+  '{{ attribute.name }}',
+{% endif %}
+{% endfor %}
+{% endfor %}
+};

@@ -1,0 +1,30 @@
+{%- import 'macros.j2' as m -%}
+{{ m.file_header() }}
+
+/// Semantic-convention metric instruments for the `{{ ctx.root_namespace }}`
+/// namespace.
+library;
+
+import '../../semantics_base.dart';
+
+/// `{{ ctx.root_namespace }}.*` metric instruments from the OpenTelemetry
+/// semantic conventions.
+enum {{ ctx.root_namespace | pascal_case }}Metric implements OTelMetric {
+{% for metric in ctx.metrics %}
+{{ m.doc(metric) }}{{ m.deprecated_annotation(metric) }}  {{ m.ident(metric.metric_name) }}('{{ metric.metric_name }}', SemanticInstrument.{{ metric.instrument | map_text("instrument_map") }}, '{{ metric.unit }}'){{ "," if not loop.last else ";" }}
+{% endfor %}
+
+  @override
+  final String name;
+
+  @override
+  final SemanticInstrument instrument;
+
+  @override
+  final String unit;
+
+  const {{ ctx.root_namespace | pascal_case }}Metric(this.name, this.instrument, this.unit);
+
+  @override
+  String toString() => name;
+}

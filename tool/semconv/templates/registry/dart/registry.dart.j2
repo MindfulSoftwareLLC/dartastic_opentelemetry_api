@@ -1,0 +1,80 @@
+{%- import 'macros.j2' as m -%}
+{{ m.file_header() }}
+
+/// Programmatic index of every generated semantic-convention enum.
+library;
+
+import '../semantics_base.dart';
+{% for imp in ctx.imports %}
+import '{{ imp }}';
+{% endfor %}
+
+/// Index of every generated semantic-convention enum, plus the registry
+/// version this package was generated from.
+///
+/// Useful for package-wide invariants (duplicate-key checks, audits) and
+/// for tooling that needs to enumerate the full semconv surface.
+abstract final class SemconvRegistry {
+  /// Semconv schema version (from `model/manifest.yaml`).
+  static const String schemaVersion = '{{ params.semconv_version }}';
+
+  /// Registry git commit the enums were generated from.
+  static const String registryCommit = '{{ params.registry_commit }}';
+
+  /// Registry `git describe` at generation time.
+  static const String registryDescribe = '{{ params.registry_describe }}';
+
+  /// Every attribute-key enum's values, one list per registry namespace.
+  static const List<List<OTelSemantic>> allAttributeEnums = [
+{% for g in ctx.attr_groups %}
+    {{ m.type_name(g.root_namespace) }}.values,
+{% endfor %}
+  ];
+
+  /// Every string-valued value enum's values.
+  static const List<List<OTelSemanticValue>> allValueEnums = [
+{% for g in ctx.attr_groups %}
+{% for attribute in g.attributes %}
+{% if attribute.type is mapping %}
+{% if attribute.type.members[0].value is not int %}
+    {{ attribute.name | pascal_case }}.values,
+{% endif %}
+{% endif %}
+{% endfor %}
+{% endfor %}
+  ];
+
+  /// Every int-valued value enum's values.
+  static const List<List<OTelSemanticIntValue>> allIntValueEnums = [
+{% for g in ctx.attr_groups %}
+{% for attribute in g.attributes %}
+{% if attribute.type is mapping %}
+{% if attribute.type.members[0].value is int %}
+    {{ attribute.name | pascal_case }}.values,
+{% endif %}
+{% endif %}
+{% endfor %}
+{% endfor %}
+  ];
+
+  /// Every metric enum's values, one list per namespace.
+  static const List<List<OTelMetric>> allMetricEnums = [
+{% for r in ctx.metric_roots %}
+    {{ r | pascal_case }}Metric.values,
+{% endfor %}
+  ];
+
+  /// Every event enum's values, one list per namespace.
+  static const List<List<OTelEvent>> allEventEnums = [
+{% for r in ctx.event_roots %}
+    {{ r | pascal_case }}Event.values,
+{% endfor %}
+  ];
+
+  /// Every entity enum's values, one list per namespace.
+  static const List<List<OTelEntity>> allEntityEnums = [
+{% for r in ctx.entity_roots %}
+    {{ r | pascal_case }}Entity.values,
+{% endfor %}
+  ];
+}

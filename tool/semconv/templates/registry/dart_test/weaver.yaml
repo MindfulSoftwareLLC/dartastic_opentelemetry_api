@@ -1,0 +1,69 @@
+params:
+  semconv_version: unknown
+  registry_commit: unknown
+  registry_describe: unknown
+
+whitespace_control:
+  trim_blocks: true
+  lstrip_blocks: true
+
+comment_formats:
+  dart:
+    format: markdown
+    prefix: "/// "
+    trim: true
+    word_wrap:
+      line_length: 76
+default_comment_format: dart
+
+text_maps:
+  enum_name_overrides:
+    Container: ContainerAttributes
+    Error: ErrorAttributes
+    Event: EventAttributes
+    Exception: ExceptionAttributes
+    File: FileAttributes
+    Process: ProcessAttributes
+    State: StateAttributes
+  instrument_map:
+    counter: counter
+    updowncounter: upDownCounter
+    gauge: gauge
+    histogram: histogram
+  reserved_words:
+    default: default$
+    new: new$
+    in: in$
+    values: values$
+    index: index$
+
+templates:
+  - pattern: audit_test.dart.j2
+    filter: semconv_grouped_attributes({})
+    application_mode: single
+    file_name: semconv_audit_test.dart
+
+  - pattern: signals_audit_test.dart.j2
+    filter: >-
+      {
+        metric_groups: semconv_grouped_metrics({}),
+        event_groups: (.groups
+          | map(select(.type == "event"))
+          | map(. + {root_namespace: (.name | split(".") | .[0])})
+          | group_by(.root_namespace)
+          | map({root_namespace: .[0].root_namespace, events: (. | sort_by(.name))})),
+        entity_groups: (.groups
+          | map(select(.type == "entity"))
+          | map(. + {root_namespace: (.name | split(".") | .[0]),
+                     identifying: [.attributes[]? | select(.role == "identifying") | .name],
+                     descriptive: [.attributes[]? | select((.role // "descriptive") != "identifying") | .name]})
+          | group_by(.root_namespace)
+          | map({root_namespace: .[0].root_namespace, entities: (. | sort_by(.name))}))
+      }
+    application_mode: single
+    file_name: semconv_signals_audit_test.dart
+
+  - pattern: expected.dart.j2
+    filter: semconv_grouped_attributes({})
+    application_mode: single
+    file_name: semconv_expected.g.dart
