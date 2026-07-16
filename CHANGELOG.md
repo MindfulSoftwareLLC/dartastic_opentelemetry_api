@@ -7,6 +7,281 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.0.0-beta.10-wip]
 
+### Changed
+
+- **Breaking: the semantic-convention enums are now generated from the
+  OpenTelemetry registry with OTel Weaver, one file per registry
+  namespace** (#50, #51). The hand-written `semantics.dart`,
+  `semantic_values.dart`, `semantic_metrics.dart`, `semantic_events.dart`,
+  `gen_ai_semantics.dart`, and `ui_semantics.dart` are gone; generated
+  files live under `lib/src/api/semantics/semconv/` (90 attribute
+  namespaces, 934 attributes, ~140 value enums, 29 metric namespaces with
+  535 metrics, 14 event namespaces with 32 events, and 24 entity
+  namespaces with 64 entities). Generated from
+  [semantic-conventions](https://github.com/open-telemetry/semantic-conventions)
+  `v1.43.0-21-g436fa257` (commit `436fa257`, schema `1.44.0-unreleased`).
+  Regenerate with `tool/semconv/generate.sh`; verify freshness with
+  `tool/semconv/generate.sh --check`. There is no compatibility layer —
+  the tables below are the migration guide.
+
+- **Breaking: file restructure.** Every old semantics file is replaced:
+
+  | Old file | Replacement |
+  | --- | --- |
+  | `semantics/semantics.dart` | `semantics/semantics_base.dart` (interfaces) + `semantics/semconv/<ns>.dart` per namespace + `semantics/http_header_attribute.dart` |
+  | `semantics/semantic_values.dart` | value enums live beside their attribute in `semconv/<ns>.dart` |
+  | `semantics/semantic_metrics.dart` | `semconv/metrics/<ns>_metrics.dart` per namespace |
+  | `semantics/semantic_events.dart` | `semconv/events/<ns>_events.dart` per namespace |
+  | `semantics/gen_ai_semantics.dart` | `semconv/gen_ai.dart` (wholly deprecated, see below) |
+  | `semantics/ui_semantics.dart` | `semantics/rum.dart` (wholly deprecated, see below) |
+  | `semantics/navigation_action.dart` | `semantics/rum.dart` |
+  | `semantics/lifecycle_state.dart` | `semantics/rum.dart` |
+
+- **Breaking: attribute-key enums are named after their registry
+  namespace**, with an `Attributes` suffix only where the bare name
+  collides with `dart:core`/`dart:io`/Flutter-widgets types. Renames
+  (everything not listed keeps its name and is regenerated in place):
+
+  | Old enum | New enum |
+  | --- | --- |
+  | `Database` | `Db` |
+  | `Kubernetes` | `K8s` |
+  | `Hardware` | `Hw` (all keys change too — see Fixed) |
+  | `OperatingSystem` | `Os` |
+  | `RPC` | `Rpc` |
+  | `GraphQL` | `Graphql` |
+  | `CloudEvents` | `Cloudevents` |
+  | `ComputeUnit` | `ContainerAttributes` |
+  | `ErrorResource` | `ErrorAttributes` |
+  | `EventResource` | `EventAttributes` |
+  | `ExceptionResource` | `ExceptionAttributes` |
+  | `FileResource` | `FileAttributes` |
+  | `ProcessResource` | `ProcessAttributes` |
+  | `ServerResource` | `Server` |
+  | `TelemetrySDK`, `TelemetryDistro` | `Telemetry` (merged) |
+  | `ComputeInstance` | merged into `Host` (same member names) |
+  | `SourceCode` | merged into `Code` (same member names) |
+  | `GenAI`, `GenAi` | `GenAi` (merged, deprecated — see below) |
+  | `Environment` | `Deployment.deploymentEnvironment` (`@Deprecated`) |
+  | `General` | split: `Service.serviceName`/`serviceVersion`, `Telemetry.telemetrySdk*` |
+  | `Version` | removed (see Removed) |
+
+- **Breaking: member identifiers are the camelCase of the full attribute
+  id** (tokens split on `.`/`_`; single registry tokens keep their
+  casing, e.g. `replicaset`, `cloudevents`, `launchtype`). Key strings
+  are unchanged unless listed under Fixed. Renamed members:
+
+  `Http`:
+
+  | Old | New |
+  | --- | --- |
+  | `requestMethod` | `httpRequestMethod` |
+  | `requestMethodOriginal` | `httpRequestMethodOriginal` |
+  | `requestResendCount` | `httpRequestResendCount` |
+  | `responseStatusCode` | `httpResponseStatusCode` |
+  | `requestSize` | `httpRequestSize` |
+  | `requestBodySize` | `httpRequestBodySize` |
+  | `responseSize` | `httpResponseSize` |
+  | `responseBodySize` | `httpResponseBodySize` |
+
+  `GenAi` (every member also `@Deprecated`, see below):
+
+  | Old | New |
+  | --- | --- |
+  | `system` | `genAiSystem` |
+  | `operationName` | `genAiOperationName` |
+  | `requestModel` | `genAiRequestModel` |
+  | `requestMaxTokens` | `genAiRequestMaxTokens` |
+  | `requestTemperature` | `genAiRequestTemperature` |
+  | `requestTopP` | `genAiRequestTopP` |
+  | `requestTopK` | `genAiRequestTopK` |
+  | `requestFrequencyPenalty` | `genAiRequestFrequencyPenalty` |
+  | `requestPresencePenalty` | `genAiRequestPresencePenalty` |
+  | `requestStopSequences` | `genAiRequestStopSequences` |
+  | `responseId` | `genAiResponseId` |
+  | `responseModel` | `genAiResponseModel` |
+  | `responseFinishReasons` | `genAiResponseFinishReasons` |
+  | `usageInputTokens` | `genAiUsageInputTokens` |
+  | `usageOutputTokens` | `genAiUsageOutputTokens` |
+
+  `Kubernetes` → `K8s` (single-token registry words):
+
+  | Old | New |
+  | --- | --- |
+  | `k8sReplicaSetUid` / `k8sReplicaSetName` | `k8sReplicasetUid` / `k8sReplicasetName` |
+  | `k8sStatefulSetUid` / `k8sStatefulSetName` | `k8sStatefulsetUid` / `k8sStatefulsetName` |
+  | `k8sDaemonSetUid` / `k8sDaemonSetName` | `k8sDaemonsetUid` / `k8sDaemonsetName` |
+  | `k8sCronJobUid` / `k8sCronJobName` | `k8sCronjobUid` / `k8sCronjobName` |
+
+  `Hardware` → `Hw`: `hardwareId` → `hwId`, `hardwareName` → `hwName`,
+  `hardwareParent` → `hwParent`, `hardwareSerialNumber` →
+  `hwSerialNumber`, `hardwareType` → `hwType`, `hardwareVendor` →
+  `hwVendor`, `hardwareModel` → `hwModel` (key strings change too — see
+  Fixed).
+
+  `CloudEvents` → `Cloudevents`: `cloudEventsEventId` →
+  `cloudeventsEventId`, `cloudEventsEventSource` →
+  `cloudeventsEventSource`, `cloudEventsEventSpecVersion` →
+  `cloudeventsEventSpecVersion`, `cloudEventsEventSubject` →
+  `cloudeventsEventSubject`, `cloudEventsEventType` →
+  `cloudeventsEventType`.
+
+  `TelemetrySDK`/`TelemetryDistro` → `Telemetry`: `sdkName` →
+  `telemetrySdkName`, `sdkLanguage` → `telemetrySdkLanguage`,
+  `sdkVersion` → `telemetrySdkVersion`, `distroName` →
+  `telemetryDistroName`, `distroVersion` → `telemetryDistroVersion`.
+
+  `Aws`: `awsEcsLaunchType` → `awsEcsLaunchtype`.
+
+  All other attribute-key enums already followed the rule — their
+  members are unchanged.
+
+- **Breaking: metric enum members follow the same rule** — camelCase of
+  the full metric name instead of the old namespace-stripped short form.
+  Every member of the 15 pre-existing metric enums gains its namespace
+  prefix; the old name was exactly the new name minus that prefix (e.g.
+  `CicdMetric.pipelineRunActive` → `CicdMetric.cicdPipelineRunActive`,
+  `HttpMetric.serverRequestDuration` →
+  `HttpMetric.httpServerRequestDuration`, `K8sMetric.podCpuUsage` →
+  `K8sMetric.k8sPodCpuUsage`).
+
+- **Breaking: `SemanticEvent` split into per-namespace event enums**
+  implementing the unchanged `OTelEvent` interface:
+
+  | Old `SemanticEvent` member | New |
+  | --- | --- |
+  | `exception` | `ExceptionEvent.exception` |
+  | `featureFlagEvaluation` | `FeatureFlagEvent.featureFlagEvaluation` |
+  | `browserWebVital` | `BrowserEvent.browserWebVital` |
+  | `azureResourceLog` | `AzureEvent.azureResourceLog` |
+  | `genAiEvaluationResult` | `GenAiEvent.genAiEvaluationResult` |
+  | `faasInvocationException` | `FaasEvent.faasInvocationException` |
+  | `httpClientRequestException` | `HttpEvent.httpClientRequestException` |
+  | `httpServerRequestException` | `HttpEvent.httpServerRequestException` |
+  | `rpcClientCallException` | `RpcEvent.rpcClientCallException` |
+  | `rpcServerCallException` | `RpcEvent.rpcServerCallException` |
+  | `messagingCreateException` | `MessagingEvent.messagingCreateException` |
+  | `messagingSendException` | `MessagingEvent.messagingSendException` |
+  | `messagingProcessException` | `MessagingEvent.messagingProcessException` |
+  | `messagingReceiveException` | `MessagingEvent.messagingReceiveException` |
+  | `messagingSettleException` | `MessagingEvent.messagingSettleException` |
+
+- **Breaking: value-enum renames** (name = PascalCase of the full
+  attribute id): `AwsEcsLaunchType` → `AwsEcsLaunchtype`, `HardwareType`
+  → `HwType`, `MessagingOperation` → `MessagingOperationType`. `DbSystem`
+  still exists for the deprecated `db.system` (now `@Deprecated`); the
+  current attribute `db.system.name` gets the new `DbSystemName`.
+
+- **Breaking: legacy `az.*` keys moved out of `Azure`** — the registry
+  files deprecated ids by their real prefix, so `Azure.azNamespace` and
+  `Azure.azServiceRequestId` are now `Az.azNamespace` and
+  `Az.azServiceRequestId` (both `@Deprecated`) in `semconv/az.dart`.
+  Deprecated-only legacy roots each get their own file the same way:
+  `az.dart`, `net.dart`, `message.dart`, `pool.dart`, `oracle.dart`, and
+  `other.dart` (the dotless legacy `state` key).
+
+- `HttpHeaderAttribute` now extends `OTelSemantic`, so request/response
+  header template attributes can be used directly as keys in
+  `attributesFromSemanticMap` / `attributesOf`.
+
+### Added
+
+- Full attribute-registry coverage (#51): 26 namespaces that were never
+  modeled, including the `app.*` namespace and `app` entity from the
+  issue — `App`, `Aspnetcore`, `Cli`, `Cpu`, `Cpython`, `Disk`, `Dotnet`,
+  `Go`, `Jsonrpc`, `Jvm`, `Kestrel`, `Linux`, `Mainframe`, `Mcp`, `Nfs`,
+  `Nodejs`, `OncRpc`, `Openai`, `Openshift`, `OracleCloud`, `Oracledb`,
+  `Pprof`, `SecurityRule`, `Signalr`, `V8js`, `Zos` — plus complete
+  member sets for every previously partial namespace.
+- **Entity enums** (#51): `<Ns>Entity` enums for all 64 registry
+  entities (24 namespaces), each member carrying the entity type string
+  plus `identifying` / `descriptive` lists wired to the attribute-key
+  enums — e.g. `AppEntity.app` identifies by `App.appBuildId`. New
+  `OTelEntity` interface in `semantics_base.dart`.
+- 14 new metric namespaces (`aspnetcore`, `azure`, `cpu`, `cpython`,
+  `dotnet`, `go`, `hw`, `jvm`, `kestrel`, `nfs`, `nodejs`, `openshift`,
+  `signalr`, `v8js`) alongside the regenerated 15.
+- `OTelSemanticIntValue` for int-valued registry value enums
+  (`cpython.gc.generation`, `rpc.grpc.status_code`).
+- `SemconvRegistry` — a generated index of every semconv enum
+  (`allAttributeEnums`, `allValueEnums`, `allIntValueEnums`,
+  `allMetricEnums`, `allEventEnums`, `allEntityEnums`) plus the pinned
+  registry version/commit. Powers package-wide invariant tests
+  (duplicate-key detection, key-format checks).
+- Every non-stable enum member now carries a `Stability:` doc line
+  (`development`, `release_candidate`, `alpha`, `experimental`), and
+  every registry-deprecated attribute carries `@Deprecated` with the
+  registry's replacement guidance.
+- `tool/semconv/generate.sh` + checked-in Weaver templates
+  (`tool/semconv/templates/registry/dart[_test]/`), pinned to the same
+  `otel/weaver:v0.24.2` container digest the semantic-conventions repo
+  pins. Also generates audit tests asserting every key, value, metric,
+  event, and entity against the registry, plus source audits for
+  `@Deprecated`/`Stability:` annotations.
+
+### Deprecated
+
+- **All vendor/RUM enums** — they are not OpenTelemetry semantic
+  conventions and will be removed from this package (future home: the
+  Flutter RUM layer). Moved to `semantics/rum.dart`, names/keys/members
+  unchanged: `AppLifecycleStates`, `AppLifecycleSemantics`,
+  `AppStartType`, `AppInfoSemantics`, `DeviceSemantics`,
+  `BatterySemantics`, `NavigationSemantics`, `InteractionType`,
+  `InteractionSemantics`, `PerformanceSemantics`, `ErrorSemantics`,
+  `NetworkSemantics`, `RumSessionView`, `NavigationAction`,
+  `LifecycleState`.
+- **All of `GenAi`** — the `gen_ai.*` conventions moved upstream to
+  [semantic-conventions-genai](https://github.com/open-telemetry/semantic-conventions-genai)
+  and are deprecated in the core registry; every member is annotated
+  accordingly.
+- Registry-deprecated attributes that previously looked current are now
+  `@Deprecated`, e.g. `Db.dbSystem`/`dbConnectionString`/`dbUser`/
+  `dbName`/`dbStatement`/`dbOperation`, `Deployment.deploymentEnvironment`,
+  `Otel.otelLibraryName`/`otelLibraryVersion`, `Enduser.*`,
+  `EventAttributes.eventName`, `Code.codeNamespace`,
+  `FeatureFlag.featureFlagVariant`, the legacy `net.*`/`az.*`/`http.*`
+  keys, and the deprecated `DbSystem` value enum — plus every other
+  `deprecated:` entry in the registry.
+
+### Removed
+
+- Members that do not exist in the attribute registry (not even as
+  deprecated):
+
+  | Removed | Use instead |
+  | --- | --- |
+  | `Http.connectionState` | `Http.httpConnectionState` (was a duplicate key) |
+  | `Database.dbClientConnectionUsedState` | `Db.dbClientConnectionState` |
+  | `Messaging.messagingDestination` | `Messaging.messagingDestinationName` |
+  | `Messaging.messagingDestinationKind` | removed from the spec, no replacement |
+  | `Messaging.messagingTempDestination` | `Messaging.messagingDestinationTemporary` |
+  | `Messaging.messagingProtocol` | `Network.networkProtocolName` |
+  | `Messaging.messagingProtocolVersion` | `Network.networkProtocolVersion` |
+  | `Elasticsearch.elasticsearchClusterName` | `Db.dbNamespace` |
+  | `Elasticsearch.elasticsearchNodeVersion` | removed, no replacement |
+  | `User.userSession` | `Session.sessionId` |
+  | `ComputeUnit.containerImageTag` | `ContainerAttributes.containerImageTags` |
+  | `AppInfoSemantics` vendor keys as semconv | official identity is `App.appBuildId` / `Artifact.*` |
+- `Version` enum — `schema.url` is not a registry attribute; schema URLs
+  belong on providers/`InstrumentationScope`.
+- `General`, `SemanticEvent`, and the duplicate `GenAI` enum (see the
+  rename/split tables above).
+- `genAiSpanName()` — not a convention; compose
+  `'<operation> <model>'` directly.
+
+### Fixed
+
+- **Wire format — emitted attribute keys change** (#50, #51). These fix
+  the strings actually emitted, so backends keying on the spec names
+  will now match:
+
+  | Member (old) | Old emitted key | Correct key |
+  | --- | --- | --- |
+  | `Kubernetes.k8sResourcepaceName` | `k8s.Resourcepace.name` | `K8s.k8sNamespaceName` → `k8s.namespace.name` (#50) |
+  | `SourceCode.codeResourcepace` | `code.Resourcepace` | `Code.codeNamespace` → `code.namespace` (#50; itself deprecated → `code.function.name`) |
+  | `Hardware.*` (7 members) | `hardware.*` | `Hw.*` → `hw.*` |
+  | `FeatureFlag.featureFlagProviderName` | `feature_flag.provider_name` | same identifier, now `feature_flag.provider.name` |
+
 ## [1.0.0-beta.9] - 2026-07-11
 
 ### Fixed
