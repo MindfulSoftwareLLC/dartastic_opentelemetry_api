@@ -15,8 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `semantic_values.dart`, `semantic_metrics.dart`, `semantic_events.dart`,
   `gen_ai_semantics.dart`, and `ui_semantics.dart` are gone; generated
   files live under `lib/src/api/semantics/semconv/` (90 attribute
-  namespaces, 934 attributes, ~140 value enums, 29 metric namespaces with
-  535 metrics, 14 event namespaces with 32 events, and 24 entity
+  namespaces, 931 attributes, 167 value enums, 29 metric namespaces with
+  533 metrics, 14 event namespaces with 32 events, and 24 entity
   namespaces with 64 entities). Generated from
   [semantic-conventions](https://github.com/open-telemetry/semantic-conventions)
   `v1.43.0-21-g436fa257` (commit `436fa257`, schema `1.44.0-unreleased`).
@@ -160,6 +160,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   | `httpServerRequestException` | `HttpEvent.httpServerRequestException` |
   | `rpcClientCallException` | `RpcEvent.rpcClientCallException` |
   | `rpcServerCallException` | `RpcEvent.rpcServerCallException` |
+  | `genAiClientInferenceOperationDetails` | `GenAiEvent.genAiClientInferenceOperationDetails` |
   | `messagingCreateException` | `MessagingEvent.messagingCreateException` |
   | `messagingSendException` | `MessagingEvent.messagingSendException` |
   | `messagingProcessException` | `MessagingEvent.messagingProcessException` |
@@ -171,14 +172,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   → `HwType`, `MessagingOperation` → `MessagingOperationType`. `DbSystem`
   still exists for the deprecated `db.system` (now `@Deprecated`); the
   current attribute `db.system.name` gets the new `DbSystemName`.
+  Value-enum member ids follow the registry member ids with Dart
+  reserved words `$`-escaped, which renames two members:
+  `SystemPagingDirection.pageIn` → `in$`, `SystemPagingDirection.pageOut`
+  → `out` (emitted values unchanged). The deprecated bare `state`
+  attribute's value enum is named `StateValue` to avoid colliding with
+  Flutter's `State`.
 
 - **Breaking: legacy `az.*` keys moved out of `Azure`** — the registry
   files deprecated ids by their real prefix, so `Azure.azNamespace` and
   `Azure.azServiceRequestId` are now `Az.azNamespace` and
   `Az.azServiceRequestId` (both `@Deprecated`) in `semconv/az.dart`.
   Deprecated-only legacy roots each get their own file the same way:
-  `az.dart`, `net.dart`, `message.dart`, `pool.dart`, `oracle.dart`, and
-  `other.dart` (the dotless legacy `state` key).
+  `az.dart`, `net.dart`, `message.dart`, `pool.dart`, and `other.dart`
+  (the dotless legacy `state` key).
 
 - `HttpHeaderAttribute` now extends `OTelSemantic`, so request/response
   header template attributes can be used directly as keys in
@@ -186,13 +193,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Full attribute-registry coverage (#51): 26 namespaces that were never
+- Full attribute-registry coverage (#51): 24 namespaces that were never
   modeled, including the `app.*` namespace and `app` entity from the
-  issue — `App`, `Aspnetcore`, `Cli`, `Cpu`, `Cpython`, `Disk`, `Dotnet`,
-  `Go`, `Jsonrpc`, `Jvm`, `Kestrel`, `Linux`, `Mainframe`, `Mcp`, `Nfs`,
-  `Nodejs`, `OncRpc`, `Openai`, `Openshift`, `OracleCloud`, `Oracledb`,
-  `Pprof`, `SecurityRule`, `Signalr`, `V8js`, `Zos` — plus complete
-  member sets for every previously partial namespace.
+  issue — `App`, `Aspnetcore`, `Cpu`, `Cpython`, `Disk`, `Dotnet`,
+  `Go`, `Jsonrpc`, `Jvm`, `Linux`, `Mainframe`, `Mcp`, `Nfs`,
+  `Nodejs`, `OncRpc`, `Openai`, `Openshift`, `Oracle` (`oracle.db.*`,
+  release candidate), `OracleCloud`, `Pprof`, `SecurityRule`, `Signalr`,
+  `V8js`, `Zos` — plus complete member sets for every previously
+  partial namespace.
 - **Entity enums** (#51): `<Ns>Entity` enums for all 64 registry
   entities (24 namespaces), each member carrying the entity type string
   plus `identifying` / `descriptive` lists wired to the attribute-key
@@ -261,7 +269,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   | `Elasticsearch.elasticsearchNodeVersion` | removed, no replacement |
   | `User.userSession` | `Session.sessionId` |
   | `ComputeUnit.containerImageTag` | `ContainerAttributes.containerImageTags` |
+  | `General.telemetryAutoVersion` | `Telemetry.telemetryDistroVersion` |
+  | `System.systemDiskIoDirection` | `Disk.diskIoDirection` |
   | `AppInfoSemantics` vendor keys as semconv | official identity is `App.appBuildId` / `Artifact.*` |
+- Value-enum members that do not exist in the registry:
+  `TelemetrySdkLanguage.dart` (**note:** `dart` is missing from the
+  registry's `telemetry.sdk.language` well-known values — an upstream
+  semconv gap; SDKs should keep emitting the literal `dart`),
+  `CloudPlatform.herokuDyno`, `NetworkConnectionType.mobile`,
+  `ProfileFrameType.java`/`nodejs`/`python`, and
+  `SystemMemoryState.slabReclaimable`/`slabUnreclaimable` (slab states
+  moved upstream to `system.memory.linux.slab.state`).
 - `Version` enum — `schema.url` is not a registry attribute; schema URLs
   belong on providers/`InstrumentationScope`.
 - `General`, `SemanticEvent`, and the duplicate `GenAI` enum (see the
@@ -281,6 +299,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   | `SourceCode.codeResourcepace` | `code.Resourcepace` | `Code.codeNamespace` → `code.namespace` (#50; itself deprecated → `code.function.name`) |
   | `Hardware.*` (7 members) | `hardware.*` | `Hw.*` → `hw.*` |
   | `FeatureFlag.featureFlagProviderName` | `feature_flag.provider_name` | same identifier, now `feature_flag.provider.name` |
+  | `CloudPlatform.azureVm`/`azureAks`/`azureFunctions`/`azureAppService`/`azureOpenshift`/`azureContainerApps`/`azureContainerInstances` | `azure_vm` etc. | same identifiers, now the registry's dotted values `azure.vm`, `azure.aks`, `azure.functions`, `azure.app_service`, `azure.openshift`, `azure.container_apps`, `azure.container_instances` |
+  | `GenAiTokenType.completion` | `completion` | same identifier (`@Deprecated`), now emits `output`; new member `GenAiTokenType.output` |
 
 ## [1.0.0-beta.9] - 2026-07-11
 
