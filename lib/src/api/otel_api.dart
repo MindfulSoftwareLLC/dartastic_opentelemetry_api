@@ -28,7 +28,7 @@ import 'metrics/observable_counter.dart';
 import 'metrics/observable_gauge.dart';
 import 'metrics/observable_up_down_counter.dart';
 import 'metrics/up_down_counter.dart';
-import 'semantics/semantics.dart';
+import 'semantics/semantics_base.dart';
 import 'trace/span_context.dart';
 import 'trace/span_event.dart';
 import 'trace/span_id.dart';
@@ -461,14 +461,14 @@ class OTelAPI {
   /// ```dart
   /// // Today (and forever):
   /// OTelAPI.attributesOf<Http>({
-  ///   Http.requestMethod: 'GET',
-  ///   Http.responseStatusCode: 200,
+  ///   Http.httpRequestMethod: 'GET',
+  ///   Http.httpResponseStatusCode: 200,
   /// });
   ///
   /// // With Dart 3.10+ static dot-shorthand enabled:
   /// OTelAPI.attributesOf<Http>({
-  ///   .requestMethod: 'GET',
-  ///   .responseStatusCode: 200,
+  ///   .httpRequestMethod: 'GET',
+  ///   .httpResponseStatusCode: 200,
   /// });
   /// ```
   ///

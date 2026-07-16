@@ -150,9 +150,9 @@ void main() {
     );
 
     final attrs = OTelAPI.attributesFromSemanticMap({
-      Database.dbOperation: 'update',
-      Database.dbCollectionName: 'orders',
-      Database.dbResponseReturnedRows: 3,
+      Db.dbOperationName: 'update',
+      Db.dbCollectionName: 'orders',
+      Db.dbResponseReturnedRows: 3,
     });
 
     logger.emit(
