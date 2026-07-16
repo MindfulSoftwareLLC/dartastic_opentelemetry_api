@@ -1,7 +1,7 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
-import 'package:dartastic_opentelemetry_api/src/api/semantics/semantics.dart';
+import 'package:dartastic_opentelemetry_api/src/api/semantics/semantics_base.dart';
 import 'package:test/test.dart';
 
 // Create a test implementation of OTelSemantic

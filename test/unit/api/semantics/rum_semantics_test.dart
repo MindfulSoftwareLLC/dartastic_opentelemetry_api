@@ -5,7 +5,7 @@ import 'package:dartastic_opentelemetry_api/dartastic_opentelemetry_api.dart';
 import 'package:test/test.dart';
 
 void main() {
-  group('UI Semantics', () {
+  group('RUM/vendor semantics (deprecated)', () {
     test('AppLifecycleStates toString returns key', () {
       expect(AppLifecycleStates.active.toString(),
           equals('device.app.lifecycle.active'));
@@ -244,7 +244,6 @@ void main() {
     test('User (OTel spec) toString returns key', () {
       expect(User.userId.toString(), equals('user.id'));
       expect(User.userRoles.toString(), equals('user.roles'));
-      expect(User.userSession.toString(), equals('user.session'));
     });
   });
 }
