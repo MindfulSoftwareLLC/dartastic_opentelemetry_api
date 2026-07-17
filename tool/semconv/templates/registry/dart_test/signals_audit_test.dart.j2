@@ -1,0 +1,62 @@
+{%- import 'macros.j2' as m -%}
+{{ m.file_header() }}
+
+// Generated audit: asserts every metric, event, and entity against the
+// registry it was generated from.
+
+import 'package:dartastic_opentelemetry_api/src/api/semantics/semantics_base.dart';
+import 'package:dartastic_opentelemetry_api/src/api/semantics/semconv/semconv.dart';
+import 'package:test/test.dart';
+
+void main() {
+  group('metrics', () {
+{% for g in ctx.metric_groups %}
+    test('{{ g.root_namespace }}', () {
+      expect({{ g.root_namespace | pascal_case }}Metric.values.length, {{ g.metrics | length }});
+{% for metric in g.metrics %}
+      expect({{ g.root_namespace | pascal_case }}Metric.{{ m.ident(metric.metric_name) }}.name, '{{ metric.metric_name }}');
+      expect({{ g.root_namespace | pascal_case }}Metric.{{ m.ident(metric.metric_name) }}.instrument, SemanticInstrument.{{ metric.instrument | map_text("instrument_map") }});
+      expect({{ g.root_namespace | pascal_case }}Metric.{{ m.ident(metric.metric_name) }}.unit, '{{ m.dart_str(metric.unit) }}');
+{% endfor %}
+    });
+{% endfor %}
+  });
+
+  group('events', () {
+{% for g in ctx.event_groups %}
+    test('{{ g.root_namespace }}', () {
+      expect({{ g.root_namespace | pascal_case }}Event.values.length, {{ g.events | length }});
+{% for event in g.events %}
+      expect({{ g.root_namespace | pascal_case }}Event.{{ m.ident(event.name) }}.name, '{{ event.name }}');
+{% endfor %}
+    });
+{% endfor %}
+  });
+
+  group('entities', () {
+{% for g in ctx.entity_groups %}
+    test('{{ g.root_namespace }}', () {
+      expect({{ g.root_namespace | pascal_case }}Entity.values.length, {{ g.entities | length }});
+{% for entity in g.entities %}
+      expect({{ g.root_namespace | pascal_case }}Entity.{{ m.ident(entity.name) }}.name, '{{ entity.name }}');
+{% if entity.identifying | length > 0 %}
+      expect(
+        {{ g.root_namespace | pascal_case }}Entity.{{ m.ident(entity.name) }}.identifying.map((a) => a.key),
+        [{% for a in entity.identifying %}'{{ a }}'{{ ", " if not loop.last }}{% endfor %}],
+      );
+{% else %}
+      expect({{ g.root_namespace | pascal_case }}Entity.{{ m.ident(entity.name) }}.identifying, isEmpty);
+{% endif %}
+{% if entity.descriptive | length > 0 %}
+      expect(
+        {{ g.root_namespace | pascal_case }}Entity.{{ m.ident(entity.name) }}.descriptive.map((a) => a.key),
+        [{% for a in entity.descriptive %}'{{ a }}'{{ ", " if not loop.last }}{% endfor %}],
+      );
+{% else %}
+      expect({{ g.root_namespace | pascal_case }}Entity.{{ m.ident(entity.name) }}.descriptive, isEmpty);
+{% endif %}
+{% endfor %}
+    });
+{% endfor %}
+  });
+}

@@ -1,0 +1,9 @@
+{%- import 'macros.j2' as m -%}
+{{ m.file_header() }}
+
+/// Barrel for the generated OpenTelemetry semantic-convention enums.
+library;
+
+{% for exp in ctx.exports %}
+export '{{ exp }}';
+{% endfor %}
