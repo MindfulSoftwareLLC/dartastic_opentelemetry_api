@@ -151,6 +151,21 @@ class APITracer {
     final contextSpan = contextOfSpan.span;
     final effectiveParentSpan = parentSpan ?? contextSpan;
 
+    // trace/api.md, "Behavior of the API in the absence of an installed
+    // SDK": with only the API installed, return a non-recording span
+    // carrying the SpanContext from the parent context (explicit or
+    // implicit) unchanged — no new IDs are minted — or an empty one
+    // (all-zero IDs, unsampled) when the context has no span. The SDK
+    // delegates span creation here with its own factory installed, so
+    // this branch only applies when no SDK is present.
+    if (OTelFactory.otelFactory!.isAPIFactory) {
+      final parentSpanContext = spanContext ??
+          effectiveParentSpan?.spanContext ??
+          contextOfSpan.spanContext;
+      return NonRecordingSpan(
+          parentSpanContext ?? OTelFactory.otelFactory!.spanContextInvalid());
+    }
+
     // If spanContext is not provided, we need to create one
     SpanContext effectiveSpanContext;
     if (spanContext != null) {

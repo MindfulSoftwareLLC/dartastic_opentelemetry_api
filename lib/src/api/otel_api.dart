@@ -29,6 +29,7 @@ import 'metrics/observable_gauge.dart';
 import 'metrics/observable_up_down_counter.dart';
 import 'metrics/up_down_counter.dart';
 import 'semantics/semantics_base.dart';
+import 'trace/span.dart';
 import 'trace/span_context.dart';
 import 'trace/span_event.dart';
 import 'trace/span_id.dart';
@@ -330,6 +331,16 @@ class OTelAPI {
   static SpanContext spanContextInvalid() {
     _getAndCacheOtelFactory();
     return OTelFactory.otelFactory!.spanContextInvalid();
+  }
+
+  /// Wraps a [SpanContext] in a non-recording span, per the spec
+  /// (trace/api.md, "Wrapping a SpanContext in a Span"): the returned
+  /// span's [APISpan.spanContext] is [spanContext] unchanged,
+  /// [APISpan.isRecording] is `false`, and every other operation is a
+  /// no-op.
+  static APISpan nonRecordingSpan(SpanContext spanContext) {
+    _getAndCacheOtelFactory();
+    return NonRecordingSpan(spanContext);
   }
 
   /// Creates a span event with the current timestamp.

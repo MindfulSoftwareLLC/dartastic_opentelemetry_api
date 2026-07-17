@@ -8,6 +8,8 @@ import 'package:dartastic_opentelemetry_api/src/api/trace/tracer.dart';
 import 'package:dartastic_opentelemetry_api/src/api/trace/tracer_provider.dart';
 import 'package:test/test.dart';
 
+import '../../../test_util.dart';
+
 void main() {
   group('Span Exception Handling', () {
     late APITracerProvider tracerProvider;
@@ -21,6 +23,7 @@ void main() {
         serviceName: 'test-service',
         serviceVersion: '1.0.0',
       );
+      installSdkLikeFactory();
 
       tracerProvider = OTelAPI.tracerProvider();
       tracer = tracerProvider.getTracer('test-tracer');

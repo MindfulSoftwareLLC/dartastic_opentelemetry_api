@@ -4,6 +4,8 @@
 import 'package:dartastic_opentelemetry_api/dartastic_opentelemetry_api.dart';
 import 'package:test/test.dart';
 
+import '../../../test_util.dart';
+
 void main() {
   group('Context', () {
     setUp(() {
@@ -13,6 +15,7 @@ void main() {
         serviceName: 'test-service',
         serviceVersion: '1.0.0',
       );
+      installSdkLikeFactory();
     });
 
     test('uses root context by default', () {
