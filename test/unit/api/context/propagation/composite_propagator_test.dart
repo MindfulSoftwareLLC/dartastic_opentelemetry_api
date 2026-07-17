@@ -76,6 +76,15 @@ void main() {
   });
 
   group('CompositePropagator', () {
+    test('OTelAPI.compositePropagator creates via the factory', () {
+      final propagator1 = MockPropagator('p1', ['f1']);
+      final propagator2 = MockPropagator('p2', ['f2']);
+      final composite =
+          OTelAPI.compositePropagator<Map<String, String>, String>(
+              [propagator1, propagator2]);
+      expect(composite.fields(), containsAll(['f1', 'f2']));
+    });
+
     test(
         'fields() returns the combined fields from all propagators without duplicates',
         () {
