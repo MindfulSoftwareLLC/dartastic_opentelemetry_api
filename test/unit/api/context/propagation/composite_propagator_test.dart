@@ -84,7 +84,8 @@ void main() {
       final propagator3 = MockPropagator('p3', ['field3', 'field4']);
 
       final composite =
-          CompositePropagator([propagator1, propagator2, propagator3]);
+          OTelAPI.compositePropagator<Map<String, String>, String>(
+              [propagator1, propagator2, propagator3]);
 
       final fields = composite.fields();
       expect(fields, containsAll(['field1', 'field2', 'field3', 'field4']));
@@ -97,7 +98,8 @@ void main() {
       final propagator3 = MockPropagator('p3', ['field3']);
 
       final composite =
-          CompositePropagator([propagator1, propagator2, propagator3]);
+          OTelAPI.compositePropagator<Map<String, String>, String>(
+              [propagator1, propagator2, propagator3]);
 
       final context = OTelAPI.context();
       final carrier = {
@@ -119,7 +121,9 @@ void main() {
       final propagator1 = MockPropagator('p1', ['field1', 'missing1']);
       final propagator2 = MockPropagator('p2', ['field2', 'missing2']);
 
-      final composite = CompositePropagator([propagator1, propagator2]);
+      final composite =
+          OTelAPI.compositePropagator<Map<String, String>, String>(
+              [propagator1, propagator2]);
 
       // Create context with existing baggage
       final baggage = OTelAPI.baggage().copyWith('existing', 'value');
@@ -148,7 +152,8 @@ void main() {
       final propagator3 = MockPropagator('p3', ['field3']);
 
       final composite =
-          CompositePropagator([propagator1, propagator2, propagator3]);
+          OTelAPI.compositePropagator<Map<String, String>, String>(
+              [propagator1, propagator2, propagator3]);
 
       // Create context with baggage values that match each propagator's prefix
       final baggage = OTelAPI.baggage()
@@ -173,7 +178,9 @@ void main() {
       final propagator1 = MockPropagator('p1', ['field1']);
       final propagator2 = MockPropagator('p2', ['field2']);
 
-      final composite = CompositePropagator([propagator1, propagator2]);
+      final composite =
+          OTelAPI.compositePropagator<Map<String, String>, String>(
+              [propagator1, propagator2]);
 
       // Create context with values that don't match propagator prefixes
       final baggage = OTelAPI.baggage()
@@ -194,7 +201,8 @@ void main() {
     });
 
     test('works with empty list of propagators', () {
-      final composite = CompositePropagator<Map<String, String>, String>([]);
+      final composite =
+          OTelAPI.compositePropagator<Map<String, String>, String>([]);
 
       final context = OTelAPI.context();
       final carrier = <String, String>{};

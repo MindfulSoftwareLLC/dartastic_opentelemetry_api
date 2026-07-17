@@ -24,6 +24,7 @@ export 'src/api/context/context.dart';
 export 'src/api/context/context_key.dart';
 export 'src/api/context/propagation/composite_propagator.dart';
 export 'src/api/context/propagation/context_propagator.dart';
+export 'src/api/context/propagation/noop_text_map_propagator.dart';
 export 'src/api/context/propagation/text_map_propagator.dart';
 export 'src/api/factory/otel_api_factory.dart';
 // Id
