@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import '../../factory/otel_factory.dart';
+import '../../util/otel_log.dart';
 
 part 'trace_state_create.dart';
 
@@ -74,19 +75,18 @@ class TraceState {
   ///  If adding this pair would exceed the 32 key-value pair limit,
   ///  the oldest entries are removed to make room.
   TraceState put(String key, String value) {
-    if (OTelFactory.otelFactory == null) {
-      throw StateError('Call initialize() first.');
-    }
     if (!_isValidKey(key) || !_isValidValue(value)) {
-      throw ArgumentError('Invalid key or value for TraceState');
+      OTelLog.warn('Invalid TraceState key or value; entry ignored.');
+      return this;
     }
+    final factory = OTelFactory.getOrCreateDefault();
 
     final newEntries = Map<String, String>.from(_entries);
 
     // If we already have this key, just update its value
     if (newEntries.containsKey(key)) {
       newEntries[key] = value;
-      return OTelFactory.otelFactory!.traceState(newEntries);
+      return factory.traceState(newEntries);
     }
 
     // If adding a new key would exceed the limit, remove the oldest entry
@@ -99,19 +99,16 @@ class TraceState {
     }
 
     newEntries[key] = value;
-    return OTelFactory.otelFactory!.traceState(newEntries);
+    return factory.traceState(newEntries);
   }
 
   ///  Creates a new [TraceState] with the given [key] removed.
   TraceState remove(String key) {
-    if (OTelFactory.otelFactory == null) {
-      throw StateError('Call initialize() first.');
-    }
     if (!_entries.containsKey(key)) return this;
 
     final newEntries = Map<String, String>.from(_entries);
     newEntries.remove(key);
-    return OTelFactory.otelFactory!.traceState(newEntries);
+    return OTelFactory.getOrCreateDefault().traceState(newEntries);
   }
 
   /// Convert to W3C trace context header string
