@@ -4,7 +4,6 @@
 import 'package:dartastic_opentelemetry_api/dartastic_opentelemetry_api.dart';
 import 'package:test/test.dart';
 
-
 void main() {
   group('Semconv invariants', () {
     final keyFormat = RegExp(r'^[a-z0-9_.]+$');
