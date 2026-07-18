@@ -26,23 +26,28 @@ and web vitals metrics and much more.
 
 ## Commercial Support
 
-[Dartastic.io](https://dartastic.io) tools and services for Dart and Flutter teams shipping to production.
+[Dartastic.io](https://dartastic.io) offers tools and services for Dart and Flutter teams.
 * **Dartastic Pro OTel Runtime**
-  * Native OTel runtime that takes OTel of the UI thread or server threads.
-    * Detects native crashes
-    * Identifies the janky widget
+  * Native OTel runtime that takes OTel off the main isolate.
+    * Reports native crashes.
+    * Identifies janky widgets.
     * Strips PII out of your data on the fly.
-    * Sends source code lines with error spans with Symbolizer.
-    * Metrics from iOS, Android and Linux, standard and beyond the standard.
-    * Use with any o11y backend.
-  * Professionally supported version of this open source dartastic_opentelemetry package and dartastic_opentelemetry_api - and their future CNCF equivalents.
+    * Converts production errors into source code lines with the Dartastic Symbolizer API.
+    * Metrics from iOS, Android and Linux, standard metrics plus all of iOS MetricKit and Android Vitals.
+    * Compatible with any observability backend that supports OpenTelemetry.
+  * Professionally supported version of the dartastic_opentelemetry package and dartastic_opentelemetry_api - and their future CNCF equivalents.
   * Over 50 OSS OpenTelemetry integration libraries for Dart and Flutter - dio, shelf, logger...
   * Over 600 Pro OpenTelemetry integration libraries for Dart and Flutter - anthropic, aws, azure, stripe...
-* **Dartastic Pub** [pub.dartastic.io](pub.dartastic.io) Privately share your packages and plugins with your team,
+* **Dartastic Pub** [https://dartastic.io/pub](https://dartastic.io/pub) Privately share your packages and plugins with your team,
   partners and customers.
-* **Dartastic Symbolizer** [symbolizer.dartastic.io](symbolizer.dartastic.io) Turn production errors into
+* **Dartastic Symbolizer** [https://dartastic.io/symbolizer](https://dartastic.io/symbolizer) Turn production errors into
   source code lines with a Web API call. Squash Dart and Flutter bugs fast and keep your source code artifacts private.
-* **Dartastic Hosted** - spin up a private observability ecosystem customized for Flutter and Dart - private pub server, private unlimited Symbolizer, custom dashboards for Dart and Flutter.
+* **Dartastic Observatory** - An observability backend specialized for Flutter and Dart
+  * Custom dashboards for Dart and Flutter
+  * Private Pub server
+  * Symbolizer
+  * 7-day free trial for Dartastic Cloud Observatory on isolated shared infrastructure.
+  * Dartastic Hosted Observatory runs the stack in your own private box.
 
 ## About the API - use the SDK
 
@@ -63,6 +68,9 @@ for an example.
 ## Features
 
 - ✅ **Complete OpenTelemetry API implementation** for Dart
+- ✅ **Typed OTel Semantic Convention enums for the full OTel registry** —
+  attribute keys, attribute values, metrics, events, and entities for all
+  90 registry namespaces.
 - ✅ **Strict adherence** to the OpenTelemetry specification
   - All MUST and SHOULD requirements are implemented
   - Most, if not all, MAY requirements are implemented
@@ -78,7 +86,7 @@ for an example.
 ## Getting Started
 
 Typically, you wouldn't use this library and will use Dartastic OTel `dartastic_opentelemetry` 
-or `flutterrific_opentelemetry` instead to  get a working OTel implementation in your 
+or `flutterrific_opentelemetry` instead to get a working OTel implementation in your 
 Dart or Flutter application, respectively.  
 
 ### Installation
@@ -106,10 +114,10 @@ This API is rarely used without an SDK. For a fully functional OpenTelemetry imp
     dartastic_opentelemetry: ^1.0.0
   ```
 
-- **Flutter Applications**: Use the [Flutterific OTel SDK](https://pub.dev/packages/flutterrific_opentelemetry).
+- **Flutter Applications**: Use the [Flutterrific OTel SDK](https://pub.dev/packages/flutterrific_opentelemetry).
   ```yaml
   dependencies:
-    flutterrific_opentelemetry: ^1.0.0
+    flutterrific_opentelemetry: ^0.4.0
   ```
 
 Each layer exports all the relevant classes to the next layer so you only have to include one library in your pubspec.yaml.
@@ -125,11 +133,11 @@ dependencies:
 
 ## Usage
 
-The entrypoint for almost all object creation is the `OTelAPI` class. Again this would be rarely used, instead
-use the `OTel` class from `dartastic_opentelemetry` which has the same methods with addition methods
+The entrypoint for almost all object creation is the `OTelAPI` class. Again this would rarely be used, instead
+use the `OTel` class from `dartastic_opentelemetry` which has the same methods with additional methods
 for SDK objects like `Resource` and `SpanProcessor`.
 
-All public constructors are private except the `OTelAPIFactory`. Use `OTelAPI` to create API objects.
+All constructors are package-internal except `OTelAPIFactory`'s — use `OTelAPI` to create API objects.
 Convenience static factories such as `Attributes.of`, plus `copyWith`, `copyWithout`, and `toJson`
 methods, are provided on objects such as `Attributes`, `Baggage`, and `Context`.
 
@@ -145,7 +153,7 @@ This is a no-op when using `OTelAPI`. Use `OTel` from the SDK to record real tra
 
 Prefer typed enum keys over raw strings for attributes. The API ships enums for every
 namespace in the [OTel semantic conventions](https://opentelemetry.io/docs/specs/semconv/)
-(`HttpResource`, `UrlResource`, `ServerResource`, `DatabaseResource`, `UserSemantics`, etc.)
+(`Http`, `Url`, `Server`, `Db`, `User`, etc.)
 For app-specific attributes that aren't in a convention, define your own enum implementing
 `OTelSemantic`.
 
@@ -256,8 +264,7 @@ void main() {
   // ServiceResource) with your own enum (ExampleAttribute) for
   // non-convention keys — never use raw strings.
   Attributes attributes = OTelAPI.attributes([
-    OTelAPI.attributeString(
-        ServiceResource.serviceName.key, 'payment-processor'),
+    OTelAPI.attributeString(Service.serviceName.key, 'payment-processor'),
     OTelAPI.attributeInt(ExampleAttribute.retryCount.key, 3),
     OTelAPI.attributeDouble(ExampleAttribute.requestDuration.key, 0.125),
     OTelAPI.attributeBool(ExampleAttribute.requestSuccess.key, true),
@@ -269,11 +276,11 @@ void main() {
   // `.key` accessor on each entry. Mixes any combination of
   // OTel-spec semconv enums with your own ExampleAttribute-style enums.
   Attributes fromMap = OTelAPI.attributesFromSemanticMap({
-    HttpResource.requestMethod: 'GET',
-    UrlResource.urlFull: 'https://api.example.com/users',
-    HttpResource.responseStatusCode: 200,
-    DeploymentResource.deploymentEnvironmentName: 'production',
-    UserSemantics.userRoles: ['admin', 'operator'],
+    Http.httpRequestMethod: 'GET',
+    Url.urlFull: 'https://api.example.com/users',
+    Http.httpResponseStatusCode: 200,
+    Deployment.deploymentEnvironmentName: 'production',
+    User.userRoles: ['admin', 'operator'],
   });
 }
 ```
@@ -286,9 +293,9 @@ import 'package:dartastic_opentelemetry_api/dartastic_opentelemetry_api.dart';
 final otelLoggerProvider = OTelAPI.loggerProvider();
 final otelLogger = otelLoggerProvider.getLogger('dart-otel-api-faux-db-service');
 final attrs = OTelAPI.attributesFromSemanticMap({
-  DatabaseResource.dbOperation: 'update',
-  DatabaseResource.dbCollectionName: 'orders',
-  DatabaseResource.dbResponseReturnedRows: 3,
+  Db.dbOperationName: 'update',
+  Db.dbCollectionName: 'orders',
+  Db.dbResponseReturnedRows: 3,
 });
 
 otelLogger.emit(
@@ -320,18 +327,18 @@ In real applications, you would typically use the `OTel` class from an SDK imple
 
 ```dart
 // Get the tracer provider
-TracerProvider provider = OTelAPI.tracerProvider();
+APITracerProvider provider = OTelAPI.tracerProvider();
 
-// Create context
-Context context = OTelAPI.context(baggage: baggage, spanContext: spanContext);
+// Create baggage
+Baggage baggage = OTelAPI.baggageForMap({'userId': 'user-123'});
+
+// Create a context carrying the baggage
+Context context = OTelAPI.context(baggage: baggage);
 
 // Create attributes
 Attribute attr1 = OTelAPI.attributeString('key', 'value');
 Attribute attr2 = OTelAPI.attributeInt('count', 42);
 Attributes attributes = OTelAPI.attributes([attr1, attr2]);
-
-// Create baggage
-Baggage baggage = OTelAPI.baggageForMap({'userId': 'user-123'});
 ```
 
 ## CNCF Contribution and Alignment
@@ -353,15 +360,13 @@ To create your own SDK implementation, implement the `OTelFactory` interface. Se
 
 ## AI Usage
 Practically all code in Dartastic was originally generated by Claude.
-EVERY character is reviewed by a human for compliance with the OTel spec. 
-A vast amount of code was edited by hand.  
-Tests may need improved quality.
+EVERY character is reviewed by a human for and checked for compliance with the OTel spec. 
 
 ## Additional Resources
 
 - [OpenTelemetry Specification](https://opentelemetry.io/docs/specs/otel/)
 - [Dartastic OTel SDK](https://pub.dev/packages/dartastic_opentelemetry) - For Dart backend applications
-- [Flutterific OTel SDK](https://pub.dev/packages/flutterrific_opentelemetry) - For Flutter applications
+- [Flutterrific OTel SDK](https://pub.dev/packages/flutterrific_opentelemetry) - For Flutter applications
 - [Dartastic.io](https://dartastic.io/) - An OpenTelemetry backend for Dart and Flutter
 
 ## License
@@ -370,4 +375,4 @@ Apache 2.0 - See the [LICENSE](LICENSE) file for details.
 
 ## Acknowledgements
 
-This Dart API, the Dartastic SDK, and Flutterific OTel are made with 💙 by Michael Bushe at [Dartastic.io](https://dartastic.io).
+This Dart API, the Dartastic SDK, and Flutterrific OTel are made with 💙 by Michael Bushe at [Dartastic.io](https://dartastic.io).
