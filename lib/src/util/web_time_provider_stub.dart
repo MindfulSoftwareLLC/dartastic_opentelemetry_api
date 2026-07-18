@@ -19,8 +19,12 @@ class WebTimeProvider implements TimeProvider {
     );
   }
 
+  // Unreachable: the constructor always throws, so no instance can exist
+  // to call this on. Kept only to satisfy the TimeProvider interface.
+  // coverage:ignore-start
   @override
   DateTime nowDateTime() {
     throw UnsupportedError('WebTimeProvider is only available on web targets.');
   }
+  // coverage:ignore-end
 }

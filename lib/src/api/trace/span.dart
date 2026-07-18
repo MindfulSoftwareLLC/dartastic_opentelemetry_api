@@ -82,17 +82,9 @@ class APISpan {
     // Set initial status to unset per spec
     _spanStatusCode = SpanStatusCode.Unset;
 
-    // Validate parent-child relationship
-    if (parentSpan != null) {
-      // Must inherit trace ID from parent
-      if (spanContext.traceId != parentSpan.spanContext.traceId) {
-        throw ArgumentError('Child span must inherit trace ID from parent');
-      }
-      // Parent's span ID must match our parent span ID
-      if (spanContext.parentSpanId != parentSpan.spanContext.spanId) {
-        throw ArgumentError('Parent span ID must match');
-      }
-    }
+    // No parent-child validation here: APISpanCreate.create — the sole
+    // construction path — performs the trace-ID and parent-span-ID
+    // checks before invoking this constructor.
     // No `else` branch: when parentSpan is null, the span may legitimately
     // have any parentSpanId (null, the invalid all-zeros marker, OR a
     // valid remote span id propagated from an upstream context). The

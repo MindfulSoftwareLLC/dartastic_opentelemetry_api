@@ -2,6 +2,8 @@
 
 Thank you for your interest in contributing to the OpenTelemetry API for Dart! This document provides guidelines and instructions for contributing to this project.
 
+Contributors should join the `#otel-dart` channel on the [CNCF Slack](https://slack.cncf.io/) — it's where Dart OpenTelemetry development is discussed and the fastest way to reach the maintainers.
+
 ## Code of Conduct
 
 This project follows the [CNCF Code of Conduct](https://github.com/cncf/foundation/blob/main/code-of-conduct.md). By participating, you are expected to uphold this code. Please report unacceptable behavior to the project maintainers.
@@ -189,6 +191,6 @@ By contributing to this project, you agree that your contributions will be licen
 
 ## Questions?
 
-If you have any questions about contributing, please open an issue or contact the project maintainers directly.
+If you have any questions about contributing, ask in the `#otel-dart` channel on the [CNCF Slack](https://slack.cncf.io/), open an issue, or contact the project maintainers directly.
 
 Thank you for contributing to the OpenTelemetry API for Dart!

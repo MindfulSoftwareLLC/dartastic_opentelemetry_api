@@ -199,10 +199,10 @@ void main() {
         'should convert from Map<String, Object> with an Object to string value',
         () {
       final attrs = OTelAPI.attributesFromMap({
-        'menu.select': InteractionType
-            .menuSelect, //don't put a key as a value, this just tests toString
+        'net.type': NetworkConnectionType
+            .wifi, //don't put a key as a value, this just tests toString
       });
-      expect(attrs.getString('menu.select'), equals('menu_select'));
+      expect(attrs.getString('net.type'), equals('wifi'));
     });
 
     test('remove returns new Attributes without given key', () {

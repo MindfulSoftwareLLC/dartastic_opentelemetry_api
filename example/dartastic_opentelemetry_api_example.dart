@@ -112,8 +112,8 @@ void main() {
               [OTelAPI.attributeString(ExampleAttribute.eventFoo.key, 'bar')]),
         );
       });
-      // Capitalized Ok to match the OTel spec.
-      span.setStatus(SpanStatusCode.Ok);
+      // No setStatus(SpanStatusCode.Ok) here: Ok is the default, so only
+      // Error needs to be set explicitly.
     } catch (e, stackTrace) {
       span.recordException(e, stackTrace: stackTrace);
       span.setStatus(SpanStatusCode.Error, e.toString());

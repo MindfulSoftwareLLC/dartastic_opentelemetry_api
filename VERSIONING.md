@@ -53,6 +53,34 @@ This package aims to align with the OpenTelemetry specification:
 - We track the specification version we implement in our documentation
 - Critical specification changes may necessitate breaking changes
 
+## Semantic Conventions Versioning
+
+The semantic-convention enums under `lib/src/api/semantics/semconv/` are
+generated from a pinned OpenTelemetry semantic-conventions registry with
+OTel Weaver (`tool/semconv/generate.sh`; verify freshness with
+`--check`). The pinned registry version and commit are recorded in
+`SemconvRegistry` and in every generated file header, and every registry
+bump is documented in the CHANGELOG.
+
+Within a major version, registry regenerations are **additive and
+deprecating only**:
+
+- New namespaces, attributes, enum members, metrics, events, and
+  entities may be added (a MINOR change).
+- Attributes the registry deprecates gain `@Deprecated` but remain.
+- Registry changes that would rename or remove generated Dart
+  identifiers, or change emitted key/value strings, are **held back and
+  batched into the next MAJOR release**.
+- Exception: spec-fidelity corrections — where a generated member
+  emitted a string that did not match the registry — are bug fixes and
+  may land in a MINOR release with a prominent wire-format table in the
+  CHANGELOG (precedent: 1.0.0-beta.10).
+
+Only registry conventions (plus their spec-mandated deprecation
+history) appear in this package. Conventions the registry does not yet
+cover — such as Flutter RUM semantics — are defined by downstream
+packages (e.g. `flutterrific_opentelemetry`).
+
 ## Long-Term Support (LTS)
 
 - No formal LTS versions currently exist for this pre-1.0 package

@@ -5,7 +5,41 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.0.0-beta.11-wip]
+## [1.0.0-rc.1-wip]
+
+### Removed
+- **Breaking: the deprecated vendor/RUM enums are removed** (deprecated
+  with notice in 1.0.0-beta.10): `AppLifecycleStates`,
+  `AppLifecycleSemantics`, `AppStartType`, `AppInfoSemantics`,
+  `DeviceSemantics`, `BatterySemantics`, `NavigationSemantics`,
+  `InteractionType`, `InteractionSemantics`, `PerformanceSemantics`,
+  `ErrorSemantics`, `NetworkSemantics`, `RumSessionView`,
+  `NavigationAction`, and `LifecycleState` (`semantics/rum.dart` is
+  gone). They are not OpenTelemetry semantic conventions and so do not
+  belong in this package; `flutterrific_opentelemetry` defines its own
+  Flutter conventions for what the registry does not yet cover. The API
+  package now contains only registry conventions.
+
+### Added
+- **Semantic-conventions versioning policy** in VERSIONING.md: within a
+  major version, registry regenerations are additive and deprecating
+  only; identifier- or wire-affecting registry changes batch into the
+  next major; spec-fidelity string corrections are bug fixes with a
+  CHANGELOG wire-format table.
+
+### Changed
+- **Breaking: `APIObservableResult` is now an abstract interface.** The
+  API-side implementation was unconstructible (private constructor, no
+  factory) so nothing could have used it; SDKs implement the interface,
+  as `dartastic_opentelemetry` already does.
+
+### Fixed
+- `Attributes.of` no longer throws a `TypeError` when a map value is an
+  untyped list (`List<Object>` / `List<dynamic>`). Lists are now
+  element-checked like `Attributes.fromJson`: homogeneous
+  string/bool/int/double lists convert, mixed numeric lists promote to
+  `List<double>`, and unsupported element types are warned and ignored
+  per the OTel specification.
 
 ## [1.0.0-beta.10] - 2026-07-18
 
