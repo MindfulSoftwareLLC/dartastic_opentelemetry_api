@@ -199,7 +199,8 @@ void main() {
         tracer.withSpan(childSpan, () {
           childSpan.setIntAttribute(ExampleAttribute.operationValue.key, 42);
         });
-        childSpan.setStatus(SpanStatusCode.Ok);
+        // No setStatus(SpanStatusCode.Ok) here: Ok is the default, so
+        // only Error needs to be set explicitly.
       } catch (e, stackTrace) {
         // Per the OTel spec: recordException first, then setStatus(Error).
         childSpan.recordException(e, stackTrace: stackTrace);
@@ -209,7 +210,6 @@ void main() {
         childSpan.end();
       }
     });
-    rootSpan.setStatus(SpanStatusCode.Ok);
   } catch (e, stackTrace) {
     rootSpan.recordException(e, stackTrace: stackTrace);
     rootSpan.setStatus(SpanStatusCode.Error, e.toString());
