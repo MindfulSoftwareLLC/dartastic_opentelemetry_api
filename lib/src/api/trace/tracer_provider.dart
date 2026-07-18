@@ -183,24 +183,19 @@ class APITracerProvider {
       return true; // Already shut down
     }
 
-    try {
-      // Mark as shut down immediately to prevent new tracers/spans
-      _isShutdown = true;
+    // Mark as shut down immediately to prevent new tracers/spans
+    _isShutdown = true;
 
-      // Clear the tracer cache
-      _tracerCache.clear();
+    // Clear the tracer cache
+    _tracerCache.clear();
 
-      // Disable the provider
-      _enabled = false;
+    // Disable the provider
+    _enabled = false;
 
-      // Reset current context through context API
-      // Clear any active spans from context
-      Context.root.setCurrentSpan(null);
+    // Reset current context through context API
+    // Clear any active spans from context
+    Context.root.setCurrentSpan(null);
 
-      return true;
-    } catch (e) {
-      OTelLog.error('Error during TracerProvider shutdown: $e');
-      return false;
-    }
+    return true;
   }
 }

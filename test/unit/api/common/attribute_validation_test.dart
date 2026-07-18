@@ -62,12 +62,16 @@ void main() {
       expect(attrs.getStringList('bad'), isNull);
     });
 
-    test('fromJson converts untyped bool, int, and mixed numeric lists', () {
+    test(
+        'fromJson converts untyped string, bool, int, and mixed numeric'
+        ' lists', () {
       final attrs = Attributes.fromJson({
+        'names': <dynamic>['a', 'b'],
         'flags': <dynamic>[true, false],
         'counts': <dynamic>[1, 2],
         'nums': <dynamic>[1, 2.5],
       });
+      expect(attrs.getStringList('names'), equals(['a', 'b']));
       expect(attrs.getBoolList('flags'), equals([true, false]));
       expect(attrs.getIntList('counts'), equals([1, 2]));
       expect(attrs.getDoubleList('nums'), equals([1.0, 2.5]));
