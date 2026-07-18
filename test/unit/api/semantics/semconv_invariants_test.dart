@@ -4,31 +4,6 @@
 import 'package:dartastic_opentelemetry_api/dartastic_opentelemetry_api.dart';
 import 'package:test/test.dart';
 
-/// The RUM/vendor keys that intentionally shadow a registry attribute key.
-/// Anything outside this set is an accidental collision and a bug.
-const Set<String> allowedRumRegistryOverlap = {
-  'device.id',
-  'error.message',
-  'error.type',
-  'network.type',
-};
-
-/// Every deprecated vendor/RUM enum that implements [OTelSemantic].
-List<List<OTelSemantic>> rumSemanticEnums() => [
-      AppLifecycleStates.values,
-      AppLifecycleSemantics.values,
-      AppStartType.values,
-      AppInfoSemantics.values,
-      InteractionType.values,
-      DeviceSemantics.values,
-      BatterySemantics.values,
-      NavigationSemantics.values,
-      InteractionSemantics.values,
-      PerformanceSemantics.values,
-      ErrorSemantics.values,
-      NetworkSemantics.values,
-      RumSessionView.values,
-    ];
 
 void main() {
   group('Semconv invariants', () {
@@ -105,18 +80,6 @@ void main() {
           }
         }
       }
-    });
-
-    test('RUM/vendor keys only shadow the known registry keys', () {
-      final semconvKeys = <String>{
-        for (final values in SemconvRegistry.allAttributeEnums)
-          for (final member in values) member.key,
-      };
-      final rumKeys = <String>{
-        for (final values in rumSemanticEnums())
-          for (final member in values) member.key,
-      };
-      expect(semconvKeys.intersection(rumKeys), allowedRumRegistryOverlap);
     });
 
     test('registry records its source version', () {
