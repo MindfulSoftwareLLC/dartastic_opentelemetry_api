@@ -4,6 +4,7 @@
 part of 'measurement.dart';
 
 /// Factory methods for creating [Measurement] instances.
+@internal
 class MeasurementCreate<T extends num> {
   /// Creates a new [Measurement] instance.
   /// This is an implementation detail and should not be used directly.

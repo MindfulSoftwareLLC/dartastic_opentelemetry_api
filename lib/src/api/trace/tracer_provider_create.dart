@@ -4,6 +4,7 @@
 part of 'tracer_provider.dart';
 
 /// Internal constructor access for TracerProvider
+@internal
 class TracerProviderCreate {
   /// Creates a TracerProvider, only accessible within library
   static APITracerProvider create(

@@ -1,6 +1,8 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
+import 'package:meta/meta.dart';
+
 import '../context.dart';
 import 'text_map_propagator.dart';
 
@@ -45,6 +47,7 @@ class CompositePropagator<C, V> implements TextMapPropagator<C, V> {
 /// Internal constructor access for [CompositePropagator].
 /// Used by `OTelFactory` implementations; users should create composite
 /// propagators with `OTelAPI.compositePropagator`.
+@internal
 class CompositePropagatorCreate {
   /// Creates a [CompositePropagator] delegating to [propagators].
   static CompositePropagator<C, V> create<C, V>(

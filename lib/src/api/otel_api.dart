@@ -4,7 +4,6 @@
 import 'dart:typed_data';
 
 import 'package:meta/meta.dart';
-
 import '../factory/otel_factory.dart';
 import '../util/otel_log.dart';
 import 'baggage/baggage.dart';

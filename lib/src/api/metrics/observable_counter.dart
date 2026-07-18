@@ -1,6 +1,7 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
+import 'package:meta/meta.dart';
 import 'measurement.dart';
 import 'meter.dart';
 import 'observable_callback.dart';

@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import 'dart:typed_data';
+import 'package:meta/meta.dart';
 import '../id/id_generator.dart';
 
 part 'span_id_create.dart';

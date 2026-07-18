@@ -1,6 +1,7 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
+import 'package:meta/meta.dart';
 import '../../factory/otel_factory.dart';
 import '../../util/default_time_provider.dart';
 import '../../util/time_provider.dart';

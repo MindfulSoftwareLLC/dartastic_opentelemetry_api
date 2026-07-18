@@ -6,7 +6,6 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:meta/meta.dart';
-
 import '../../factory/otel_factory.dart';
 import '../baggage/baggage.dart';
 import '../trace/span.dart';

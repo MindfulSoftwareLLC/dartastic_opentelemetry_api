@@ -3,6 +3,7 @@
 
 // ignore_for_file: unnecessary_getters_setters
 
+import 'package:meta/meta.dart';
 import '../../util/default_time_provider.dart';
 import '../../util/otel_log.dart';
 import '../../util/time_provider.dart';

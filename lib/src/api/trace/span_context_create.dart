@@ -4,6 +4,7 @@
 part of 'span_context.dart';
 
 /// Internal constructor access for Span
+@internal
 class SpanContextCreate {
   /// Creates a Span, only accessible within library
   static SpanContext create({

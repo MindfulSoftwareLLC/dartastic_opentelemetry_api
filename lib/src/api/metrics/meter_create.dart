@@ -7,6 +7,7 @@ part of 'meter.dart';
 /// This is part of the meter.dart file to keep related code together.
 /// Factory class for creating APIMeter instances.
 /// This class is internal and should not be used directly by application code.
+@internal
 class APIMeterCreate {
   /// Creates a new [APIMeter] instance with the specified parameters.
   /// This is an implementation detail and should not be used directly.

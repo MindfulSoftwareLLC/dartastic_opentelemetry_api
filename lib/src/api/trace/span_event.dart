@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import 'package:meta/meta.dart';
-
 import '../common/attributes.dart';
 
 part 'span_event_create.dart';

@@ -5,6 +5,7 @@ part of 'observable_gauge.dart';
 
 /// Factory methods for creating [APIObservableGauge] instances.
 /// This is part of the observable_gauge.dart file to keep related code together.
+@internal
 class ObservableGaugeCreate {
   /// Creates a new [APIObservableGauge] instance.
   /// This is an implementation detail and should not be used directly.

@@ -5,6 +5,7 @@ part of 'counter.dart';
 
 /// Factory methods for creating [APICounter] instances.
 /// This is part of the counter.dart file to keep related code together.
+@internal
 class CounterCreate {
   /// Creates a new [APICounter] instance.
   /// This is an implementation detail and should not be used directly.

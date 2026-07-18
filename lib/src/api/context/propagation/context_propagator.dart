@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import 'package:meta/meta.dart';
-
 import '../context.dart';
 
 /// A propagator for binary values that can inject into and extract from a carrier.

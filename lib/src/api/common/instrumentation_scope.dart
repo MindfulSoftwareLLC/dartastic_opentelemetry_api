@@ -3,6 +3,7 @@
 
 library;
 
+import 'package:meta/meta.dart';
 import '../otel_api.dart';
 import 'attributes.dart';
 

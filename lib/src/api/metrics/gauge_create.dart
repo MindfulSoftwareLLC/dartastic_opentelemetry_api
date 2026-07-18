@@ -5,6 +5,7 @@ part of 'gauge.dart';
 
 /// Factory methods for creating [APIGauge] instances.
 /// This is part of the gauge.dart file to keep related code together.
+@internal
 class GaugeCreate {
   /// Creates a new [APIGauge] instance.
   /// This is an implementation detail and should not be used directly.

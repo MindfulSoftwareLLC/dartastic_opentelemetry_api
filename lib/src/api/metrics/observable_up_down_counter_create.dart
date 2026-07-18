@@ -5,6 +5,7 @@ part of 'observable_up_down_counter.dart';
 
 /// Factory methods for creating [APIObservableUpDownCounter] instances.
 /// This is part of the observable_up_down_counter.dart file to keep related code together.
+@internal
 class ObservableUpDownCounterCreate<T extends num> {
   /// Creates a new [APIObservableUpDownCounter] instance.
   /// This is an implementation detail and should not be used directly.

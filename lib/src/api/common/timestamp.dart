@@ -3,7 +3,6 @@
 
 import 'package:fixnum/fixnum.dart';
 import 'package:meta/meta.dart';
-
 import '../../util/time.dart';
 
 /// Utility class for working with OpenTelemetry timestamps.

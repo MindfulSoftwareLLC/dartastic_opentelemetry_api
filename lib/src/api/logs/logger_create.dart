@@ -3,6 +3,7 @@
 
 part of 'logger.dart';
 
+@internal
 class LoggerCreate {
   /// Creates a Logger, only accessible within library
   static APILogger create({

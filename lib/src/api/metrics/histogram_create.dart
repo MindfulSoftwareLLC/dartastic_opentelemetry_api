@@ -5,6 +5,7 @@ part of 'histogram.dart';
 
 /// Factory methods for creating [APIHistogram] instances.
 /// This is part of the histogram.dart file to keep related code together.
+@internal
 class HistogramCreate {
   /// Creates a new [APIHistogram] instance.
   /// This is an implementation detail and should not be used directly.
