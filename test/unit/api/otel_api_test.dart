@@ -408,6 +408,86 @@ void main() {
         );
       }, throwsA(isA<ArgumentError>()));
     });
+
+    test('loggerProvider returns named provider when name provided', () {
+      final provider = OTelAPI.loggerProvider('named-logs');
+      expect(provider, isA<APILoggerProvider>());
+      expect(provider, isNot(same(OTelAPI.loggerProvider())));
+      expect(OTelAPI.loggerProvider('named-logs'), same(provider));
+    });
+
+    test('createCounter delegates to the global meter provider', () {
+      final counter = OTelAPI.createCounter('api-counter',
+          description: 'counts things', unit: '{thing}');
+      expect(counter, isA<APICounter>());
+      expect(counter.name, equals('api-counter'));
+    });
+
+    test('createUpDownCounter delegates to the global meter provider', () {
+      final counter = OTelAPI.createUpDownCounter('api-updown',
+          description: 'queue depth', unit: '{item}');
+      expect(counter, isA<APIUpDownCounter>());
+      expect(counter.name, equals('api-updown'));
+    });
+
+    test('createGauge delegates to the global meter provider', () {
+      final gauge =
+          OTelAPI.createGauge('api-gauge', description: 'level', unit: '%');
+      expect(gauge, isA<APIGauge>());
+      expect(gauge.name, equals('api-gauge'));
+    });
+
+    test('createHistogram delegates to the global meter provider', () {
+      final histogram = OTelAPI.createHistogram('api-histogram',
+          description: 'latency', unit: 'ms', boundaries: [1, 5, 10]);
+      expect(histogram, isA<APIHistogram>());
+      expect(histogram.name, equals('api-histogram'));
+    });
+
+    test('createObservableCounter delegates to the global meter provider', () {
+      final counter = OTelAPI.createObservableCounter('api-obs-counter',
+          description: 'observed count', unit: '{thing}');
+      expect(counter, isA<APIObservableCounter>());
+      expect(counter.name, equals('api-obs-counter'));
+    });
+
+    test('createObservableGauge delegates to the global meter provider', () {
+      final gauge = OTelAPI.createObservableGauge('api-obs-gauge',
+          description: 'observed level', unit: '%');
+      expect(gauge, isA<APIObservableGauge>());
+      expect(gauge.name, equals('api-obs-gauge'));
+    });
+
+    test('createObservableUpDownCounter delegates to the global meter provider',
+        () {
+      final counter = OTelAPI.createObservableUpDownCounter('api-obs-updown',
+          description: 'observed depth', unit: '{item}');
+      expect(counter, isA<APIObservableUpDownCounter>());
+      expect(counter.name, equals('api-obs-updown'));
+    });
+
+    test('initialize logs when replacing the uninitialized no-op factory', () {
+      OTelAPI.reset();
+      final messages = <String>[];
+      final prevLevel = OTelLog.currentLevel;
+      final prevFn = OTelLog.logFunction;
+      OTelLog.currentLevel = LogLevel.debug;
+      OTelLog.logFunction = messages.add;
+      try {
+        // Uninitialized use installs the default no-op API factory.
+        OTelAPI.tracerProvider();
+        OTelAPI.initialize(
+          endpoint: 'http://localhost:4317',
+          serviceName: 'test-service',
+          serviceVersion: '1.0.0',
+        );
+      } finally {
+        OTelLog.currentLevel = prevLevel;
+        OTelLog.logFunction = prevFn;
+      }
+      expect(messages.join('\n'),
+          contains('replacing the installed no-op API factory'));
+    });
   });
 }
 

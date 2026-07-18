@@ -51,9 +51,12 @@ jobs:
       - name: Run tests with coverage
         run: dart pub global run coverage:test_with_coverage
       - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         with:
-          file: coverage/lcov.info
+          # Tokenless uploads are rejected on protected branches
+          # ("Token required because branch is protected").
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: coverage/lcov.info
           fail_ci_if_error: false
           
   pana:
