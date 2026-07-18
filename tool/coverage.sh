@@ -1,6 +1,11 @@
 #!/bin/bash
 
-# Ensure the coverage directory exists
+# Always operate from the repo root, wherever the script is invoked from.
+cd "$(dirname "$0")/.." || exit 1
+
+# Start from a clean slate: stale coverage JSON from earlier runs gets
+# merged by format_coverage and corrupts line data and totals.
+rm -rf coverage
 mkdir -p coverage
 
 # Run tests with coverage
