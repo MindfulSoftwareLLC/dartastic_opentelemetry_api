@@ -15,6 +15,7 @@ import 'span_id.dart';
 import 'span_kind.dart';
 import 'span_link.dart';
 
+part 'non_recording_span.dart';
 part 'span_create.dart';
 
 /// The set of canonical status codes.
@@ -119,6 +120,11 @@ class APISpan {
   /// Returns whether this span has been ended
   bool get isEnded => _endTime != null;
 
+  /// Whether mutating operations currently apply. The default is
+  /// "until the span ends"; [NonRecordingSpan] overrides this to make
+  /// every mutation a no-op, per the spec.
+  bool get _modifiable => !isEnded;
+
   /// The status of this [APISpan].
   SpanStatusCode get status => _spanStatusCode ?? SpanStatusCode.Unset;
 
@@ -169,7 +175,7 @@ class APISpan {
   /// present during span creation.
   /// Ignored if isEnded
   set attributes(Attributes newAttributes) {
-    if (!isEnded) {
+    if (_modifiable) {
       _attributes = newAttributes;
     }
   }
@@ -180,7 +186,7 @@ class APISpan {
   /// present during span creation.
   /// Ignored if isEnded
   void setStringAttribute<T>(String name, String value) {
-    if (!isEnded) {
+    if (_modifiable) {
       _attributes = _attributes.copyWithStringAttribute(name, value);
     }
   }
@@ -191,7 +197,7 @@ class APISpan {
   /// present during span creation.
   /// Ignored if isEnded
   void setBoolAttribute(String name, bool value) {
-    if (!isEnded) {
+    if (_modifiable) {
       _attributes = _attributes.copyWithBoolAttribute(name, value);
     }
   }
@@ -202,7 +208,7 @@ class APISpan {
   /// present during span creation.
   /// Ignored if isEnded
   void setIntAttribute(String name, int value) {
-    if (!isEnded) {
+    if (_modifiable) {
       _attributes = _attributes.copyWithIntAttribute(name, value);
     }
   }
@@ -213,7 +219,7 @@ class APISpan {
   /// present during span creation.
   /// Ignored if isEnded
   void setDoubleAttribute(String name, double value) {
-    if (!isEnded) {
+    if (_modifiable) {
       _attributes = _attributes.copyWithDoubleAttribute(name, value);
     }
   }
@@ -225,7 +231,7 @@ class APISpan {
   /// present during span creation.
   /// Ignored if isEnded
   void setDateTimeAsStringAttribute(String name, DateTime value) {
-    if (!isEnded) {
+    if (_modifiable) {
       _attributes = _attributes.copyWithStringAttribute(
           name, Timestamp.dateTimeToString(value));
     }
@@ -237,7 +243,7 @@ class APISpan {
   /// present during span creation.
   /// Ignored if isEnded
   void setStringListAttribute<T>(String name, List<String> value) {
-    if (!isEnded) {
+    if (_modifiable) {
       _attributes = _attributes.copyWithStringListAttribute(name, value);
     }
   }
@@ -248,7 +254,7 @@ class APISpan {
   /// present during span creation.
   /// Ignored if isEnded
   void setBoolListAttribute(String name, List<bool> value) {
-    if (!isEnded) {
+    if (_modifiable) {
       _attributes = _attributes.copyWithBoolListAttribute(name, value);
     }
   }
@@ -259,7 +265,7 @@ class APISpan {
   /// present during span creation.
   /// Ignored if isEnded
   void setIntListAttribute(String name, List<int> value) {
-    if (!isEnded) {
+    if (_modifiable) {
       _attributes = _attributes.copyWithIntListAttribute(name, value);
     }
   }
@@ -270,7 +276,7 @@ class APISpan {
   /// present during span creation.
   /// Ignored if isEnded
   void setDoubleListAttribute(String name, List<double> value) {
-    if (!isEnded) {
+    if (_modifiable) {
       _attributes = _attributes.copyWithDoubleListAttribute(name, value);
     }
   }
@@ -280,7 +286,7 @@ class APISpan {
   /// "standard event names and keys" which have prescribed semantic meanings.
   /// See https://github.com/open-telemetry/semantic-conventions/blob/main/docs/README.md
   void addEvent(SpanEvent spanEvent) {
-    if (!isEnded) {
+    if (_modifiable) {
       _spanEvents ??= [];
       _spanEvents!.add(spanEvent);
     }
@@ -291,7 +297,7 @@ class APISpan {
     if (OTelFactory.otelFactory == null) {
       throw StateError('Call initialize() first.');
     }
-    if (!isEnded) {
+    if (_modifiable) {
       _spanEvents ??= [];
       // Source the event timestamp from this span's TimeProvider so events
       // share the same clock as start/end. Bypasses the static
@@ -308,7 +314,7 @@ class APISpan {
     if (OTelFactory.otelFactory == null) {
       throw StateError('Call initialize() first.');
     }
-    if (!isEnded) {
+    if (_modifiable) {
       _spanEvents ??= [];
       spanEvents.forEach((name, attributes) => _spanEvents!.add(OTelFactory
           .otelFactory!
@@ -323,7 +329,7 @@ class APISpan {
     if (OTelFactory.otelFactory == null) {
       throw StateError('Call initialize() first.');
     }
-    if (!isEnded) {
+    if (_modifiable) {
       _spanLinks ??= [];
       _spanLinks!.add(OTelFactory.otelFactory!
           .spanLink(spanContext, attributes: attributes));
@@ -333,7 +339,7 @@ class APISpan {
   /// Adds a link to this Span.
   /// Ignored if the span is ended.
   void addSpanLink(SpanLink spanLink) {
-    if (!isEnded) {
+    if (_modifiable) {
       _spanLinks ??= [];
       _spanLinks!.add(spanLink);
     }
@@ -348,7 +354,7 @@ class APISpan {
   /// [description] When [statusCode] is error, description should include the
   /// error's toString() if an exception is caught available.
   void setStatus(SpanStatusCode statusCode, [String? description]) {
-    if (!isEnded) {
+    if (_modifiable) {
       if (statusCode == SpanStatusCode.Unset) {
         return;
       }
@@ -372,7 +378,7 @@ class APISpan {
   ///
   /// If the span has already ended this is ignored.
   void updateName(String name) {
-    if (!isEnded) {
+    if (_modifiable) {
       _name = name;
     }
   }
@@ -428,7 +434,7 @@ class APISpan {
   ///
   /// Only the first call to end modifies the Span.
   void end({DateTime? endTime, SpanStatusCode? spanStatus}) {
-    if (!isEnded) {
+    if (_modifiable) {
       _endTime = endTime ?? _timeProvider.nowDateTime();
       // Only set status if no status has been set
       if (_spanStatusCode == null || _spanStatusCode == SpanStatusCode.Unset) {
@@ -447,7 +453,7 @@ class APISpan {
   /// @param attributes The attributes to add to this span
   /// @return void
   void addAttributes(Attributes attributes) {
-    if (!isEnded) {
+    if (_modifiable) {
       _attributes = _attributes.copyWithAttributes(attributes);
     }
   }
