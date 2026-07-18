@@ -4,6 +4,7 @@
 import 'package:meta/meta.dart';
 
 import '../../factory/otel_factory.dart';
+import '../../util/otel_log.dart';
 import 'baggage_entry.dart';
 
 part 'baggage_create.dart';
@@ -19,22 +20,17 @@ class Baggage {
 
   /// Creates a new baggage instance. The provided entries map is copied
   /// and made immutable to ensure baggage immutability. Defaults to empty.
+  /// Names must be non-empty per spec; entries with empty names are
+  /// ignored and logged. Values may be any valid UTF-8 string, per spec.
   Baggage._([Map<String, BaggageEntry>? entries])
-      : _entries =
-            Map.unmodifiable(Map<String, BaggageEntry>.from(entries ?? {})) {
-    // Validate that no keys are empty strings
-    for (final key in _entries.keys) {
-      if (key.isEmpty) {
-        throw ArgumentError('Baggage keys must not be empty strings');
-      }
-    }
-    // Validate that no values are null
-    for (final entry in _entries.values) {
-      if (entry.value.isEmpty) {
-        throw ArgumentError('Baggage values must not be empty strings');
-      }
-    }
-  }
+      : _entries = Map.unmodifiable(Map<String, BaggageEntry>.fromEntries(
+            (entries ?? {}).entries.where((e) {
+          if (e.key.isEmpty) {
+            OTelLog.warn('Baggage names must be non-empty; entry ignored.');
+            return false;
+          }
+          return true;
+        })));
 
   /// Retrieves a BaggageEntry for the given key, or `null` if not present.
   BaggageEntry? getEntry(String key) => _entries[key];
@@ -56,29 +52,27 @@ class Baggage {
   /// keys that are the same as the keys in [moreBaggage]
   Baggage copyWithBaggage(Baggage moreBaggage) {
     final combined = {..._entries, ...moreBaggage._entries};
-    return OTelFactory.otelFactory!.baggage(combined);
+    return OTelFactory.getOrCreateDefault().baggage(combined);
   }
 
   /// Returns a new Baggage with the given key-value pair added (or replaced).
+  /// Names must be non-empty per spec; an empty name is ignored and logged.
   Baggage copyWith(String key, String value, [String? metadata]) {
-    if (key.isEmpty) throw ArgumentError('Baggage key must not be empty');
-    if (value.isEmpty) throw ArgumentError('Baggage value must not be empty');
-    if (OTelFactory.otelFactory == null) {
-      throw StateError('Call initialize() first.');
+    if (key.isEmpty) {
+      OTelLog.warn('Baggage names must be non-empty; entry ignored.');
+      return this;
     }
+    final factory = OTelFactory.getOrCreateDefault();
     final updated = Map.of(_entries)
-      ..[key] = OTelFactory.otelFactory!.baggageEntry(value, metadata);
-    return OTelFactory.otelFactory!.baggage(updated);
+      ..[key] = factory.baggageEntry(value, metadata);
+    return factory.baggage(updated);
   }
 
   /// Returns a new Baggage with the given key removed (if it exists).
   Baggage copyWithout(String key) {
-    if (OTelFactory.otelFactory == null) {
-      throw StateError('Call initialize() first.');
-    }
     if (!_entries.containsKey(key)) return this;
     final updated = Map.of(_entries)..remove(key);
-    return OTelFactory.otelFactory!.baggage(updated);
+    return OTelFactory.getOrCreateDefault().baggage(updated);
   }
 
   /// Converts the baggage to a JSON representation.
@@ -101,8 +95,8 @@ class Baggage {
         final value = entry.value as Map;
         // Try to get the value field first
         final rawValue = value['value'];
-        if (rawValue is! String || rawValue.isEmpty) {
-          continue; // Skip entries with non-string or empty values
+        if (rawValue is! String) {
+          continue; // Skip entries with non-string values
         }
         final metadata = value['metadata'];
         if (metadata != null && metadata is! String) {

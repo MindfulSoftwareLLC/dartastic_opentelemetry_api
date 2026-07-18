@@ -430,8 +430,8 @@ class OTelAPI {
       if (entry.value is Map) {
         final value = entry.value as Map;
         final stringValue = value['value'] as String?;
-        if (stringValue == null || stringValue.isEmpty) {
-          continue; // Skip invalid entries
+        if (stringValue == null) {
+          continue; // Skip non-string entries
         }
         entries[entry.key] = OTelFactory.otelFactory!.baggageEntry(
           stringValue,
