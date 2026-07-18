@@ -27,6 +27,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   next major; spec-fidelity string corrections are bug fixes with a
   CHANGELOG wire-format table.
 
+### Changed
+- **Breaking: `APIObservableResult` is now an abstract interface.** The
+  API-side implementation was unconstructible (private constructor, no
+  factory) so nothing could have used it; SDKs implement the interface,
+  as `dartastic_opentelemetry` already does.
+
+### Fixed
+- `Attributes.of` no longer throws a `TypeError` when a map value is an
+  untyped list (`List<Object>` / `List<dynamic>`). Lists are now
+  element-checked like `Attributes.fromJson`: homogeneous
+  string/bool/int/double lists convert, mixed numeric lists promote to
+  `List<double>`, and unsupported element types are warned and ignored
+  per the OTel specification.
+
 ## [1.0.0-beta.10] - 2026-07-18
 
 ### Changed

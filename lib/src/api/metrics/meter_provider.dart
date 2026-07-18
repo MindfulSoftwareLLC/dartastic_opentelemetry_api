@@ -151,21 +151,16 @@ class APIMeterProvider {
       return true; // Already shut down
     }
 
-    try {
-      // Mark as shut down immediately to prevent new meters
-      _isShutdown = true;
+    // Mark as shut down immediately to prevent new meters
+    _isShutdown = true;
 
-      // Clear the meter cache
-      _meterCache.clear();
+    // Clear the meter cache
+    _meterCache.clear();
 
-      // Disable the provider
-      _enabled = false;
+    // Disable the provider
+    _enabled = false;
 
-      return true;
-    } catch (e) {
-      OTelLog.error('Error during MeterProvider shutdown: $e');
-      return false;
-    }
+    return true;
   }
 
   /// Forces the MeterProvider to flush all pending metrics to exporters.
@@ -177,12 +172,7 @@ class APIMeterProvider {
       return false; // Already shut down
     }
 
-    try {
-      // In the API implementation, this is a no-op
-      return true;
-    } catch (e) {
-      OTelLog.error('Error during MeterProvider forceFlush: $e');
-      return false;
-    }
+    // In the API implementation, this is a no-op
+    return true;
   }
 }

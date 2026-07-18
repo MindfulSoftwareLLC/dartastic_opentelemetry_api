@@ -31,9 +31,9 @@ class Attribute<T extends Object> {
       if (valueList.isEmpty) {
         throw ArgumentError('Attribute _value list must not be empty');
       }
-      if (valueList.contains(null)) {
-        throw ArgumentError('null is not allowed in List attribute values.');
-      }
+      // No null-element guard: attributes are only created with
+      // non-nullable element types (List<String>, List<bool>, List<int>,
+      // List<double>), so sound null safety already rules nulls out.
     }
   }
 

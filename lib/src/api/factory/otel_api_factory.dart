@@ -4,6 +4,7 @@
 import 'dart:typed_data';
 
 import '../../factory/otel_factory.dart';
+import '../../util/otel_log.dart';
 import '../baggage/baggage.dart';
 import '../baggage/baggage_entry.dart';
 import '../common/attribute.dart';
@@ -185,19 +186,29 @@ class OTelAPIFactory extends OTelFactory {
       } else if (value is Attribute) {
         attributes.add(value);
       } else if (value is List) {
+        // Element-check rather than hard-cast: the static list type is
+        // often List<Object> or List<dynamic> (e.g. from map literals),
+        // which `as List<String>` would reject at runtime.
         if (value.isNotEmpty) {
-          if (value.first is String) {
+          if (value.every((e) => e is String)) {
             attributes.add(AttributeCreate.create<List<String>>(
-                key, value as List<String>));
-          } else if (value.first is bool) {
+                key, value.cast<String>()));
+          } else if (value.every((e) => e is bool)) {
             attributes.add(
-                AttributeCreate.create<List<bool>>(key, value as List<bool>));
-          } else if (value.first is int) {
-            attributes.add(
-                AttributeCreate.create<List<int>>(key, value as List<int>));
-          } else if (value.first is double) {
+                AttributeCreate.create<List<bool>>(key, value.cast<bool>()));
+          } else if (value.every((e) => e is int)) {
+            attributes
+                .add(AttributeCreate.create<List<int>>(key, value.cast<int>()));
+          } else if (value.every((e) => e is double || e is int)) {
+            // Mixed numeric lists are promoted to double.
             attributes.add(AttributeCreate.create<List<double>>(
-                key, value as List<double>));
+                key,
+                value
+                    .map((e) => e is int ? e.toDouble() : e as double)
+                    .toList()));
+          } else {
+            OTelLog.warn(
+                'Ignoring attribute $key because the list contains unsupported types. Only String, bool, int, double lists are allowed by the OTel specification.');
           }
         }
       } else {
