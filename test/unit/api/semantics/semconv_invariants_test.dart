@@ -72,6 +72,7 @@ void main() {
       for (final values in SemconvRegistry.allEntityEnums) {
         for (final entity in values) {
           expect(entity.name, matches(keyFormat));
+          expect(entity.toString(), equals(entity.name));
           for (final attr in [...entity.identifying, ...entity.descriptive]) {
             expect(allKeys, contains(attr.key),
                 reason:
