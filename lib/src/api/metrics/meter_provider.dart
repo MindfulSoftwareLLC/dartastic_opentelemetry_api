@@ -78,7 +78,7 @@ class APIMeterProvider {
       String? schemaUrl,
       Attributes? attributes}) {
     if (_isShutdown) {
-      throw StateError('MeterProvider has been shut down');
+      OTelLog.warn('getMeter called after shutdown; returning a no-op meter.');
     }
 
     // Validate the meter name; if invalid (empty), log a warning and use empty string.

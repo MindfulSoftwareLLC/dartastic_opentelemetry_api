@@ -203,7 +203,7 @@ void main() {
       expect(provider.isShutdown, isTrue);
     });
 
-    test('getLogger throws StateError after shutdown', () async {
+    test('getLogger returns a working logger after shutdown', () async {
       final provider = OTelAPI.loggerProvider();
 
       // Create a logger before shutdown (should work)
@@ -213,11 +213,8 @@ void main() {
       // Shutdown the provider
       await provider.shutdown();
 
-      // Attempting to create a logger after shutdown should throw
-      expect(
-        () => provider.getLogger('after-shutdown'),
-        throwsA(isA<StateError>()),
-      );
+      // Creating a logger after shutdown works and is a fresh no-op
+      expect(provider.getLogger('after-shutdown'), isNotNull);
     });
 
     test('getLogger uses defaults when no optional parameters provided', () {

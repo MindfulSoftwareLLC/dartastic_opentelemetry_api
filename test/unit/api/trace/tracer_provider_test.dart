@@ -165,14 +165,11 @@ void main() {
       expect(provider.isShutdown, isTrue);
     });
 
-    test('getTracer throws StateError after shutdown', () {
+    test('getTracer returns a working tracer after shutdown', () {
       final provider = OTelAPI.tracerProvider();
       provider.isShutdown = true;
 
-      expect(
-        () => provider.getTracer('test-lib'),
-        throwsA(isA<StateError>()),
-      );
+      expect(provider.getTracer('test-lib'), isNotNull);
     });
 
     test('shutdown returns true and marks provider as shutdown', () async {
@@ -205,11 +202,8 @@ void main() {
       // Shutdown the provider
       await provider.shutdown();
 
-      // After shutdown, getting tracer should throw
-      expect(
-        () => provider.getTracer('test-lib', version: '1.0.0'),
-        throwsA(isA<StateError>()),
-      );
+      // After shutdown, getting a tracer works and is a fresh no-op
+      expect(provider.getTracer('test-lib', version: '1.0.0'), isNotNull);
     });
   });
 }

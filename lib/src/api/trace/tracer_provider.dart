@@ -83,7 +83,8 @@ class APITracerProvider {
   APITracer getTracer(String name,
       {String? version, String? schemaUrl, Attributes? attributes}) {
     if (_isShutdown) {
-      throw StateError('TracerProvider has been shut down');
+      OTelLog.warn(
+          'getTracer called after shutdown; returning a no-op tracer.');
     }
 
     // Validate the tracer name; if invalid (empty), log a warning and use empty string.

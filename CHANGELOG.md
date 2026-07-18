@@ -348,6 +348,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   invalid keys/values are now ignored with a warning (previously
   `ArgumentError`), and both operations work without an installed SDK
   (previously `StateError`).
+- **Provider accessors use safe defaults instead of throwing.** Per the
+  trace API spec, an invalid name must return "a working Tracer
+  implementation... as a fallback rather than returning null or throwing an
+  exception": `OTelAPI.tracerProvider('')` / `meterProvider('')` /
+  `loggerProvider('')` now warn and return the global default (previously
+  `ArgumentError`), and `getTracer` / `getMeter` / `getLogger` after
+  provider shutdown warn and return a no-op instance (previously
+  `StateError`).
 
 ## [1.0.0-beta.9] - 2026-07-11
 

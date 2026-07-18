@@ -101,9 +101,8 @@ void main() {
       expect(meterProvider.isShutdown, isTrue);
       expect(meterProvider.enabled, isFalse);
 
-      // Should throw when trying to get a meter after shutdown
-      expect(
-          () => meterProvider.getMeter(name: 'test-meter'), throwsStateError);
+      // Getting a meter after shutdown works and is a fresh no-op
+      expect(meterProvider.getMeter(name: 'test-meter'), isA<APIMeter>());
     });
 
     test('forceFlush returns true', () async {
