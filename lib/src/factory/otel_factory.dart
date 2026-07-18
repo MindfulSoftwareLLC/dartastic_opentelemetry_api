@@ -10,6 +10,9 @@ import '../api/common/attributes.dart';
 import '../api/common/instrumentation_scope.dart';
 import '../api/context/context.dart';
 import '../api/context/context_key.dart';
+import '../api/context/propagation/composite_propagator.dart';
+import '../api/context/propagation/noop_text_map_propagator.dart';
+import '../api/context/propagation/text_map_propagator.dart';
 import '../api/factory/otel_api_factory.dart';
 import '../api/logs/logger_provider.dart';
 import '../api/metrics/counter.dart';
@@ -31,6 +34,7 @@ import '../api/trace/trace_flags.dart';
 import '../api/trace/trace_id.dart';
 import '../api/trace/trace_state.dart';
 import '../api/trace/tracer_provider.dart';
+import '../util/otel_log.dart';
 
 /// A function that creates the OTel Factory, used bu initialize methods
 typedef OTelFactoryCreationFunction = OTelFactory Function(
@@ -455,6 +459,40 @@ abstract class OTelFactory {
   ///
   /// This clears all cached providers and resets the factory configuration to defaults.
   /// This method is primarily used for testing purposes.
+  TextMapPropagator<dynamic, dynamic>? _textMapPropagator;
+
+  /// Creates a [TextMapPropagator] that delegates to [propagators],
+  /// injecting in list order and extracting in reverse order.
+  TextMapPropagator<C, V> compositePropagator<C, V>(
+          List<TextMapPropagator<C, V>> propagators) =>
+      CompositePropagatorCreate.create<C, V>(propagators);
+
+  /// The global [TextMapPropagator].
+  ///
+  /// The OpenTelemetry specification (api-propagators.md, "Global
+  /// Propagators") requires that "The OpenTelemetry API MUST provide a way
+  /// to obtain a propagator for each supported Propagator type" via global
+  /// Get/Set methods, and that "The OpenTelemetry API MUST use no-op
+  /// propagators unless explicitly configured otherwise" — so this defaults
+  /// to a [NoopTextMapPropagator] until an SDK (or application) sets it.
+  ///
+  /// The global lives on the factory so that, like every other API
+  /// object, a replacement factory can substitute its own implementation.
+  TextMapPropagator<dynamic, dynamic> get textMapPropagator =>
+      _textMapPropagator ??= const NoopTextMapPropagator<dynamic, dynamic>();
+
+  /// Installs [propagator] as the global [TextMapPropagator], replacing
+  /// the previous one. Typically called by an SDK during initialization;
+  /// instrumentation libraries should only read the global.
+  set textMapPropagator(TextMapPropagator<dynamic, dynamic> propagator) {
+    if (OTelLog.isDebug()) {
+      OTelLog.debug('OTelFactory: replacing the global TextMapPropagator '
+          '(${textMapPropagator.runtimeType}) with '
+          '${propagator.runtimeType}.');
+    }
+    _textMapPropagator = propagator;
+  }
+
   void reset() {
     _apiEndpoint = defaultEndpoint;
     _apiServiceName = OTelAPI.defaultServiceName;
@@ -465,6 +503,7 @@ abstract class OTelFactory {
     _tracerProviders = null;
     _meterProviders?.clear();
     _meterProviders = null;
+    _textMapPropagator = null;
     otelFactory = null;
   }
 

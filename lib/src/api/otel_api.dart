@@ -14,6 +14,8 @@ import 'common/attributes.dart';
 import 'common/instrumentation_scope.dart';
 import 'context/context.dart';
 import 'context/context_key.dart';
+import 'context/propagation/noop_text_map_propagator.dart';
+import 'context/propagation/text_map_propagator.dart';
 import 'factory/otel_api_factory.dart';
 import 'id/id_generator.dart';
 import 'logs/logger.dart';
@@ -137,6 +139,49 @@ class OTelAPI {
   static Context context({Baggage? baggage}) {
     _getAndCacheOtelFactory();
     return OTelFactory.otelFactory!.context(baggage: baggage);
+  }
+
+  /// The global [TextMapPropagator].
+  ///
+  /// The OpenTelemetry specification (api-propagators.md, "Global
+  /// Propagators") requires that "The OpenTelemetry API MUST provide a way
+  /// to obtain a propagator for each supported Propagator type" via global
+  /// Get/Set methods; this getter/setter pair satisfies that requirement
+  /// for [TextMapPropagator], the single supported Propagator type today.
+  ///
+  /// Per the same section, "The OpenTelemetry API MUST use no-op propagators
+  /// unless explicitly configured otherwise", so this defaults to a
+  /// [NoopTextMapPropagator] until an SDK (or application) sets it.
+  ///
+  /// The global is deliberately non-generic
+  /// (`TextMapPropagator<dynamic, dynamic>`) so a single global can serve
+  /// carriers of any type; propagator implementations remain generic and
+  /// type-safe at their definition sites.
+  ///
+  /// Like every other API object, the global propagator goes through
+  /// [OTelFactory], so a replacement factory can substitute its own
+  /// implementation. It is process/isolate-local: setting it in one
+  /// isolate does not propagate to other isolates.
+  static TextMapPropagator<dynamic, dynamic> get textMapPropagator {
+    _getAndCacheOtelFactory();
+    return OTelFactory.otelFactory!.textMapPropagator;
+  }
+
+  /// Sets the global [TextMapPropagator], replacing the previous one.
+  ///
+  /// Typically called by an SDK during initialization; instrumentation
+  /// libraries should only read the global via [textMapPropagator].
+  static set textMapPropagator(TextMapPropagator<dynamic, dynamic> propagator) {
+    _getAndCacheOtelFactory();
+    OTelFactory.otelFactory!.textMapPropagator = propagator;
+  }
+
+  /// Creates a [TextMapPropagator] that delegates to [propagators],
+  /// injecting in list order and extracting in reverse order.
+  static TextMapPropagator<C, V> compositePropagator<C, V>(
+      List<TextMapPropagator<C, V>> propagators) {
+    _getAndCacheOtelFactory();
+    return OTelFactory.otelFactory!.compositePropagator<C, V>(propagators);
   }
 
   /// Creates a new InstrumentationScope.

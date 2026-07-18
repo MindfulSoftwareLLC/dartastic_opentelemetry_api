@@ -4,13 +4,15 @@
 import '../context.dart';
 import 'text_map_propagator.dart';
 
-/// A propagator that combines multiple other propagators
+/// A propagator that combines multiple other propagators.
+///
+/// Created via `OTelAPI.compositePropagator` (or an `OTelFactory`
+/// implementation), like every other API object. The propagators are
+/// applied in order for injection and in reverse order for extraction.
 class CompositePropagator<C, V> implements TextMapPropagator<C, V> {
   final List<TextMapPropagator<C, V>> _propagators;
 
-  /// Creates a new CompositePropagator with the given list of propagators.
-  /// The propagators are applied in order for injection and in reverse order for extraction.
-  CompositePropagator(List<TextMapPropagator<C, V>> propagators)
+  CompositePropagator._(List<TextMapPropagator<C, V>> propagators)
       : _propagators = List.unmodifiable(propagators);
 
   @override
@@ -38,4 +40,14 @@ class CompositePropagator<C, V> implements TextMapPropagator<C, V> {
     }
     return set.toList(growable: false);
   }
+}
+
+/// Internal constructor access for [CompositePropagator].
+/// Used by `OTelFactory` implementations; users should create composite
+/// propagators with `OTelAPI.compositePropagator`.
+class CompositePropagatorCreate {
+  /// Creates a [CompositePropagator] delegating to [propagators].
+  static CompositePropagator<C, V> create<C, V>(
+          List<TextMapPropagator<C, V>> propagators) =>
+      CompositePropagator<C, V>._(propagators);
 }

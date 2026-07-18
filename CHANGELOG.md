@@ -231,6 +231,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   spec's "Wrapping a SpanContext in a Span" operation: the wrapped
   context is returned unchanged, `isRecording` is `false`, and all other
   operations are no-ops (#40).
+- **Global `TextMapPropagator`** — `OTelAPI.textMapPropagator` getter/setter,
+  implementing the spec's Global Propagators requirement: "The OpenTelemetry
+  API MUST provide a way to obtain a propagator for each supported Propagator
+  type" (`TextMapPropagator` being the single supported type today). The
+  global is non-generic (`TextMapPropagator<dynamic, dynamic>`) and, like
+  every other API object, routed through `OTelFactory`, so a replacement
+  factory can substitute its own implementation. Isolate-local;
+  `OTelAPI.reset()` restores the no-op default (#42).
+- `OTelAPI.compositePropagator` / `OTelFactory.compositePropagator` —
+  factory-routed construction for `CompositePropagator`, previously the
+  only instantiable API object built by direct construction; its public
+  constructor is now private (**Breaking**, construct via the factory)
+  (#42).
+- **`NoopTextMapPropagator`** — the default value of the global, satisfying
+  "The OpenTelemetry API MUST use no-op propagators unless explicitly
+  configured otherwise": `inject` writes nothing and `extract` returns the
+  passed `Context` unchanged (#42).
 
 ### Deprecated
 
