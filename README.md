@@ -6,6 +6,9 @@
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![OpenTelemetry API Specification](https://img.shields.io/badge/OpenTelemetry%20API-Specification-blueviolet)](https://opentelemetry.io/docs/specs/otel/)
 
+**Note:** 0.9.1 is a stable-channel republication of `1.0.0-rc.1` —
+identical content. New projects should depend on `^1.0.0-rc.1`.
+
 A Dart implementation of the [OpenTelemetry](https://opentelemetry.io/) API that strictly adheres to the 
 OpenTelemetry (OTel) specification. This package provides a vendor-neutral, implementation-agnostic API for 
 observability instrumentation in Dart and Flutter applications.
