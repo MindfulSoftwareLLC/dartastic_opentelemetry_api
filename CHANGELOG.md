@@ -15,10 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `InteractionType`, `InteractionSemantics`, `PerformanceSemantics`,
   `ErrorSemantics`, `NetworkSemantics`, `RumSessionView`,
   `NavigationAction`, and `LifecycleState` (`semantics/rum.dart` is
-  gone). They are vendor conventions, not OpenTelemetry semantic
-  conventions; their home is the Flutter RUM layer
-  (`flutterrific_opentelemetry`). The API package now contains only
-  registry conventions.
+  gone). They are not OpenTelemetry semantic conventions and so do not
+  belong in this package; `flutterrific_opentelemetry` defines its own
+  Flutter conventions for what the registry does not yet cover. The API
+  package now contains only registry conventions.
 
 ### Added
 - **Semantic-conventions versioning policy** in VERSIONING.md: within a

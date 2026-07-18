@@ -1,13 +1,13 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
-// Nearest registry replacement for the removed vendor `NavigationAction`
-// enum. The registry has no navigation-action convention (push, pop,
-// replace, deep link, ...); what it does define is the screen/widget
-// surface: `app.screen.*` / `app.widget.*` attributes and the
-// `app.screen.click` / `app.widget.click` events. Navigation actions
-// remain vendor semantics in the RUM layer (flutterrific_opentelemetry)
-// until a convention exists upstream.
+// Nearest registry replacement for the removed `NavigationAction` enum.
+// The registry has no navigation-action convention (push, pop, replace,
+// deep link, ...); what it does define is the screen/widget surface:
+// `app.screen.*` / `app.widget.*` attributes and the `app.screen.click`
+// / `app.widget.click` events. flutterrific_opentelemetry defines
+// navigation-action conventions, a candidate for a future upstream
+// semantic convention.
 
 import 'package:dartastic_opentelemetry_api/dartastic_opentelemetry_api.dart';
 import 'package:test/test.dart';

@@ -1,7 +1,7 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
-// Registry replacements for the removed vendor RUM enums: the keys those
+// Registry replacements for the removed RUM enums: the keys those
 // enums carried are covered by registry conventions — device.*,
 // session.*, network.connection.type, error.type, service.*, and the
 // app.* crash/jank surface.

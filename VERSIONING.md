@@ -76,10 +76,10 @@ deprecating only**:
   may land in a MINOR release with a prominent wire-format table in the
   CHANGELOG (precedent: 1.0.0-beta.10).
 
-Vendor- and product-specific conventions are not part of this package:
-only registry conventions (plus their spec-mandated deprecation
-history) appear here. Vendor/RUM conventions live in downstream layers
-(e.g. the Flutter RUM layer).
+Only registry conventions (plus their spec-mandated deprecation
+history) appear in this package. Conventions the registry does not yet
+cover — such as Flutter RUM semantics — are defined by downstream
+packages (e.g. `flutterrific_opentelemetry`).
 
 ## Long-Term Support (LTS)
 

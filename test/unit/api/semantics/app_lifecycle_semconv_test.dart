@@ -1,12 +1,12 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
-// Registry replacement for the removed vendor `LifecycleState` and
+// Registry replacement for the removed `LifecycleState` and
 // `AppLifecycleStates` enums: app lifecycle is modeled by the
 // `device.app.lifecycle` event carrying a platform state attribute
-// (`android.app.state` or `ios.app.state`). Flutter's
-// resumed/inactive/paused/detached states map onto these platform
-// values in the RUM layer (flutterrific_opentelemetry).
+// (`android.app.state` or `ios.app.state`).
+// flutterrific_opentelemetry maps Flutter's
+// resumed/inactive/paused/detached states onto these platform values.
 
 import 'package:dartastic_opentelemetry_api/dartastic_opentelemetry_api.dart';
 import 'package:test/test.dart';
