@@ -83,6 +83,19 @@ for an example.
 - ✅ **No-op implementation** for safely including in any application
 - ✅ **Pluggable API design** - create your own SDK implementation using `OTelFactory`
 
+## Demos 🎬
+
+-  **Dart OTel Reference Demo** The [Dart OpenTelemetry Reference Demo](https://github.com/Dartastic/dart-otel-reference-demo)
+   A reference implementation for use of this SDK demonstrating well-instrumented:
+  - Dart server applications,
+  - Dart CLIs
+  - Flutter apps
+  - Dart CloudRun functions
+  - Dart Cloud Functions (Firebase Functions in Dart)
+
+-  **Flutter Demo** The [Wonderous OpenTelemetry Demo](https://github.com/MindfulSoftwareLLC/wondrous_opentelemetry) demonstrates  
+   gskinner's Wonderous App with instrumentation for OpenTelemetry with [Flutterrific](https://pub.dev/packages/flutterrific_opentelemetry) .
+
 ## Getting Started
 
 Typically, you wouldn't use this library and will use Dartastic OTel `dartastic_opentelemetry` 
