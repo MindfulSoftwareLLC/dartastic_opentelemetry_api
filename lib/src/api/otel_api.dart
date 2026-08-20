@@ -5,6 +5,7 @@ import 'dart:typed_data';
 
 import 'package:meta/meta.dart';
 import '../factory/otel_factory.dart';
+import '../util/otel_error_handler.dart';
 import '../util/otel_log.dart';
 import 'baggage/baggage.dart';
 import 'baggage/baggage_entry.dart';
@@ -770,6 +771,27 @@ class OTelAPI {
       [Attributes? attributes]) {
     _getAndCacheOtelFactory();
     return OTelFactory.otelFactory!.createMeasurement(value, attributes);
+  }
+
+  /// Installs a global error handler, replacing the default behavior of
+  /// logging suppressed errors through [OTelLog].
+  ///
+  /// Per the OpenTelemetry specification (error-handling.md), the library
+  /// never throws for invalid API usage at runtime; suppressed errors are
+  /// reported to this handler instead. Pass `null` to restore the default
+  /// logging handler. Equivalent to setting [OTelErrorHandling.handler].
+  ///
+  /// ```dart
+  /// // Fail fast on invalid API usage, e.g. in a staging environment:
+  /// OTelAPI.setErrorHandler((error, stackTrace) =>
+  ///     Error.throwWithStackTrace(error, stackTrace ?? StackTrace.current));
+  /// ```
+  static void setErrorHandler(OTelErrorHandler? handler) {
+    if (handler == null) {
+      OTelErrorHandling.resetToDefault();
+    } else {
+      OTelErrorHandling.handler = handler;
+    }
   }
 
   static OTelFactory _getAndCacheOtelFactory() {
