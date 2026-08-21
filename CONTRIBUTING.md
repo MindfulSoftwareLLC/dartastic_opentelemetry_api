@@ -43,7 +43,9 @@ There are many ways to contribute to this project:
    ```
    This installs:
    - **pre-commit**: Automatically formats Dart files and restages them
-   - **pre-push**: Blocks push if analyzer warnings exist, tests fail, or coverage drops below 92%
+   - **pre-push**: Blocks push if analyzer warnings exist, tests fail, or
+     coverage drops below the published coverage badge (fallback floor 92%
+     when the badge can't be fetched)
 
 ### Development Workflow
 
