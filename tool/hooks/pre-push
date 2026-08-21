@@ -1,7 +1,9 @@
 #!/bin/bash
-# Pre-push hook: fail push if analyzer has warnings/errors, tests fail, or coverage < 92%
+# Pre-push hook: fail push if analyzer has warnings/errors, tests fail, or
+# line coverage drops below the published coverage badge.
 
-MIN_COVERAGE=92
+# Floor used when the published badge can't be fetched (e.g. offline).
+FALLBACK_MIN_COVERAGE=92
 
 # Check if dart is available on PATH
 if ! command -v dart &> /dev/null; then
@@ -64,36 +66,37 @@ dart run coverage:format_coverage \
   --base-directory=. \
   --check-ignore
 
-# Check if lcov is available
-if ! command -v lcov &> /dev/null; then
-    echo "Warning: lcov not installed, skipping coverage percentage check"
-    echo "Install lcov to enable coverage threshold enforcement"
-    echo ""
-    echo "========================================"
-    echo "All checks passed. Proceeding with push."
-    echo "========================================"
-    exit 0
+# Line coverage straight from lcov.info — no lcov CLI needed.
+COVERAGE_PCT=$(awk -F: '/^LF:/{lf+=$2} /^LH:/{lh+=$2} END{if (lf>0) printf "%.1f", 100*lh/lf}' coverage/lcov.info)
+
+if [ -z "$COVERAGE_PCT" ]; then
+    echo "ERROR: could not compute coverage from coverage/lcov.info."
+    exit 1
 fi
 
-# Extract coverage percentage
-COVERAGE_OUTPUT=$(lcov --summary coverage/lcov.info 2>&1)
-COVERAGE_PCT=$(echo "$COVERAGE_OUTPUT" | grep -oP 'lines\.*: \K[0-9]+\.[0-9]+' | head -1)
-
-# If grep -P doesn't work (macOS), try alternative
-if [ -z "$COVERAGE_PCT" ]; then
-    COVERAGE_PCT=$(echo "$COVERAGE_OUTPUT" | grep "lines" | sed 's/.*: //' | sed 's/%.*//' | tr -d ' ')
+# Baseline: the published badge — coverage must go up, or at least not down.
+BASELINE=$FALLBACK_MIN_COVERAGE
+BASELINE_SOURCE="fallback floor"
+if git fetch -q origin badges 2>/dev/null; then
+    BADGE_PCT=$(git show origin/badges:coverage.svg 2>/dev/null \
+        | grep -o '[0-9][0-9.]*%' | head -1 | tr -d '%')
+    if [ -n "$BADGE_PCT" ]; then
+        BASELINE=$BADGE_PCT
+        BASELINE_SOURCE="published badge"
+    fi
 fi
 
 echo "Coverage: ${COVERAGE_PCT}%"
-echo "Minimum required: ${MIN_COVERAGE}%"
+echo "Required: >= ${BASELINE}% (${BASELINE_SOURCE})"
 
 # Compare coverage (using bc for float comparison)
 if command -v bc &> /dev/null; then
-    COVERAGE_OK=$(echo "$COVERAGE_PCT >= $MIN_COVERAGE" | bc -l)
+    COVERAGE_OK=$(echo "$COVERAGE_PCT >= $BASELINE" | bc -l)
 else
     # Fallback: truncate to integer comparison
     COVERAGE_INT=${COVERAGE_PCT%.*}
-    if [ "$COVERAGE_INT" -ge "$MIN_COVERAGE" ]; then
+    BASELINE_INT=${BASELINE%.*}
+    if [ "$COVERAGE_INT" -ge "$BASELINE_INT" ]; then
         COVERAGE_OK=1
     else
         COVERAGE_OK=0
@@ -103,8 +106,8 @@ fi
 if [ "$COVERAGE_OK" != "1" ]; then
     echo ""
     echo "========================================"
-    echo "ERROR: Coverage ${COVERAGE_PCT}% is below minimum ${MIN_COVERAGE}%! Push aborted."
-    echo "Please add more tests to increase coverage."
+    echo "ERROR: Coverage ${COVERAGE_PCT}% is below ${BASELINE}%! Push aborted."
+    echo "Coverage should go up, not down — please add more tests."
     echo "========================================"
     exit 1
 fi
