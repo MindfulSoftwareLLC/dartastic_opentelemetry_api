@@ -8,7 +8,7 @@ import 'dart:convert';
 import 'package:collection/collection.dart';
 import 'package:meta/meta.dart';
 import '../../factory/otel_factory.dart';
-import '../../util/otel_log.dart';
+import '../../util/otel_error_handler.dart';
 import 'attribute.dart';
 
 part 'attributes_create.dart';
@@ -73,16 +73,16 @@ class Attributes {
                     .map((e) => e is int ? e.toDouble() : e as double)
                     .toList()));
           } else {
-            OTelLog.warn(
-                'Ignoring attribute $key because the list contains unsupported types. Only String, bool, int, double lists are allowed by the OTel specification.');
+            OTelErrorHandling.report(ArgumentError(
+                'Ignoring attribute $key because the list contains unsupported types. Only String, bool, int, double lists are allowed by the OTel specification.'));
           }
         } else {
-          OTelLog.warn(
-              'Ignoring attribute $key because empty lists are not allowed by the OTel specification.');
+          OTelErrorHandling.report(ArgumentError(
+              'Ignoring attribute $key because empty lists are not allowed by the OTel specification.'));
         }
       } else {
-        OTelLog.warn(
-            'Ignoring attribute $key because the value is not a valid attribute type. Only String, bool, int, double and Lists of those types are allowed by the OTel specification.');
+        OTelErrorHandling.report(ArgumentError(
+            'Ignoring attribute $key because the value is not a valid attribute type. Only String, bool, int, double and Lists of those types are allowed by the OTel specification.'));
       }
     }
 
