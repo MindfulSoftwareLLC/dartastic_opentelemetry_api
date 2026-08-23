@@ -48,7 +48,8 @@ templates:
   - pattern: signals_audit_test.dart.j2
     filter: >-
       {
-        metric_groups: semconv_grouped_metrics({}),
+        metric_groups: (semconv_grouped_metrics({})
+          | map(. + {metrics: (.metrics | unique_by(.metric_name))})),
         event_groups: (.groups
           | map(select(.type == "event"))
           | map(. + {root_namespace: (.name | split(".") | .[0])})
