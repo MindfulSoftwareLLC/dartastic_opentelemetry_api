@@ -8,6 +8,39 @@ import 'package:dartastic_opentelemetry_api/dartastic_opentelemetry_api.dart';
 import 'package:test/test.dart';
 
 void main() {
+  group('withSpanContext debug logging', () {
+    tearDown(() {
+      OTelLog.logFunction = null;
+      OTelLog.currentLevel = LogLevel.info;
+    });
+
+    test('logs the trace replacement when debug logging is enabled', () {
+      final lines = <String>[];
+      OTelLog.logFunction = lines.add;
+      OTelLog.currentLevel = LogLevel.debug;
+
+      final spanA = OTelAPI.spanContext(
+        traceId: OTelAPI.traceId(),
+        spanId: OTelAPI.spanId(),
+      );
+      final spanB = OTelAPI.spanContext(
+        traceId: OTelAPI.traceId(),
+        spanId: OTelAPI.spanId(),
+      );
+      final base = OTelAPI.context().withSpanContext(spanA);
+
+      final derived = base.withSpanContext(spanB);
+
+      expect(derived.spanContext, spanB);
+      expect(
+        lines.join('\n'),
+        contains('replacing span context of trace'),
+        reason: 'the derive-not-throw path must announce the trace '
+            'replacement when debug logging is on (#196)',
+      );
+    });
+  });
+
   group('Context API surface', () {
     setUp(() {
       OTelAPI.reset();
