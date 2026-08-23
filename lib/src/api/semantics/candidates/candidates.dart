@@ -83,3 +83,11 @@ library;
 export 'app_candidates.dart';
 export 'browser_candidates.dart';
 export 'device_candidates.dart';
+
+/// Keys that have graduated to the registry (or been rejected) and remain
+/// here only as `@Deprecated` members awaiting removal in the next release.
+///
+/// The graduation-guard tests exempt exactly these keys, so a key may
+/// coexist with its generated `semconv/` twin for the one release its
+/// deprecation cycle runs. Empty means no candidate is mid-cycle.
+const Set<String> deprecatedCandidateKeys = <String>{};

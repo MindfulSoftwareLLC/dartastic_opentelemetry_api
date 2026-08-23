@@ -83,15 +83,21 @@ void main() {
     // The graduation guard, part 1: exact collision. When a candidate is
     // accepted upstream it starts being generated into semconv/, and the
     // same key would then exist twice under two different stability
-    // promises.
+    // promises. A key listed in [deprecatedCandidateKeys] is mid-cycle —
+    // already @Deprecated in favor of its generated twin — and is exempt
+    // for that one release.
     test('no candidate duplicates a registry attribute key', () {
-      final graduated = _candidateKeys.where(_registryKeys.contains).toList()
+      final graduated = _candidateKeys
+          .where(_registryKeys.contains)
+          .where((k) => !deprecatedCandidateKeys.contains(k))
+          .toList()
         ..sort();
       expect(
         graduated,
         isEmpty,
-        reason: 'Now in the registry — delete from candidates/ and use the '
-            'generated semconv/ enum instead: $graduated',
+        reason: 'Now in the registry — mark the candidate @Deprecated in '
+            'favor of the generated semconv/ enum, add its key to '
+            'deprecatedCandidateKeys, and remove it next release: $graduated',
       );
     });
 
@@ -111,6 +117,7 @@ void main() {
       };
       final collisions = <String>[];
       for (final key in _candidateKeys) {
+        if (deprecatedCandidateKeys.contains(key)) continue;
         final match = registryByShape[_shape(key)];
         if (match != null && match != key) collisions.add('$key ~ $match');
       }
@@ -119,8 +126,9 @@ void main() {
         collisions,
         isEmpty,
         reason: 'A registry key differs from a candidate only in how the '
-            'name is organized. Treat this as a graduation and adopt the '
-            "registry's spelling: $collisions",
+            'name is organized. Treat this as a graduation: deprecate the '
+            "candidate in favor of the registry's spelling and add its key "
+            'to deprecatedCandidateKeys: $collisions',
       );
     });
 
