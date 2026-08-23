@@ -3,7 +3,7 @@
 
 import 'package:meta/meta.dart';
 import '../../factory/otel_factory.dart';
-import '../../util/otel_log.dart';
+import '../../util/otel_error_handler.dart';
 import 'baggage_entry.dart';
 
 part 'baggage_create.dart';
@@ -25,7 +25,8 @@ class Baggage {
       : _entries = Map.unmodifiable(Map<String, BaggageEntry>.fromEntries(
             (entries ?? {}).entries.where((e) {
           if (e.key.isEmpty) {
-            OTelLog.warn('Baggage names must be non-empty; entry ignored.');
+            OTelErrorHandling.report(ArgumentError(
+                'Baggage names must be non-empty; entry ignored.'));
             return false;
           }
           return true;
@@ -58,7 +59,8 @@ class Baggage {
   /// Names must be non-empty per spec; an empty name is ignored and logged.
   Baggage copyWith(String key, String value, [String? metadata]) {
     if (key.isEmpty) {
-      OTelLog.warn('Baggage names must be non-empty; entry ignored.');
+      OTelErrorHandling.report(
+          ArgumentError('Baggage names must be non-empty; entry ignored.'));
       return this;
     }
     final factory = OTelFactory.getOrCreateDefault();

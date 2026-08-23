@@ -101,7 +101,7 @@ void main() {
       expect(fields.length, equals(4)); // No duplicates
     });
 
-    test('extract() applies propagators in reverse order', () {
+    test('extract() applies propagators in the order they were specified', () {
       final propagator1 = MockPropagator('p1', ['field1']);
       final propagator2 = MockPropagator('p2', ['field2']);
       final propagator3 = MockPropagator('p3', ['field3']);
@@ -120,10 +120,41 @@ void main() {
 
       final extractedContext = composite.extract(context, carrier, getter);
 
-      // Propagators should be applied in reverse order (p3, p2, p1)
+      // Each propagator extracts its own field
       expect(extractedContext.baggage?.getValue('field1'), equals('p1:value1'));
       expect(extractedContext.baggage?.getValue('field2'), equals('p2:value2'));
       expect(extractedContext.baggage?.getValue('field3'), equals('p3:value3'));
+    });
+
+    test(
+        'extract() lets the last propagator win when two propagators '
+        'write the same Context slot', () {
+      // Per the Propagators API spec, the composite invokes propagators
+      // "in the order they were specified". When two propagators extract
+      // into the same slot, the last one specified must win.
+      final propagator1 = MockPropagator('p1', ['shared']);
+      final propagator2 = MockPropagator('p2', ['shared']);
+
+      final composite =
+          OTelAPI.compositePropagator<Map<String, String>, String>(
+              [propagator1, propagator2]);
+
+      final carrier = {'shared': 'value'};
+      final getter = MockTextMapGetter(carrier);
+
+      final extractedContext =
+          composite.extract(OTelAPI.context(), carrier, getter);
+
+      expect(extractedContext.baggage?.getValue('shared'), equals('p2:value'));
+
+      // Reversing the registration order reverses the winner.
+      final reversedComposite =
+          OTelAPI.compositePropagator<Map<String, String>, String>(
+              [propagator2, propagator1]);
+      final reversedContext =
+          reversedComposite.extract(OTelAPI.context(), carrier, getter);
+
+      expect(reversedContext.baggage?.getValue('shared'), equals('p1:value'));
     });
 
     test('extract() preserves original context for fields not in carrier', () {

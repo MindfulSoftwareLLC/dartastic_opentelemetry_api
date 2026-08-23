@@ -4,7 +4,7 @@
 import 'dart:typed_data';
 
 import '../../factory/otel_factory.dart';
-import '../../util/otel_log.dart';
+import '../../util/otel_error_handler.dart';
 import '../baggage/baggage.dart';
 import '../baggage/baggage_entry.dart';
 import '../common/attribute.dart';
@@ -207,8 +207,8 @@ class OTelAPIFactory extends OTelFactory {
                     .map((e) => e is int ? e.toDouble() : e as double)
                     .toList()));
           } else {
-            OTelLog.warn(
-                'Ignoring attribute $key because the list contains unsupported types. Only String, bool, int, double lists are allowed by the OTel specification.');
+            OTelErrorHandling.report(ArgumentError(
+                'Ignoring attribute $key because the list contains unsupported types. Only String, bool, int, double lists are allowed by the OTel specification.'));
           }
         }
       } else {

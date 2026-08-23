@@ -3,7 +3,7 @@
 
 import 'package:meta/meta.dart';
 import '../../factory/otel_factory.dart';
-import '../../util/otel_log.dart';
+import '../../util/otel_error_handler.dart';
 
 part 'trace_state_create.dart';
 
@@ -77,7 +77,8 @@ class TraceState {
   ///  the oldest entries are removed to make room.
   TraceState put(String key, String value) {
     if (!_isValidKey(key) || !_isValidValue(value)) {
-      OTelLog.warn('Invalid TraceState key or value; entry ignored.');
+      OTelErrorHandling.report(
+          ArgumentError('Invalid TraceState key or value; entry ignored.'));
       return this;
     }
     final factory = OTelFactory.getOrCreateDefault();

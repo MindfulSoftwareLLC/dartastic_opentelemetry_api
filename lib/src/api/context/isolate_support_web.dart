@@ -27,3 +27,8 @@ Future<T> runIsolateComputation<T>(
   // On web, we just run the computation in the current context
   return await computation();
 }
+
+/// Web variant of the error-handler bridge: no isolate exists, so the
+/// installed handler is already ambient — just run the computation.
+Future<T> runIsolateWithErrorHandlerBridge<T>(Future<T> Function() childMain) =>
+    childMain();
