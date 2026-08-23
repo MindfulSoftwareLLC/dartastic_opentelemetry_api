@@ -111,7 +111,7 @@ void main() {
       span.setStatus(SpanStatusCode.Error);
       expect(span.spanEvents, isNull);
       expect(span.status,
-          equals(SpanStatusCode.Ok)); // Status should remain unchanged
+          equals(SpanStatusCode.Unset)); // Status should remain unchanged
     });
 
     test('status setting rules', () {
