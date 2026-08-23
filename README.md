@@ -258,6 +258,58 @@ void main() {
 }
 ```
 
+### Running traced work in another isolate
+
+Isolates share no mutable state, so context and configuration do not
+cross the boundary on their own. `Context.runIsolate` carries them for
+you — the OTel configuration, the active context (the propagated
+`SpanContext` arrives `isRemote: true`, like a context extracted from
+W3C headers), and your installed error handler:
+
+```dart
+final result = await Context.current.runIsolate(() async {
+  // OTel is configured, Context.current is this context, and the
+  // error handler behaves as in the parent.
+  return heavyComputation();
+});
+```
+
+Isolates spawned directly (`Isolate.spawn`, `compute`) start
+unconfigured. See [doc/isolates.md](doc/isolates.md) for the full
+story, including the SendPort pattern for aggregating error reports
+across isolates.
+
+### Error handling
+
+Per the OpenTelemetry [error-handling principles], the API never throws
+into application code when misused — invalid input degrades safely and
+is reported. Where those reports go is yours to configure:
+
+```dart
+// Default: reports are logged via OTelLog and never throw.
+// Route them to your own sink instead:
+OTelAPI.setErrorHandler((error, stackTrace) {
+  myTelemetryHealthMonitor.record(error, stackTrace);
+});
+
+// Strict mode for development — crash on any OTel misuse:
+OTelAPI.setErrorHandler((error, stackTrace) =>
+    Error.throwWithStackTrace(error, stackTrace ?? StackTrace.current));
+
+// Passing null restores the default logging handler.
+OTelAPI.setErrorHandler(null);
+```
+
+The handler receives the **library's** internal error reports (invalid
+attribute keys, malformed input, dropped data). Exceptions thrown by
+**your own code** inside `withSpan` blocks are never routed here — they
+always rethrow; how they are recorded on the span is controlled by the
+SDK's `SpanExceptionOptions`. The handler is a per-isolate global;
+`Context.runIsolate` re-installs it in child isolates
+([doc/isolates.md](doc/isolates.md)).
+
+[error-handling principles]: https://opentelemetry.io/docs/specs/otel/error-handling/
+
 ### Working with Attributes
 
 ```dart
