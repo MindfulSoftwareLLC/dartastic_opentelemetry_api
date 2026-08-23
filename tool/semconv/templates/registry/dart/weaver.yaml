@@ -55,7 +55,14 @@ templates:
     file_name: "{{ ctx.root_namespace | snake_case }}.dart"
 
   - pattern: metrics.dart.j2
-    filter: semconv_grouped_metrics({})
+    # A metric defined once and `ref:`d by several groups (hw.status and
+    # hw.errors are ref'd by every hardware device file) arrives here once
+    # per referencing group. They are the same instrument — same name, same
+    # kind, same unit — so collapse them, or the enum emits the identifier
+    # 15 times and will not compile.
+    filter: >-
+      semconv_grouped_metrics({})
+      | map(. + {metrics: (.metrics | unique_by(.metric_name))})
     application_mode: each
     file_name: "metrics/{{ ctx.root_namespace | snake_case }}_metrics.dart"
 
