@@ -5,6 +5,7 @@ import 'dart:typed_data';
 
 import 'package:meta/meta.dart';
 import '../factory/otel_factory.dart';
+import '../util/otel_error_handler.dart';
 import '../util/otel_log.dart';
 import 'baggage/baggage.dart';
 import 'baggage/baggage_entry.dart';
@@ -772,6 +773,34 @@ class OTelAPI {
     return OTelFactory.otelFactory!.createMeasurement(value, attributes);
   }
 
+  /// Installs a global error handler, replacing the default behavior of
+  /// logging suppressed errors through [OTelLog].
+  ///
+  /// Per the OpenTelemetry specification (error-handling.md), the library
+  /// never throws for invalid API usage at runtime; suppressed errors are
+  /// reported to this handler instead. Pass `null` to restore the default
+  /// behavior — the installed factory's [OTelFactory.defaultErrorHandler],
+  /// which logs through [OTelLog] unless an SDK factory overrides it.
+  ///
+  /// Like every other global, the handler is held by the installed
+  /// [OTelFactory] ([OTelFactory.errorHandler]). Calling this before any
+  /// factory is installed is safe: the handler is buffered and adopted
+  /// when a factory is installed, so it works in any order relative to
+  /// `initialize()`.
+  ///
+  /// ```dart
+  /// // Fail fast on invalid API usage, e.g. in a staging environment:
+  /// OTelAPI.setErrorHandler((error, stackTrace) =>
+  ///     Error.throwWithStackTrace(error, stackTrace ?? StackTrace.current));
+  /// ```
+  static void setErrorHandler(OTelErrorHandler? handler) {
+    if (handler == null) {
+      OTelErrorHandling.resetToDefault();
+    } else {
+      OTelErrorHandling.handler = handler;
+    }
+  }
+
   static OTelFactory _getAndCacheOtelFactory() {
     // According to OpenTelemetry spec, when no SDK is installed, the API
     // must provide NoOp implementations automatically rather than throwing.
@@ -784,6 +813,9 @@ class OTelAPI {
   @visibleForTesting
   static void reset() {
     _otelFactory = null;
+    // Restore default error handling: clears the factory-held user
+    // handler and any handler buffered before a factory was installed.
+    OTelErrorHandling.resetToDefault();
     OTelFactory.otelFactory?.reset();
     // ignore: invalid_use_of_visible_for_testing_member
     Context.resetRoot();

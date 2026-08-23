@@ -7,6 +7,7 @@ import 'dart:typed_data';
 
 import 'package:meta/meta.dart';
 import '../../factory/otel_factory.dart';
+import '../../util/otel_log.dart';
 import '../baggage/baggage.dart';
 import '../trace/span.dart';
 import '../trace/span_context.dart';
@@ -161,34 +162,28 @@ class Context {
     return copyWith(_baggageKey, baggage);
   }
 
-  /// Creates a new context with the given span context
+  /// Creates a new context with the given span context.
+  ///
+  /// Returns a new [Context] derived from this one with [spanContext] set,
+  /// replacing any existing span context — even one belonging to a
+  /// different trace. Per the OpenTelemetry Context specification a
+  /// set-value operation always returns a derived Context, and per the
+  /// Propagators API specification `extract` must never throw: receiving a
+  /// valid `traceparent` for another trace while a local span is active is
+  /// an ordinary situation, not an error. When the trace ID changes, a
+  /// debug log records the replacement. Use [withSpan] to make a span (and
+  /// its span context) current when creating child spans.
   Context withSpanContext(SpanContext spanContext) {
-    // First check the current span if any
-    final currentSpan = get<APISpan?>(_spanKey);
-    if (currentSpan != null &&
-        currentSpan.spanContext.isValid &&
-        spanContext.isValid &&
-        currentSpan.spanContext.traceId != spanContext.traceId) {
-      throw ArgumentError(
-          // ignore: prefer_adjacent_string_concatenation
-          'Cannot change trace ID when setting SpanContext. ' +
-              'Current trace ID: ${currentSpan.spanContext.traceId}, ' +
-              'New trace ID: ${spanContext.traceId}. ' +
-              'Use withSpan() for creating child spans.');
-    }
-
-    // Then check current span context
-    final currentSpanContext = get<SpanContext?>(_spanContextKey);
+    final currentSpanContext = get<APISpan?>(_spanKey)?.spanContext ??
+        get<SpanContext?>(_spanContextKey);
     if (currentSpanContext != null &&
         currentSpanContext.isValid &&
         spanContext.isValid &&
-        currentSpanContext.traceId != spanContext.traceId) {
-      throw ArgumentError(
-          // ignore: prefer_adjacent_string_concatenation
-          'Cannot change trace ID when setting SpanContext. ' +
-              'Current trace ID: ${currentSpanContext.traceId}, ' +
-              'New trace ID: ${spanContext.traceId}. ' +
-              'Use withSpan() for creating child spans.');
+        currentSpanContext.traceId != spanContext.traceId &&
+        OTelLog.isDebug()) {
+      OTelLog.debug('Context.withSpanContext: replacing span context of trace '
+          '${currentSpanContext.traceId} with span context of trace '
+          '${spanContext.traceId}.');
     }
 
     return copyWith(_spanContextKey, spanContext);
@@ -327,7 +322,7 @@ class Context {
     final serializedContext = serialize();
     final factoryFactory = oldFactory.factoryFactory;
 
-    return Isolate.run(() async {
+    Future<T> childMain() async {
       // Set up the factory in the new isolate.
       OTelFactory.otelFactory =
           OTelFactory.deserialize(serializedFactory, factoryFactory);
@@ -362,7 +357,11 @@ class Context {
         computation,
         zoneValues: {_zoneKey: isolateContext},
       );
-    });
+    }
+
+    // Spawn via the platform bridge, which re-installs the parent's
+    // error handler inside the child isolate first (api#94).
+    return runIsolateWithErrorHandlerBridge(childMain);
   }
 
   /// Serializes the context into a JSON-compatible map.

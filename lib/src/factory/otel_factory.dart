@@ -34,6 +34,7 @@ import '../api/trace/trace_flags.dart';
 import '../api/trace/trace_id.dart';
 import '../api/trace/trace_state.dart';
 import '../api/trace/tracer_provider.dart';
+import '../util/otel_error_handler.dart';
 import '../util/otel_log.dart';
 
 /// A function that creates the OTel Factory, used bu initialize methods
@@ -52,9 +53,31 @@ abstract class OTelFactory {
   /// For gRPC, callers must pass `http://localhost:4317` explicitly.
   static const defaultEndpoint = 'http://localhost:4318';
 
+  static OTelFactory? _installedFactory;
+
   /// SDKs must replace this otelFactory with their own to get the SDK
   /// object created instead of the API default implementation
-  static OTelFactory? otelFactory;
+  static OTelFactory? get otelFactory => _installedFactory;
+
+  /// Installs [factory] as the global factory.
+  ///
+  /// Installation adopts error-handler state so a user handler is never
+  /// lost: a handler buffered by [OTelAPI.setErrorHandler] before any
+  /// factory existed moves onto [factory], and a handler held by a
+  /// factory being replaced (e.g. the auto-installed no-op API factory
+  /// upgraded by an SDK) carries over unless [factory] already holds its
+  /// own.
+  static set otelFactory(OTelFactory? factory) {
+    final previous = _installedFactory;
+    _installedFactory = factory;
+    if (factory != null && !identical(factory, previous)) {
+      final previousHandler = previous?.errorHandler;
+      if (previousHandler != null) {
+        factory.errorHandler ??= previousHandler;
+      }
+      OTelErrorHandling.adoptPendingHandler(factory);
+    }
+  }
 
   String _apiEndpoint;
   String _apiServiceName;
@@ -493,6 +516,32 @@ abstract class OTelFactory {
     _textMapPropagator = propagator;
   }
 
+  /// The user-installed global error handler, or `null` when none is
+  /// installed.
+  ///
+  /// Like every other OpenTelemetry global, the handler lives on the
+  /// factory so that a replacement factory can substitute its own
+  /// behavior. [OTelAPI.setErrorHandler] is the user-facing surface;
+  /// [OTelErrorHandling.report] resolves to this handler, falling back to
+  /// [defaultErrorHandler] when it is `null`. Setting it to `null`
+  /// restores [defaultErrorHandler] behavior.
+  OTelErrorHandler? errorHandler;
+
+  /// The default error handler used whenever no user [errorHandler] is
+  /// installed: [OTelErrorHandling.defaultErrorHandler], which logs
+  /// through [OTelLog] and never throws.
+  ///
+  /// Factory subclasses (SDK factories) may override this getter to
+  /// supply their own default reporting behavior — for example, routing
+  /// suppressed errors to the SDK's self-diagnostics. A user handler
+  /// installed with [OTelAPI.setErrorHandler] always wins over this
+  /// default; `OTelAPI.setErrorHandler(null)` returns to it. A factory
+  /// that overrides this getter reconstructs its default natively in
+  /// `deserialize()`/[factoryFactory] on the far side of an isolate
+  /// boundary — defaults are never forwarded between isolates.
+  OTelErrorHandler get defaultErrorHandler =>
+      OTelErrorHandling.defaultErrorHandler;
+
   void reset() {
     _apiEndpoint = defaultEndpoint;
     _apiServiceName = OTelAPI.defaultServiceName;
@@ -504,6 +553,7 @@ abstract class OTelFactory {
     _meterProviders?.clear();
     _meterProviders = null;
     _textMapPropagator = null;
+    errorHandler = null;
     otelFactory = null;
   }
 

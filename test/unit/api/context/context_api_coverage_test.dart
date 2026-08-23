@@ -1,7 +1,7 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
-// Coverage for Context.withSpanContext trace-change rejection and the
+// Coverage for Context.withSpanContext trace replacement and the
 // ContextKey uniqueId/toString surface.
 
 import 'package:dartastic_opentelemetry_api/dartastic_opentelemetry_api.dart';
@@ -18,7 +18,13 @@ void main() {
       );
     });
 
-    test('withSpanContext rejects changing the trace ID', () {
+    test(
+        'withSpanContext returns a derived context when the Context holds '
+        'a span of another trace', () {
+      // Per the Propagators API spec, extract "MUST NOT throw": a service
+      // with an active local span in trace A that receives a valid
+      // traceparent for trace B is an ordinary situation. withSpanContext
+      // sits on that extraction path, so it must derive, never throw.
       final sc1 = OTelAPI.spanContext(
         traceId: OTelAPI.traceId(),
         spanId: OTelAPI.spanId(),
@@ -30,14 +36,11 @@ void main() {
       final span = OTelAPI.nonRecordingSpan(sc1);
       final context = Context.root.withSpan(span);
 
-      expect(
-        () => context.withSpanContext(sc2),
-        throwsA(isA<ArgumentError>().having(
-          (e) => e.message,
-          'message',
-          contains('Cannot change trace ID'),
-        )),
-      );
+      final derived = context.withSpanContext(sc2);
+      expect(derived.spanContext, equals(sc2));
+
+      // The original context is unchanged.
+      expect(context.spanContext, equals(sc1));
     });
 
     test('ContextKey exposes uniqueId and a descriptive toString', () {

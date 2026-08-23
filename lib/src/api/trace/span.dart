@@ -420,17 +420,28 @@ class APISpan {
   }
 
   /// Marks the end of the Span execution.
-  /// By default the end time is set to the calling time and
-  /// the span status is [SpanStatusCode.Ok]
+  ///
+  /// [endTime] optionally sets an explicit end timestamp; when omitted it
+  /// is set to the current time, per trace/api.md (End).
+  ///
+  /// End never changes the span status: a span whose status was never set
+  /// remains [SpanStatusCode.Unset]. Per trace/api.md (Set Status),
+  /// instrumentation SHOULD leave the status as Unset unless there is an
+  /// error, and SHOULD NOT set Ok unless explicitly configured to do so.
   ///
   /// Only the first call to end modifies the Span.
-  void end({DateTime? endTime, SpanStatusCode? spanStatus}) {
+  void end({
+    DateTime? endTime,
+    @Deprecated('The spec End operation takes only an optional timestamp. '
+        'Call setStatus() before end() instead. When given, this is applied '
+        'through the setStatus rules and no longer defaults to Ok.')
+    SpanStatusCode? spanStatus,
+  }) {
     if (_modifiable) {
-      _endTime = endTime ?? _timeProvider.nowDateTime();
-      // Only set status if no status has been set
-      if (_spanStatusCode == null || _spanStatusCode == SpanStatusCode.Unset) {
-        _spanStatusCode = spanStatus ?? SpanStatusCode.Ok;
+      if (spanStatus != null) {
+        setStatus(spanStatus);
       }
+      _endTime = endTime ?? _timeProvider.nowDateTime();
     }
   }
 

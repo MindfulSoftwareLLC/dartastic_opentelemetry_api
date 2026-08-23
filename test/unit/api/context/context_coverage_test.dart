@@ -143,7 +143,8 @@ void main() {
       });
     });
 
-    test('Context throws when withSpanContext changes trace ID', () {
+    test('Context.withSpanContext replaces a span context of another trace',
+        () {
       // Create two span contexts with different trace IDs
       final spanContext1 = OTelAPI.spanContext(
         traceId: OTelAPI.traceId(),
@@ -158,10 +159,11 @@ void main() {
       // First set spanContext1
       final context1 = Context.root.withSpanContext(spanContext1);
 
-      // Then try to set spanContext2 with a different trace ID
-      expect(() {
-        context1.withSpanContext(spanContext2);
-      }, throwsArgumentError);
+      // Setting spanContext2 with a different trace ID must not throw:
+      // a Context set-value operation returns a derived Context.
+      final context2 = context1.withSpanContext(spanContext2);
+      expect(context2.spanContext, equals(spanContext2));
+      expect(context1.spanContext, equals(spanContext1));
     });
 
     test('Context.get returns null when value type does not match', () {

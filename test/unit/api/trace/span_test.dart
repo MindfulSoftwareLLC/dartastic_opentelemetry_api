@@ -184,7 +184,8 @@ void main() {
       span.updateName('new-name');
 
       expect(span.attributes.length, equals(0));
-      expect(span.status, equals(SpanStatusCode.Ok));
+      // end() does not change the status; it stays Unset (trace/api.md)
+      expect(span.status, equals(SpanStatusCode.Unset));
       expect(span.statusDescription, isNull);
       expect(span.name, equals('test-span'));
     });
@@ -345,6 +346,7 @@ void main() {
     });
 
     test('addEvent throws if name is empty', () {
+      // NOTE: becomes non-throwing under api#69 (#119), a separate issue.
       final span = tracer.startSpan('test');
       expect(
         () => span.addEvent(OTelAPI.spanEvent('')),
@@ -356,7 +358,40 @@ void main() {
       final span = tracer.startSpan('test');
       span.end();
       span.end(); // Should not throw
-      expect(span.status, equals(SpanStatusCode.Ok));
+      expect(span.status, equals(SpanStatusCode.Unset));
+    });
+
+    test('end() leaves the status Unset', () {
+      // trace/api.md: End takes only an optional timestamp and never
+      // changes the status; only setStatus does.
+      final span = tracer.startSpan('test');
+      expect(span.status, equals(SpanStatusCode.Unset));
+      span.end();
+      expect(span.status, equals(SpanStatusCode.Unset));
+    });
+
+    test('end() preserves a status set before ending', () {
+      final span = tracer.startSpan('test');
+      span.setStatus(SpanStatusCode.Error, 'boom');
+      span.end();
+      expect(span.status, equals(SpanStatusCode.Error));
+      expect(span.statusDescription, equals('boom'));
+    });
+
+    test('end(spanStatus:) applies the setStatus rules, without an Ok default',
+        () {
+      // The deprecated spanStatus parameter still works but goes through
+      // setStatus; passing Unset is ignored per the Set Status rules.
+      final okSpan = tracer.startSpan('ok')..end(spanStatus: SpanStatusCode.Ok);
+      expect(okSpan.status, equals(SpanStatusCode.Ok));
+
+      final errorSpan = tracer.startSpan('error')
+        ..end(spanStatus: SpanStatusCode.Error);
+      expect(errorSpan.status, equals(SpanStatusCode.Error));
+
+      final unsetSpan = tracer.startSpan('unset')
+        ..end(spanStatus: SpanStatusCode.Unset);
+      expect(unsetSpan.status, equals(SpanStatusCode.Unset));
     });
 
     test('addEvent twice', () {
@@ -388,9 +423,9 @@ void main() {
       final span = tracer.startSpan('test');
       expect(span.status, equals(SpanStatusCode.Unset));
       span.end();
-      expect(span.status, equals(SpanStatusCode.Ok));
+      expect(span.status, equals(SpanStatusCode.Unset));
       span.setStatus(SpanStatusCode.Error);
-      expect(span.status, equals(SpanStatusCode.Ok));
+      expect(span.status, equals(SpanStatusCode.Unset));
     });
 
     test('recordException is ignored after end', () {

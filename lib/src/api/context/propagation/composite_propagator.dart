@@ -9,8 +9,10 @@ import 'text_map_propagator.dart';
 /// A propagator that combines multiple other propagators.
 ///
 /// Created via `OTelAPI.compositePropagator` (or an `OTelFactory`
-/// implementation), like every other API object. The propagators are
-/// applied in order for injection and in reverse order for extraction.
+/// implementation), like every other API object. Per the OpenTelemetry
+/// Propagators API specification, the propagators are invoked in the order
+/// they were specified, for both injection and extraction. When two
+/// propagators write the same Context slot, the last one specified wins.
 class CompositePropagator<C, V> implements TextMapPropagator<C, V> {
   final List<TextMapPropagator<C, V>> _propagators;
 
@@ -20,8 +22,7 @@ class CompositePropagator<C, V> implements TextMapPropagator<C, V> {
   @override
   Context extract(Context context, C carrier, TextMapGetter<V> getter) {
     var ctx = context;
-    // Apply propagators in reverse order
-    for (final propagator in _propagators.reversed) {
+    for (final propagator in _propagators) {
       ctx = propagator.extract(ctx, carrier, getter);
     }
     return ctx;
