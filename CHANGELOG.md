@@ -7,6 +7,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.0.0-rc.2-wip]
 
+### Added
+- **`lib/src/api/semantics/candidates/` — a home for attribute keys that are
+  not yet in the registry**, staged for upstream contribution, exported from
+  the package barrel and marked `@experimental`.
+
+  This revisits the rc.1 position that "the API package now contains only
+  registry conventions". That rule was right about the *problem* — a private
+  dialect masquerading as OpenTelemetry — but it left no path for the
+  conventions we want to propose, which the semantic-conventions CONTRIBUTING
+  guide asks be "prototyped in the corresponding instrumentation(s)" first.
+  Candidates are kept in a separate directory, under a separate stability
+  promise, so a consumer can always tell a published convention from a
+  proposal.
+
+  Candidates are **unstable**: renameable, retypeable and removable in a minor
+  release without deprecation. When one is accepted upstream it is deleted
+  here and reappears in generated `semconv/` output.
+
+  Staged: `app.start.type` (`cold`/`warm`/`hot`), `app.launch.id`,
+  `app.screen.previous_id`, `app.screen.previous_name`,
+  `app.gesture.direction`, `app.gesture.delta.x`, `app.gesture.delta.y`,
+  `device.battery.level`, `device.battery.state`, `device.battery.save_mode`,
+  `device.emulator`, and `browser.languages`.
+
+- **`doc/SEMCONV_CANDIDATES.md`** — the disposition of all 116 identifiers
+  removed in rc.1. Most should return as *registry* conventions rather than
+  candidates: the registry has since gained `app.crash`, `app.jank`,
+  `app.screen.click`, `app.widget.click`, `device.app.lifecycle`,
+  `session.start`/`session.end` and `browser.web_vital.*`, which cover the
+  bulk of the removed RUM surface. The document maps each removal to its
+  registry replacement, to a candidate, or to a recorded reason for dropping
+  it.
+
 ## [1.0.0-rc.1] - 2026-07-18
 
 ### Removed

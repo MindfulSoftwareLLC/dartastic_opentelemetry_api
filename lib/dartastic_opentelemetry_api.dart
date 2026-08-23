@@ -54,6 +54,7 @@ export 'src/api/metrics/up_down_counter.dart' hide UpDownCounterCreate;
 // API
 export 'src/api/otel_api.dart';
 // Semantics
+export 'src/api/semantics/candidates/candidates.dart';
 export 'src/api/semantics/http_header_attribute.dart';
 export 'src/api/semantics/semantics_base.dart';
 export 'src/api/semantics/semconv/semconv.dart';
