@@ -24,15 +24,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `k8s.node.filesystem.inode.count` / `.free`, and the `scaleway_cloud`
   and `scaleway_cloud_compute` members.
 
-### Fixed
-- **The semconv generator no longer emits duplicate metric identifiers.**
-  A metric defined once and `ref:`d by several groups arrived at the
-  template once per referencing group, so the enum declared the same Dart
-  identifier repeatedly and would not compile. `hw.status` and `hw.errors`
-  are `ref:`d by every hardware device file, which is why v1.44.0 is the
-  first registry to surface it. Identical instruments — same name, kind and
-  unit — are now collapsed to one member.
-
 ## [1.0.0-rc.1] - 2026-07-18
 
 ### Removed
