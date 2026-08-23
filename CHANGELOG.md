@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.0.0-rc.2-wip]
 
+### Added
+- **Semantic conventions regenerated from registry v1.44.0** (previously
+  v1.43.0-21-g436fa257). Additive only, per the VERSIONING.md policy: 47
+  new identifiers, no renames and no removals.
+
+  The substantial addition is the complete **`browser.web_vital.*`** set —
+  `name`, `value`, `delta`, `id`, `rating` and `navigation_type` — together
+  with their value enums: `cls`, `lcp`, `fcp`, `inp`, `ttfb` and the
+  obsoleted `fid`; `good` / `needs-improvement` / `poor`; and the six
+  navigation types (`navigate`, `reload`, `back-forward`,
+  `back-forward-cache`, `prerender`, `restore`). Web-vitals instrumentation
+  now has registry names to emit against instead of inventing its own.
+
+  Also new: `browser.platform`, `hw.errors` and `hw.status`,
+  `k8s.node.filesystem.inode.count` / `.free`, and the `scaleway_cloud`
+  and `scaleway_cloud_compute` members.
+
+### Fixed
+- **The semconv generator no longer emits duplicate metric identifiers.**
+  A metric defined once and `ref:`d by several groups arrived at the
+  template once per referencing group, so the enum declared the same Dart
+  identifier repeatedly and would not compile. `hw.status` and `hw.errors`
+  are `ref:`d by every hardware device file, which is why v1.44.0 is the
+  first registry to surface it. Identical instruments — same name, kind and
+  unit — are now collapsed to one member.
+
 ## [1.0.0-rc.1] - 2026-07-18
 
 ### Removed
