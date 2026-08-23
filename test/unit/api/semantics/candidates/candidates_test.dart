@@ -132,6 +132,28 @@ void main() {
       );
     });
 
+    test('toString returns the wire name on every candidate and value enum',
+        () {
+      for (final c in AppCandidate.values) {
+        expect(c.toString(), c.key);
+      }
+      for (final c in DeviceCandidate.values) {
+        expect(c.toString(), c.key);
+      }
+      for (final c in BrowserCandidate.values) {
+        expect(c.toString(), c.key);
+      }
+      for (final v in AppStartTypeValue.values) {
+        expect(v.toString(), v.value);
+      }
+      for (final v in AppGestureDirectionValue.values) {
+        expect(v.toString(), v.value);
+      }
+      for (final v in DeviceBatteryStateValue.values) {
+        expect(v.toString(), v.value);
+      }
+    });
+
     test('candidates are usable as OTelSemantic', () {
       final entry = DeviceCandidate.deviceBatteryLevel.toMapEntry(0.42);
       expect(entry.key, 'device.battery.level');

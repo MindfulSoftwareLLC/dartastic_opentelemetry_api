@@ -59,7 +59,7 @@ OTelErrorHandler? _pendingHandler;
 /// caller: per the spec, "configuring a custom error handler in this way
 /// is the only exception to the basic error handling principles".
 class OTelErrorHandling {
-  OTelErrorHandling._();
+  OTelErrorHandling._(); // coverage:ignore-line
 
   /// The handler [report] currently resolves to.
   ///
