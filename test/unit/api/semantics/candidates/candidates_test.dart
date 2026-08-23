@@ -14,6 +14,15 @@ const _candidateEnums = <List<OTelSemantic>>[
 Iterable<String> get _candidateKeys =>
     _candidateEnums.expand((e) => e).map((a) => a.key);
 
+Set<String> get _registryKeys => SemconvRegistry.allAttributeEnums
+    .expand((e) => e)
+    .map((a) => a.key)
+    .toSet();
+
+/// A key with its delimiters removed, so that names differing only in how
+/// they are organized — `previous_id` vs `previous.id` — compare equal.
+String _shape(String key) => key.replaceAll(RegExp('[._]'), '').toLowerCase();
+
 void main() {
   group('semconv candidates', () {
     // The keys are pinned so that renaming one is a deliberate, reviewed act
@@ -71,24 +80,47 @@ void main() {
       expect(keys.toSet().length, keys.length);
     });
 
-    // The graduation guard. When a candidate is accepted upstream it starts
-    // being generated into semconv/, and the same key would then exist twice
-    // with two different stability promises. This test fails on the very
-    // regeneration that accepts it, which is exactly when the candidate
-    // should be deleted from candidates/ and callers repointed.
-    test('no candidate duplicates a registry attribute', () {
-      final registry = SemconvRegistry.allAttributeEnums
-          .expand((e) => e)
-          .map((a) => a.key)
-          .toSet();
-      final graduated = _candidateKeys.where(registry.contains).toList()
+    // The graduation guard, part 1: exact collision. When a candidate is
+    // accepted upstream it starts being generated into semconv/, and the
+    // same key would then exist twice under two different stability
+    // promises.
+    test('no candidate duplicates a registry attribute key', () {
+      final graduated = _candidateKeys.where(_registryKeys.contains).toList()
         ..sort();
       expect(
         graduated,
         isEmpty,
-        reason: 'These candidates are now in the registry — delete them from '
-            'lib/src/api/semantics/candidates/ and use the generated '
-            'semconv/ enum instead: $graduated',
+        reason: 'Now in the registry — delete from candidates/ and use the '
+            'generated semconv/ enum instead: $graduated',
+      );
+    });
+
+    // Part 2: near-miss. Upstream may accept the concept but organize the
+    // name differently — `app.screen.previous.id` instead of
+    // `app.screen.previous_id`, say. That is still a graduation, and an
+    // exact-string check would sail straight past it, so compare with the
+    // delimiters removed as well.
+    //
+    // Neither check can catch a graduation under a genuinely different
+    // name (`app.previous_screen.id`, or a rename to `app.view.*`). That
+    // needs a human reading the registry diff, which is why every
+    // regeneration should be reviewed against doc/SEMCONV_CANDIDATES.md.
+    test('no candidate near-misses a registry attribute key', () {
+      final registryByShape = {
+        for (final k in _registryKeys) _shape(k): k,
+      };
+      final collisions = <String>[];
+      for (final key in _candidateKeys) {
+        final match = registryByShape[_shape(key)];
+        if (match != null && match != key) collisions.add('$key ~ $match');
+      }
+      collisions.sort();
+      expect(
+        collisions,
+        isEmpty,
+        reason: 'A registry key differs from a candidate only in how the '
+            'name is organized. Treat this as a graduation and adopt the '
+            "registry's spelling: $collisions",
       );
     });
 

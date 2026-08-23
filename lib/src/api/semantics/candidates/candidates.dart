@@ -19,33 +19,58 @@
 ///
 /// Every key here is **unstable**. It may be renamed, retyped or removed in a
 /// minor release, and that will happen without a deprecation cycle whenever
-/// upstream reaches a different conclusion. That is the point: these names
-/// exist to be *tested against reality* and then proposed, not to be a private
-/// dialect. When one is accepted upstream it disappears from this file and
-/// reappears in the generated `semconv/` output, which is the signal that it
-/// has become real.
+/// upstream reaches a different conclusion. These names exist to be *tested
+/// against reality*, not to be a private dialect.
+///
+/// They are candidates in the weakest sense: each one **might** be proposed
+/// upstream, and might be rejected, reshaped, or renamed when it is. Nothing
+/// here has been accepted, and nothing here should be read as a commitment to
+/// propose it. When one is accepted it disappears from this file and reappears
+/// in the generated `semconv/` output, which is the signal that it became
+/// real; when one is rejected it is deleted and the reason is recorded in
+/// `doc/SEMCONV_CANDIDATES.md`.
 ///
 /// ## On the namespaces
 ///
 /// These use the `app.*`, `device.*` and `browser.*` namespaces — the same
-/// ones the registry owns. The OTel naming rules advise against that for
-/// private attributes:
+/// ones the registry owns — and the naming rules are more permissive about
+/// that than a first reading suggests, because they address two audiences
+/// separately.
+///
+/// "Recommendations for **application developers**" is where the familiar
+/// prohibition lives, and it is scoped precisely:
 ///
 /// > It is not recommended to use existing OpenTelemetry semantic convention
-/// > namespace as a prefix for a new company- or application-specific
-/// > attribute name. Doing so may result in a name clash in the future.
+/// > namespace as a prefix for a new **company- or application-specific**
+/// > attribute name.
 ///
-/// That rule is aimed at attributes which will never go upstream, where a
-/// vendor namespace is plainly correct. These are the opposite case: the
-/// semantic-conventions CONTRIBUTING guide asks that "non-trivial changes to
-/// semantic conventions should be prototyped in the corresponding
-/// instrumentation(s)", and a prototype has to carry the name being proposed
-/// or it proves nothing about the name. Renaming into a vendor namespace and
-/// back would also mean two wire changes instead of one.
+/// The same section then names the case these keys are in, and points the
+/// other way:
 ///
-/// The clash risk is real and accepted deliberately, which is why every key
-/// here is `@experimental` and why the disposition of each is written down in
-/// `doc/SEMCONV_CANDIDATES.md`.
+/// > The name may be generally applicable to applications in the industry. In
+/// > that case consider submitting a proposal to this specification to add a
+/// > new name to the semantic conventions, and if necessary also to add a new
+/// > namespace.
+///
+/// And "Recommendations for **OpenTelemetry authors**" — the audience you join
+/// the moment you write such a proposal — asks for the opposite of avoidance:
+///
+/// > When coming up with a new semantic convention make sure to check existing
+/// > namespaces to see if a similar namespace already exists.
+/// >
+/// > All names that are part of OpenTelemetry semantic conventions SHOULD be
+/// > part of a namespace.
+///
+/// So the namespace choice is not a rule being bent. It is the rule for a
+/// convention intended to be general, which is the only kind that belongs in
+/// this directory — anything genuinely specific to Dartastic or to one
+/// application should carry a reverse-domain prefix and does not go here.
+///
+/// What remains real is the *timing* risk: these are not accepted yet, and
+/// until they are, upstream could take the same name for a different purpose.
+/// That risk is the reason for the instability contract above and for
+/// `@experimental` on every key.
+///
 library;
 
 export 'app_candidates.dart';

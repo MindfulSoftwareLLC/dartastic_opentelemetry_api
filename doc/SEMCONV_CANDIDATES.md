@@ -28,22 +28,65 @@ and the reason is recorded below.
 
 ## Why they use registry namespaces
 
-Candidates sit in `app.*`, `device.*` and `browser.*` — namespaces the registry
-owns. The OTel naming rules advise against that:
+Candidates sit in `app.*`, `device.*` and `browser.*`. The naming rules are
+more permissive about that than a first reading suggests, because
+`docs/general/naming.md` addresses two audiences in separate sections.
+
+**"Recommendations for application developers"** holds the familiar
+prohibition, and it is scoped precisely:
 
 > It is not recommended to use existing OpenTelemetry semantic convention
-> namespace as a prefix for a new company- or application-specific attribute
-> name. Doing so may result in a name clash in the future.
+> namespace as a prefix for a new **company- or application-specific**
+> attribute name. Doing so may result in a name clash in the future, if
+> OpenTelemetry decides to use that same name for a different purpose or if
+> some other third party instrumentation decides to use that exact same
+> attribute name and you combine that instrumentation with your own.
 
-That rule addresses attributes which will never go upstream, where a vendor
-namespace is plainly correct. These are the opposite case. The
-semantic-conventions CONTRIBUTING guide asks that "non-trivial changes to
-semantic conventions should be prototyped in the corresponding
-instrumentation(s)" — and a prototype under a different name proves nothing
-about the name. Renaming into a vendor namespace and back would also cost two
-wire changes instead of one.
+The same section then describes the case these keys are in, and points the
+other way:
 
-The clash risk is accepted deliberately, and bounded by the contract above.
+> The name may be generally applicable to applications in the industry. In that
+> case consider submitting a proposal to this specification to add a new name
+> to the semantic conventions, and if necessary also to add a new namespace.
+
+**"Recommendations for OpenTelemetry authors"** — the audience you join the
+moment you write such a proposal — asks for the opposite of avoidance:
+
+> When coming up with a new semantic convention make sure to check existing
+> namespaces to see if a similar namespace already exists.
+>
+> All names that are part of OpenTelemetry semantic conventions SHOULD be part
+> of a namespace.
+
+So the namespace choice is not a rule being bent. It is the rule *for a
+convention intended to be general*, which is the only kind that belongs here.
+Anything genuinely specific to Dartastic or to a single application takes a
+reverse-domain prefix and does not go in this directory.
+
+The risk that remains is **timing**, not naming: these are not accepted yet,
+and until they are, upstream could take the same name for a different purpose.
+That is what the instability contract and `@experimental` are for.
+
+## How the Client SIG organizes conventions
+
+Worth knowing before proposing anything, because it shapes what a proposal
+should look like. The client-side conventions form a small tree of areas, and
+every leaf so far is an **events** document:
+
+| Area | Leaf | Events defined |
+|---|---|---|
+| `docs/app/` | `app-events.md` | `app.screen.click`, `app.widget.click`, `app.crash`, `app.jank` |
+| `docs/browser/` | `browser-events.md` | `browser.web_vital` |
+| `docs/mobile/` | `mobile-events.md` | `device.app.lifecycle` |
+| (session) | — | `session.start`, `session.end` |
+
+Attributes are not defined per-area; they live in the flat registry namespaces
+(`app.*`, `browser.*`, `device.*`, `session.*`, `android.*`, `ios.*`) and are
+referenced by the events.
+
+None of the candidates below already exist in those leaves. But the shape is a
+strong hint: several are more naturally proposed **as events, with attributes
+attached**, than as free-standing attributes — marked below where that applies.
 
 ## Disposition of the 1.0.0-rc.1 removals
 
@@ -81,10 +124,10 @@ than as candidates. This is the full accounting.
 
 | Key | Type | Why the registry needs it |
 |---|---|---|
-| `app.start.type` (`cold`/`warm`/`hot`) | string | App start is among the most-reported mobile RUM measurements; the registry has nothing for it |
+| `app.start.type` (`cold`/`warm`/`hot`) | string | App start is among the most-reported mobile RUM measurements; the registry has nothing for it. **Likely wants an `app.start` event** in the shape of `app.crash` / `app.jank` |
 | `app.launch.id` | string | Correlates one launch the way `session.id` correlates one session |
-| `app.screen.previous_id`, `app.screen.previous_name` | string | Mirrors `session.previous_id`, which solves the same problem one level up |
-| `app.gesture.direction`, `app.gesture.delta.x`, `app.gesture.delta.y` | string, double | The registry describes taps but not directional gestures, a large share of touch interaction |
+| `app.screen.previous_id`, `app.screen.previous_name` | string | Nothing in the registry records screen-to-screen navigation: `app.screen.id`/`.name` name the current screen and `session.previous_id` is the only `previous`-style attribute anywhere. **Likely wants a screen-view event**, with these attached |
+| `app.gesture.direction`, `app.gesture.delta.x`, `app.gesture.delta.y` | string, double | The `app.*` leaf defines click events only; directional gestures are a large share of touch interaction. **Likely wants a gesture event** alongside `app.screen.click` |
 | `device.battery.level` | double `0..1` | No registry equivalent; `hw.battery.*` describes server inventory, not the running device |
 | `device.battery.state` | string | as above |
 | `device.battery.save_mode` | boolean | Changes application behaviour the user did not ask for, so it explains performance data that otherwise reads as regression |
@@ -116,4 +159,10 @@ than as candidates. This is the full accounting.
 - **Web vitals have no mobile counterpart.** `browser.web_vital.*` covers the
   web well. There is no equivalent vocabulary for first frame, first
   interaction or time-to-interactive on a native application, which is why
-  several rc.1 removals map to "web only" above.
+  several rc.1 removals map to "web only" above. The mobile namespaces are
+  nearly empty on this: `android.*` and `ios.*` between them define only
+  `android.app.state`, `android.os.api_level`, `ios.app.state` and the two
+  deprecated `*.state` aliases. Any cross-platform definition has to
+  accommodate Android and iOS differing in how backgrounding is reported,
+  which is precisely what makes it worth specifying once rather than per
+  framework.

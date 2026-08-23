@@ -22,8 +22,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   proposal.
 
   Candidates are **unstable**: renameable, retypeable and removable in a minor
-  release without deprecation. When one is accepted upstream it is deleted
-  here and reappears in generated `semconv/` output.
+  release without deprecation. Each one *might* be proposed upstream and might
+  be reshaped or rejected when it is — nothing here is accepted, and nothing
+  here is a commitment to propose it. When one is accepted it is deleted here
+  and reappears in generated `semconv/` output.
 
   Staged: `app.start.type` (`cold`/`warm`/`hot`), `app.launch.id`,
   `app.screen.previous_id`, `app.screen.previous_name`,
