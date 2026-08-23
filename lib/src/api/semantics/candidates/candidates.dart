@@ -70,7 +70,7 @@
 ///
 /// So the namespace choice is not a rule being bent. It is the rule for a
 /// convention intended to be general, which is the only kind that belongs in
-/// this directory — anything genuinely specific to Dartastic or to one
+/// this directory — anything genuinely specific to Dartastic.io or to one
 /// application should carry a reverse-domain prefix and does not go here.
 ///
 /// What remains real is the *timing* risk: these are not accepted yet, and

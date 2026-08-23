@@ -67,7 +67,7 @@ moment you write such a proposal — asks for the opposite of avoidance:
 
 So the namespace choice is not a rule being bent. It is the rule *for a
 convention intended to be general*, which is the only kind that belongs here.
-Anything genuinely specific to Dartastic or to a single application takes a
+Anything genuinely specific to Dartastic.io or to a single application takes a
 reverse-domain prefix and does not go in this directory.
 
 The risk that remains is **timing**, not naming: these are not accepted yet,
