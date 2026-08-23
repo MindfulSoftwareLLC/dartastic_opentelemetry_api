@@ -17,18 +17,24 @@
 ///
 /// ## The contract
 ///
-/// Every key here is **unstable**. It may be renamed, retyped or removed in a
-/// minor release, and that will happen without a deprecation cycle whenever
-/// upstream reaches a different conclusion. These names exist to be *tested
-/// against reality*, not to be a private dialect.
+/// Every key here is **unstable in identity**: it may be renamed, retyped,
+/// removed or promoted in a minor release whenever upstream reaches a
+/// different conclusion. The change itself still gets a deprecation cycle:
+/// the old member is marked `@Deprecated`, pointing at its replacement, for
+/// at least one release, and only already-`@Deprecated` members are removed
+/// — the cycle the vendor/RUM enums already completed (deprecated in
+/// 1.0.0-beta.10, removed in 1.0.0-rc.1). These names exist to be *tested
+/// against reality*, not to be a private dialect — and to be safe to adopt
+/// while they are tested.
 ///
 /// They are candidates in the weakest sense: each one **might** be proposed
 /// upstream, and might be rejected, reshaped, or renamed when it is. Nothing
 /// here has been accepted, and nothing here should be read as a commitment to
-/// propose it. When one is accepted it disappears from this file and reappears
-/// in the generated `semconv/` output, which is the signal that it became
-/// real; when one is rejected it is deleted and the reason is recorded in
-/// `doc/SEMCONV_CANDIDATES.md`.
+/// propose it. When one is accepted it reappears in the generated `semconv/`
+/// output — the signal that it became real — and the candidate is deprecated
+/// in favor of the generated member, then removed a release later; when one
+/// is rejected it is deprecated, removed a release later, and the reason is
+/// recorded in `doc/SEMCONV_CANDIDATES.md`.
 ///
 /// ## On the namespaces
 ///
@@ -44,8 +50,9 @@
 /// > namespace as a prefix for a new **company- or application-specific**
 /// > attribute name.
 ///
-/// The same section then names the case these keys are in, and points the
-/// other way:
+/// That prohibition addresses companies and applications. This package is
+/// neither — it is an SDK, staging upstream proposals. The same section then
+/// names the case these keys are in, and points the other way:
 ///
 /// > The name may be generally applicable to applications in the industry. In
 /// > that case consider submitting a proposal to this specification to add a

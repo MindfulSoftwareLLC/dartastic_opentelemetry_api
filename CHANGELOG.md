@@ -21,11 +21,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   promise, so a consumer can always tell a published convention from a
   proposal.
 
-  Candidates are **unstable**: renameable, retypeable and removable in a minor
-  release without deprecation. Each one *might* be proposed upstream and might
-  be reshaped or rejected when it is — nothing here is accepted, and nothing
-  here is a commitment to propose it. When one is accepted it is deleted here
-  and reappears in generated `semconv/` output.
+  Candidates are **unstable in identity but deprecation-cycled**: a renamed,
+  reshaped or rejected candidate is `@Deprecated`, pointing at its
+  replacement, for a release before it is removed — the same cycle the
+  vendor/RUM enums completed. When one is accepted upstream it reappears in
+  generated `semconv/` output and the candidate is deprecated in its favor.
 
   Staged: `app.start.type` (`cold`/`warm`/`hot`), `app.launch.id`,
   `app.screen.previous_id`, `app.screen.previous_name`,

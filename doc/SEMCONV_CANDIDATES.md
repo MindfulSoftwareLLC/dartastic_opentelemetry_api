@@ -8,7 +8,7 @@ Where non-registry attribute keys live, why, and what happens to each.
 |---|---|---|
 | Source | OTel Weaver, from the registry | hand-maintained |
 | Regenerated | wholesale — `generate.sh` deletes the dir first | never |
-| Stability | follows the registry's own stability | **unstable, no deprecation cycle** |
+| Stability | follows the registry's own stability | **unstable identity, deprecation-cycled changes** |
 | Promise | this is a published OpenTelemetry convention | this is a proposal we are prototyping |
 
 Nothing hand-written can survive in `semconv/`. More importantly, a consumer
@@ -18,13 +18,19 @@ promises.
 ## The contract for a candidate
 
 Every key in `candidates/` may be renamed, retyped or removed in a minor
-release, without deprecation, the moment upstream reaches a different
-conclusion. Each is marked `@experimental`.
+release the moment upstream reaches a different conclusion — but the change
+gets a deprecation cycle: the old member is marked `@Deprecated`, pointing at
+its replacement, for at least one release, and only already-`@Deprecated`
+members are removed. The vendor/RUM enums completed exactly this cycle
+(deprecated in 1.0.0-beta.10, removed in 1.0.0-rc.1); candidates get the same
+discipline, which is what makes them safe to adopt while they are tested.
+Each is marked `@experimental`.
 
-When a candidate is **accepted** upstream it is deleted from `candidates/` and
-reappears in the generated `semconv/` output on the next regeneration. That
-move is the signal that it became real. When one is **rejected**, it is deleted
-and the reason is recorded below.
+When a candidate is **accepted** upstream it reappears in the generated
+`semconv/` output on the next regeneration — the signal that it became real —
+and the candidate is deprecated in favor of the generated member, then removed
+a release later. When one is **rejected**, it is deprecated, removed a release
+later, and the reason is recorded below.
 
 ## Why they use registry namespaces
 
@@ -42,8 +48,9 @@ prohibition, and it is scoped precisely:
 > some other third party instrumentation decides to use that exact same
 > attribute name and you combine that instrumentation with your own.
 
-The same section then describes the case these keys are in, and points the
-other way:
+That prohibition addresses companies and applications. This package is
+neither — it is an SDK, staging upstream proposals. The same section then
+describes the case these keys are in, and points the other way:
 
 > The name may be generally applicable to applications in the industry. In that
 > case consider submitting a proposal to this specification to add a new name
