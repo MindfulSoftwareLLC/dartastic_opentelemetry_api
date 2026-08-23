@@ -84,6 +84,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   registry replacement, to a candidate, or to a recorded reason for dropping
   it.
 
+## [0.10.0]
+
+Stable-channel republication of `1.0.0-rc.2` — the first stable-channel
+release since `0.9.1`. The code is the rc's code with a stable version
+stamp, so users who have not opted into prereleases get the fixes. See
+the `1.0.0-beta.*` through `1.0.0-rc.2` entries for the complete history
+since `0.9.1`.
+
+### Breaking (relative to 0.9.1)
+
+- Everything the rc line changed applies here, most notably
+  `1.0.0-rc.1`'s removal of 116 vendor/RUM identifiers that were not
+  OpenTelemetry semantic conventions. `doc/SEMCONV_CANDIDATES.md` maps
+  every removal to its registry replacement, a staged candidate, or a
+  recorded reason for dropping it.
+
+### Highlights
+
+- **`OTelAPI.setErrorHandler`** — configure where the library's internal
+  error reports go. The default logs and never throws; a strict handler
+  can crash-fast in development; `Context.runIsolate` carries the
+  handler into child isolates.
+- **Spec-compliance fixes**: `Span.end()` no longer fabricates an `Ok`
+  status, `CompositePropagator.extract` runs in registration order, and
+  `Context.withSpanContext` derives instead of throwing.
+- **Semantic conventions at registry v1.44.0**, including the complete
+  `browser.web_vital.*` set, plus an `@experimental` `candidates/`
+  staging area for keys proposed upstream.
+
 ## [1.0.0-rc.1] - 2026-07-18
 
 ### Removed
