@@ -84,7 +84,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   registry replacement, to a candidate, or to a recorded reason for dropping
   it.
 
-## [0.10.0]
+## [0.10.0] - 2026-08-23
 
 Stable-channel republication of `1.0.0-rc.2` — the first stable-channel
 release since `0.9.1`. The code is the rc's code with a stable version
