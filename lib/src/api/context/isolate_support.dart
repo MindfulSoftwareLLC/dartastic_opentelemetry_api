@@ -23,22 +23,20 @@ Future<T> runIsolateComputation<T>(
 }
 
 /// Runs [childMain] in a new isolate, first delivering the parent's
-/// installed [OTelErrorHandling.handler] to the child over an explicit
-/// port handshake (api#94).
+/// user-installed error handler ([OTelErrorHandling.installedHandler],
+/// held by the parent's factory) to the child over an explicit port
+/// handshake (api#94).
 ///
-/// The default handler is never forwarded — the child's own default is
-/// identical. A handler whose captured state cannot cross the isolate
-/// boundary degrades to the child default (reported through the parent's
-/// handler) instead of failing the spawn. Handlers are copied, not
-/// shared: a handler that must aggregate in the parent should capture a
-/// [SendPort] and forward reports through it.
+/// Defaults are never forwarded: the child resolves its own factory's
+/// `defaultErrorHandler` once `OTelFactory.deserialize` has installed the
+/// child factory — a custom factory reconstructs its default natively. A
+/// handler whose captured state cannot cross the isolate boundary
+/// degrades to the child default (reported through the parent's handler)
+/// instead of failing the spawn. Handlers are copied, not shared: a
+/// handler that must aggregate in the parent should capture a [SendPort]
+/// and forward reports through it.
 Future<T> runIsolateWithErrorHandlerBridge<T>(Future<T> Function() childMain) {
-  final parentHandler = identical(
-    OTelErrorHandling.handler,
-    OTelErrorHandling.defaultErrorHandler,
-  )
-      ? null
-      : OTelErrorHandling.handler;
+  final parentHandler = OTelErrorHandling.installedHandler;
   if (parentHandler == null) {
     return Isolate.run(childMain);
   }
@@ -87,6 +85,10 @@ Future<T> _spawnWithHandlerHandshake<T>(
     final received = await handlerPort.first;
     handlerPort.close();
     if (received is OTelErrorHandler) {
+      // The child has no factory yet — childMain installs one via
+      // OTelFactory.deserialize. Installing here buffers the handler,
+      // and factory installation adopts it (the same pre-init path as
+      // OTelAPI.setErrorHandler before initialize()).
       OTelErrorHandling.handler = received;
     }
     return childMain();

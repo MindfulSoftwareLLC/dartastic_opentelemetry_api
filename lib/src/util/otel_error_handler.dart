@@ -1,6 +1,9 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
+import 'package:meta/meta.dart';
+
+import '../factory/otel_factory.dart';
 import 'otel_log.dart';
 
 /// Signature of a global OpenTelemetry error handler.
@@ -20,17 +23,32 @@ import 'otel_log.dart';
 /// at the point the error was reported, when one is available.
 typedef OTelErrorHandler = void Function(Object error, StackTrace? stackTrace);
 
+/// Buffers a handler installed before any [OTelFactory] exists. Factory
+/// installation adopts it (see the [OTelFactory.otelFactory] setter), so
+/// installing a handler before `initialize()` never throws and is never
+/// lost.
+OTelErrorHandler? _pendingHandler;
+
 /// The global error-handling policy hook for OpenTelemetry.
 ///
-/// Per error-handling.md, "Configuring Error Handlers", replacing
-/// [handler] is the supported way for end users to change the library's
-/// default error handling behavior — for example, to fail fast on invalid
-/// API usage in a staging environment:
+/// Per error-handling.md, "Configuring Error Handlers", installing a
+/// handler (via [OTelAPI.setErrorHandler], or [handler] directly) is the
+/// supported way for end users to change the library's default error
+/// handling behavior — for example, to fail fast on invalid API usage in
+/// a staging environment:
 ///
 /// ```dart
-/// OTelErrorHandling.handler = (error, stackTrace) =>
-///     Error.throwWithStackTrace(error, stackTrace ?? StackTrace.current);
+/// OTelAPI.setErrorHandler((error, stackTrace) =>
+///     Error.throwWithStackTrace(error, stackTrace ?? StackTrace.current));
 /// ```
+///
+/// Like every other OpenTelemetry global in this library, the handler is
+/// held by the installed [OTelFactory]: the user-installed handler lives
+/// in [OTelFactory.errorHandler], and when none is installed reports fall
+/// back to [OTelFactory.defaultErrorHandler] — which SDK factories may
+/// override. Before any factory exists, an installed handler is buffered
+/// and adopted by the first factory installation, so configuration order
+/// never matters.
 ///
 /// The default handler logs through [OTelLog.error], following the
 /// self-diagnostics guidance ("the library SHOULD log the error using
@@ -43,16 +61,61 @@ typedef OTelErrorHandler = void Function(Object error, StackTrace? stackTrace);
 class OTelErrorHandling {
   OTelErrorHandling._();
 
-  /// The currently installed error handler.
+  /// The handler [report] currently resolves to.
   ///
-  /// Assign a new [OTelErrorHandler] to replace the default logging
-  /// behavior. Use [resetToDefault] to restore [defaultErrorHandler].
-  static OTelErrorHandler handler = defaultErrorHandler;
+  /// Resolution order: the user-installed handler (factory-held, or
+  /// buffered when no factory exists yet), then the installed factory's
+  /// [OTelFactory.defaultErrorHandler], then [defaultErrorHandler].
+  /// Reading this never installs a factory as a side effect.
+  static OTelErrorHandler get handler {
+    final factory = OTelFactory.otelFactory;
+    if (factory != null) {
+      return factory.errorHandler ?? factory.defaultErrorHandler;
+    }
+    return _pendingHandler ?? defaultErrorHandler;
+  }
 
-  /// Restores the [defaultErrorHandler].
-  static void resetToDefault() => handler = defaultErrorHandler;
+  /// Installs [value] as the user handler, replacing the default
+  /// behavior. Stored on the installed [OTelFactory]; buffered until one
+  /// exists. Use [resetToDefault] to restore the default behavior.
+  static set handler(OTelErrorHandler value) {
+    final factory = OTelFactory.otelFactory;
+    if (factory != null) {
+      factory.errorHandler = value;
+    } else {
+      _pendingHandler = value;
+    }
+  }
 
-  /// Reports a suppressed [error] to the installed [handler].
+  /// The user-installed handler, or `null` when only defaults (the
+  /// logging default, or a factory subclass's default) are in effect.
+  static OTelErrorHandler? get installedHandler {
+    final factory = OTelFactory.otelFactory;
+    return factory != null ? factory.errorHandler : _pendingHandler;
+  }
+
+  /// Restores the default behavior: clears the user-installed handler
+  /// (factory-held and buffered alike), so [report] falls back to the
+  /// installed factory's [OTelFactory.defaultErrorHandler] — the logging
+  /// [defaultErrorHandler] unless a factory subclass overrides it.
+  static void resetToDefault() {
+    _pendingHandler = null;
+    OTelFactory.otelFactory?.errorHandler = null;
+  }
+
+  /// Moves a handler buffered before [factory] existed into the factory's
+  /// [OTelFactory.errorHandler] slot. Called by the [OTelFactory.otelFactory]
+  /// setter on every factory installation; not part of the public API.
+  @internal
+  static void adoptPendingHandler(OTelFactory factory) {
+    final pending = _pendingHandler;
+    if (pending != null) {
+      _pendingHandler = null;
+      factory.errorHandler = pending;
+    }
+  }
+
+  /// Reports a suppressed [error] to the resolved [handler].
   ///
   /// Used by the library wherever the specification forbids throwing and
   /// an invalid input or internal failure is swallowed instead. With the
