@@ -8,6 +8,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.0.0-rc.2-wip]
 
 ### Added
+- **`OTelAPI.setErrorHandler` — a user-configurable global error handler**
+  (api#94). Internal misuse reports route through it instead of throwing;
+  the default handler logs via `OTelLog` and never throws. A user-installed
+  handler that throws propagates deliberately (strict mode), per
+  error-handling.md.
+
+### Fixed (spec compliance)
+- **`Span.end()` no longer promotes status from Unset to Ok** (api#60).
+  `Unset` stays `Unset`; analysis tools can no longer be misled by
+  fabricated Ok statuses. The deprecated `spanStatus` parameter still
+  flows through the `setStatus` rules when passed.
+- **`CompositePropagator.extract` walks propagators in the order they were
+  specified** (api#76), matching inject and every other OpenTelemetry SDK
+  (was reversed, so the last-registered propagator no longer wins extract).
+- **`Context.withSpanContext` returns a derived Context instead of throwing
+  `ArgumentError`** when the context already holds a span from a different
+  trace (api#77) — a routine situation during extraction.
+
+### Added
 - **Semantic conventions regenerated from registry v1.44.0** (previously
   v1.43.0-21-g436fa257). Additive only, per the VERSIONING.md policy: 47
   new identifiers, no renames and no removals.
