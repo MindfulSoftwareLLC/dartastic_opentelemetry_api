@@ -42,10 +42,15 @@ current context; everything behaves identically.
 
 ## The error handler crosses too — with copy semantics
 
-The global error handler installed with `OTelAPI.setErrorHandler` (or the
-SDK's `OTel.setErrorHandler`) is a per-isolate static. `runIsolate`
-re-installs the parent's handler inside the child so library error
-reports behave the same on both sides.
+The global error handler installed with `OTelAPI.setErrorHandler` (or
+the SDK's `OTel.setErrorHandler`) is held by the installed
+`OTelFactory`, which is per-isolate state. `runIsolate` delivers the
+parent's user-installed handler to the child over a port handshake
+before the child's factory exists; the child buffers it, and the
+factory installed by `OTelFactory.deserialize` adopts it — the same
+order-independent path as calling `setErrorHandler` before
+`initialize()`. Library error reports then behave the same on both
+sides.
 
 The handler is **copied**, not shared. A handler that logs, prints, or
 forwards to a crash reporter behaves identically in the child. A handler
@@ -71,6 +76,14 @@ closes over a `ReceivePort`, a stream controller, a socket, ...),
 logging handler and the parent's handler receives one report describing
 the degradation.
 
+Only **user-installed** handlers ride the handshake — factory defaults
+are never forwarded. With no user handler installed, the child resolves
+its own factory's `defaultErrorHandler` once `deserialize` has run. A
+custom factory that overrides `defaultErrorHandler`, or reconstructs a
+full handler natively in `deserialize()` / its `factoryFactory`,
+therefore needs no handshake at all: its error behavior travels with
+the factory itself.
+
 ## Isolates you spawn yourself
 
 `runIsolate` is the only isolate seam this library owns. If you use
@@ -92,9 +105,9 @@ the `withSpan` helpers make `Context.current` correct across `await`
 boundaries with no copying. Zones never cross isolates; `runIsolate` is
 the bridge for that.
 
-| Boundary                        | Mechanism                      | Context                   | Error handler                          |
-|---------------------------------|--------------------------------|---------------------------|----------------------------------------|
-| async/await (same isolate)      | zones (`context.run`)          | shared                    | shared (same static)                   |
-| `Context.runIsolate`            | serialize + re-establish       | copied, `isRemote: true`  | copied (SendPort pattern to aggregate) |
-| DIY `Isolate.spawn` / `compute` | none                           | empty                     | default                                |
-| processes                       | W3C propagators / env carriers | extracted, `isRemote: true` | not propagated                       |
+| Boundary                        | Mechanism                      | Context                     | Error handler                          |
+|---------------------------------|--------------------------------|-----------------------------|----------------------------------------|
+| async/await (same isolate)      | zones (`context.run`)          | shared                      | shared (same factory)                  |
+| `Context.runIsolate`            | serialize + re-establish       | copied, `isRemote: true`    | copied (SendPort pattern to aggregate) |
+| DIY `Isolate.spawn` / `compute` | none                           | empty                       | default                                |
+| processes                       | W3C propagators / env carriers | extracted, `isRemote: true` | not propagated                         |

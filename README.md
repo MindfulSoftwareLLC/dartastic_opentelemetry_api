@@ -296,7 +296,7 @@ OTelAPI.setErrorHandler((error, stackTrace) {
 OTelAPI.setErrorHandler((error, stackTrace) =>
     Error.throwWithStackTrace(error, stackTrace ?? StackTrace.current));
 
-// Passing null restores the default logging handler.
+// Passing null restores the default handler.
 OTelAPI.setErrorHandler(null);
 ```
 
@@ -304,8 +304,15 @@ The handler receives the **library's** internal error reports (invalid
 attribute keys, malformed input, dropped data). Exceptions thrown by
 **your own code** inside `withSpan` blocks are never routed here — they
 always rethrow; how they are recorded on the span is controlled by the
-SDK's `SpanExceptionOptions`. The handler is a per-isolate global;
-`Context.runIsolate` re-installs it in child isolates
+SDK's `SpanExceptionOptions`.
+
+Like every other OpenTelemetry global, the handler is held by the
+installed `OTelFactory`: `setErrorHandler` stores it on the factory —
+buffering it until one is installed, so the call is safe in any order
+relative to `initialize()` — and passing `null` returns to the
+factory's overridable `defaultErrorHandler` (logging via `OTelLog`,
+unless an SDK factory substitutes its own). Factories are per-isolate;
+`Context.runIsolate` re-installs your handler in child isolates
 ([doc/isolates.md](doc/isolates.md)).
 
 [error-handling principles]: https://opentelemetry.io/docs/specs/otel/error-handling/

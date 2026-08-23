@@ -12,10 +12,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (api#94). Internal misuse reports route through it instead of throwing;
   the default handler logs via `OTelLog` and never throws. A user-installed
   handler that throws propagates deliberately (strict mode), per
-  error-handling.md. `Context.runIsolate` re-installs the parent's
-  handler inside the child isolate (handlers are copied; capture a
-  `SendPort` to aggregate reports across isolates — an unsendable
-  handler degrades to the child default and is reported).
+  error-handling.md. The handler is factory-held state: `OTelFactory`
+  carries the installed handler and an overridable `defaultErrorHandler`
+  for SDK factories, and a handler installed before any factory exists
+  is buffered and adopted at factory installation. `Context.runIsolate`
+  re-installs the parent's handler inside the child isolate (handlers
+  are copied; capture a `SendPort` to aggregate reports across isolates
+  — an unsendable handler degrades to the child default and is
+  reported).
 
 ### Fixed (spec compliance)
 - **`Span.end()` no longer promotes status from Unset to Ok** (api#60).
