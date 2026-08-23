@@ -92,9 +92,9 @@ the `withSpan` helpers make `Context.current` correct across `await`
 boundaries with no copying. Zones never cross isolates; `runIsolate` is
 the bridge for that.
 
-| Boundary | Mechanism | Context | Error handler |
-|---|---|---|---|
-| async/await (same isolate) | zones (`context.run`) | shared | shared (same static) |
-| `Context.runIsolate` | serialize + re-establish | copied, `isRemote: true` | copied (SendPort pattern to aggregate) |
-| DIY `Isolate.spawn` / `compute` | none | empty | default |
-| processes | W3C propagators / env carriers | extracted, `isRemote: true` | not propagated |
+| Boundary                        | Mechanism                      | Context                   | Error handler                          |
+|---------------------------------|--------------------------------|---------------------------|----------------------------------------|
+| async/await (same isolate)      | zones (`context.run`)          | shared                    | shared (same static)                   |
+| `Context.runIsolate`            | serialize + re-establish       | copied, `isRemote: true`  | copied (SendPort pattern to aggregate) |
+| DIY `Isolate.spawn` / `compute` | none                           | empty                     | default                                |
+| processes                       | W3C propagators / env carriers | extracted, `isRemote: true` | not propagated                       |
