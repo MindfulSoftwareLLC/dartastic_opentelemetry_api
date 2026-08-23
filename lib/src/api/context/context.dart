@@ -322,7 +322,7 @@ class Context {
     final serializedContext = serialize();
     final factoryFactory = oldFactory.factoryFactory;
 
-    return Isolate.run(() async {
+    Future<T> childMain() async {
       // Set up the factory in the new isolate.
       OTelFactory.otelFactory =
           OTelFactory.deserialize(serializedFactory, factoryFactory);
@@ -357,7 +357,11 @@ class Context {
         computation,
         zoneValues: {_zoneKey: isolateContext},
       );
-    });
+    }
+
+    // Spawn via the platform bridge, which re-installs the parent's
+    // error handler inside the child isolate first (api#94).
+    return runIsolateWithErrorHandlerBridge(childMain);
   }
 
   /// Serializes the context into a JSON-compatible map.
