@@ -54,31 +54,28 @@ class Attributes {
       } else if (value is List<double>) {
         attributes.add(AttributeCreate.create<List<double>>(key, value));
       } else if (value is List) {
-        // Try to convert the list to a supported type
-        if (value.isNotEmpty) {
-          if (value.every((e) => e is String)) {
-            attributes.add(AttributeCreate.create<List<String>>(
-                key, value.cast<String>()));
-          } else if (value.every((e) => e is bool)) {
-            attributes.add(
-                AttributeCreate.create<List<bool>>(key, value.cast<bool>()));
-          } else if (value.every((e) => e is int)) {
-            attributes
-                .add(AttributeCreate.create<List<int>>(key, value.cast<int>()));
-          } else if (value.every((e) => e is double || e is int)) {
-            // Convert all to double
-            attributes.add(AttributeCreate.create<List<double>>(
-                key,
-                value
-                    .map((e) => e is int ? e.toDouble() : e as double)
-                    .toList()));
-          } else {
-            OTelErrorHandling.report(ArgumentError(
-                'Ignoring attribute $key because the list contains unsupported types. Only String, bool, int, double lists are allowed by the OTel specification.'));
-          }
+        // Try to convert the list to a supported type.
+        // For empty lists, .every() returns true for all predicates,
+        // so String wins by position — a reasonable default.
+        if (value.every((e) => e is String)) {
+          attributes.add(
+              AttributeCreate.create<List<String>>(key, value.cast<String>()));
+        } else if (value.every((e) => e is bool)) {
+          attributes
+              .add(AttributeCreate.create<List<bool>>(key, value.cast<bool>()));
+        } else if (value.every((e) => e is int)) {
+          attributes
+              .add(AttributeCreate.create<List<int>>(key, value.cast<int>()));
+        } else if (value.every((e) => e is double || e is int)) {
+          // Convert all to double
+          attributes.add(AttributeCreate.create<List<double>>(
+              key,
+              value
+                  .map((e) => e is int ? e.toDouble() : e as double)
+                  .toList()));
         } else {
           OTelErrorHandling.report(ArgumentError(
-              'Ignoring attribute $key because empty lists are not allowed by the OTel specification.'));
+              'Ignoring attribute $key because the list contains unsupported types. Only String, bool, int, double lists are allowed by the OTel specification.'));
         }
       } else {
         OTelErrorHandling.report(ArgumentError(
@@ -324,7 +321,7 @@ class Attributes {
 /// Extension to create Attributes from a simple Map
 extension AttributesExtension on Map<String, Object> {
   /// Convert this map to Attributes
-  /// Empty string are not allowed and are skipped
+  /// Empty strings and empty lists are stored per the OTel spec
   Attributes toAttributes() {
     return OTelFactory.getOrCreateDefault().attributesFromMap(this);
   }

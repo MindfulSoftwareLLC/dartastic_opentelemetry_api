@@ -481,12 +481,28 @@ void main() {
       expect(attrs.getDoubleList('key'), equals([1.0, 2.5, 3.0]));
     });
 
-    test('fromJson ignores empty list with warning', () {
+    test('fromJson stores empty list per OTel spec', () {
       final json = <String, dynamic>{'key': <dynamic>[]};
       final attrs = Attributes.fromJson(json);
 
-      // Empty lists are ignored per OTel spec
-      expect(attrs.isEmpty, isTrue);
+      // Empty lists are stored per the OTel spec: they are meaningful values.
+      expect(attrs.isEmpty, isFalse);
+      expect(attrs.getStringList('key'), equals(<String>[]));
+    });
+
+    test('fromJson round-trips empty string and empty list', () {
+      final json = <String, dynamic>{
+        'emptyStr': '',
+        'emptyList': <String>[],
+      };
+      final attrs = Attributes.fromJson(json);
+
+      expect(attrs.getString('emptyStr'), equals(''));
+      expect(attrs.getStringList('emptyList'), equals(<String>[]));
+
+      final roundTripped = Attributes.fromJson(attrs.toJson());
+      expect(roundTripped.getString('emptyStr'), equals(''));
+      expect(roundTripped.getStringList('emptyList'), equals(<String>[]));
     });
 
     test('fromJson ignores unsupported list types with warning', () {
