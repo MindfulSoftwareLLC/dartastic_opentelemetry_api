@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.0.0-rc.3-wip]
 
+### Fixed (spec compliance)
+- **Empty string and empty array attribute values are now stored** (api#80).
+  The OTel specification requires that empty strings and empty arrays be
+  valid attribute values. Previously `attributeString('k', '')` and
+  `attributeStringList('k', [])` threw `ArgumentError`, and
+  `Attributes.fromJson` silently dropped empty lists. Now all three paths
+  store empty values correctly.
+
 ## [1.0.0-rc.2] - 2026-08-23
 
 ### Added

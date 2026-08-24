@@ -18,13 +18,16 @@ void main() {
       );
     });
 
-    test('empty string value throws', () {
-      expect(() => OTelAPI.attributeString('k', ''), throwsArgumentError);
+    test('empty string value is stored', () {
+      final attr = OTelAPI.attributeString('k', '');
+      expect(attr.value, equals(''));
+      expect(attr.key, equals('k'));
     });
 
-    test('empty list value throws', () {
-      expect(() => OTelAPI.attributeStringList('k', <String>[]),
-          throwsArgumentError);
+    test('empty list value is stored', () {
+      final attr = OTelAPI.attributeStringList('k', <String>[]);
+      expect(attr.value, equals(<String>[]));
+      expect(attr.key, equals('k'));
     });
 
     test('toString includes the value', () {
@@ -75,6 +78,35 @@ void main() {
       expect(attrs.getBoolList('flags'), equals([true, false]));
       expect(attrs.getIntList('counts'), equals([1, 2]));
       expect(attrs.getDoubleList('nums'), equals([1.0, 2.5]));
+    });
+
+    test('Attributes.of preserves empty string', () {
+      final attrs = Attributes.of({'key': ''});
+      expect(attrs.getString('key'), equals(''));
+    });
+
+    test('Attributes.of preserves typed empty list', () {
+      final attrs = Attributes.of({'key': <String>[]});
+      expect(attrs.getStringList('key'), equals(<String>[]));
+    });
+
+    test('Attributes.of preserves untyped empty list as List<String>', () {
+      final attrs = Attributes.of({'key': <Object>[]});
+      expect(attrs.getStringList('key'), equals(<String>[]));
+    });
+
+    test('empty list attribute equality', () {
+      final a = OTelAPI.attributeStringList('k', []);
+      final b = OTelAPI.attributeStringList('k', []);
+      expect(a, equals(b));
+      expect(a.hashCode, equals(b.hashCode));
+    });
+
+    test('empty string attribute equality', () {
+      final a = OTelAPI.attributeString('k', '');
+      final b = OTelAPI.attributeString('k', '');
+      expect(a, equals(b));
+      expect(a.hashCode, equals(b.hashCode));
     });
   });
 }

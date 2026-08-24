@@ -161,7 +161,7 @@ class OTelAPIFactory extends OTelFactory {
   /// Creates Attributes from a map of string keys to arbitrary values.
   ///
   /// This method handles converting various value types to appropriate attribute values:
-  /// - String values become string attributes (empty strings are ignored)
+  /// - String values become string attributes (empty strings are stored per the OTel spec)
   /// - int, double, and bool values become their respective attribute types
   /// - DateTime values are converted to ISO8601 string attributes
   /// - Attribute values are passed through directly
@@ -171,9 +171,7 @@ class OTelAPIFactory extends OTelFactory {
     final attributes = <Attribute>[];
     namedMap.forEach((key, value) {
       if (value is String) {
-        if (value.isNotEmpty) {
-          attributes.add(AttributeCreate.create<String>(key, value));
-        }
+        attributes.add(AttributeCreate.create<String>(key, value));
       } else if (value is int) {
         attributes.add(AttributeCreate.create<int>(key, value));
       } else if (value is double) {
@@ -189,27 +187,25 @@ class OTelAPIFactory extends OTelFactory {
         // Element-check rather than hard-cast: the static list type is
         // often List<Object> or List<dynamic> (e.g. from map literals),
         // which `as List<String>` would reject at runtime.
-        if (value.isNotEmpty) {
-          if (value.every((e) => e is String)) {
-            attributes.add(AttributeCreate.create<List<String>>(
-                key, value.cast<String>()));
-          } else if (value.every((e) => e is bool)) {
-            attributes.add(
-                AttributeCreate.create<List<bool>>(key, value.cast<bool>()));
-          } else if (value.every((e) => e is int)) {
-            attributes
-                .add(AttributeCreate.create<List<int>>(key, value.cast<int>()));
-          } else if (value.every((e) => e is double || e is int)) {
-            // Mixed numeric lists are promoted to double.
-            attributes.add(AttributeCreate.create<List<double>>(
-                key,
-                value
-                    .map((e) => e is int ? e.toDouble() : e as double)
-                    .toList()));
-          } else {
-            OTelErrorHandling.report(ArgumentError(
-                'Ignoring attribute $key because the list contains unsupported types. Only String, bool, int, double lists are allowed by the OTel specification.'));
-          }
+        if (value.every((e) => e is String)) {
+          attributes.add(
+              AttributeCreate.create<List<String>>(key, value.cast<String>()));
+        } else if (value.every((e) => e is bool)) {
+          attributes
+              .add(AttributeCreate.create<List<bool>>(key, value.cast<bool>()));
+        } else if (value.every((e) => e is int)) {
+          attributes
+              .add(AttributeCreate.create<List<int>>(key, value.cast<int>()));
+        } else if (value.every((e) => e is double || e is int)) {
+          // Mixed numeric lists are promoted to double.
+          attributes.add(AttributeCreate.create<List<double>>(
+              key,
+              value
+                  .map((e) => e is int ? e.toDouble() : e as double)
+                  .toList()));
+        } else {
+          OTelErrorHandling.report(ArgumentError(
+              'Ignoring attribute $key because the list contains unsupported types. Only String, bool, int, double lists are allowed by the OTel specification.'));
         }
       } else {
         attributes.add(AttributeCreate.create<String>(key, '$value'));
