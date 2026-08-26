@@ -183,10 +183,18 @@ class OTelAPIFactory extends OTelFactory {
         attributes.add(AttributeCreate.create<String>(key, isoTimestamp));
       } else if (value is Attribute) {
         attributes.add(value);
+      } else if (value is List<String>) {
+        attributes.add(AttributeCreate.create<List<String>>(key, value));
+      } else if (value is List<bool>) {
+        attributes.add(AttributeCreate.create<List<bool>>(key, value));
+      } else if (value is List<int>) {
+        attributes.add(AttributeCreate.create<List<int>>(key, value));
+      } else if (value is List<double>) {
+        attributes.add(AttributeCreate.create<List<double>>(key, value));
       } else if (value is List) {
-        // Element-check rather than hard-cast: the static list type is
-        // often List<Object> or List<dynamic> (e.g. from map literals),
-        // which `as List<String>` would reject at runtime.
+        // Untyped lists (List<Object> / List<dynamic>): element-check
+        // rather than hard-cast.  Empty untyped lists take the
+        // List<String> fallback because .every() is vacuously true.
         if (value.every((e) => e is String)) {
           attributes.add(
               AttributeCreate.create<List<String>>(key, value.cast<String>()));
