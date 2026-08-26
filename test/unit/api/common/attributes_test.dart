@@ -1,6 +1,8 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
+import 'dart:convert';
+
 import 'package:dartastic_opentelemetry_api/dartastic_opentelemetry_api.dart';
 import 'package:test/test.dart';
 
@@ -500,9 +502,22 @@ void main() {
       expect(attrs.getString('emptyStr'), equals(''));
       expect(attrs.getStringList('emptyList'), equals(<String>[]));
 
-      final roundTripped = Attributes.fromJson(attrs.toJson());
+      final decoded = jsonDecode(jsonEncode(attrs.toJson())) as Map<String, dynamic>;
+      final roundTripped = Attributes.fromJson(decoded);
       expect(roundTripped.getString('emptyStr'), equals(''));
       expect(roundTripped.getStringList('emptyList'), equals(<String>[]));
+    });
+
+    test('empty typed list loses element type through real JSON round-trip', () {
+      final attrs = Attributes.of({'k': <int>[]});
+      expect(attrs.getIntList('k'), equals(<int>[]));
+
+      final decoded = jsonDecode(jsonEncode(attrs.toJson())) as Map<String, dynamic>;
+      final roundTripped = Attributes.fromJson(decoded);
+
+      // JSON has no element-type information, so the empty list comes back
+      // as List<dynamic> and falls through to the List<String> fallback.
+      expect(roundTripped.getStringList('k'), equals(<String>[]));
     });
 
     test('fromJson ignores unsupported list types with warning', () {

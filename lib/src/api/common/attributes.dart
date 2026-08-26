@@ -54,9 +54,9 @@ class Attributes {
       } else if (value is List<double>) {
         attributes.add(AttributeCreate.create<List<double>>(key, value));
       } else if (value is List) {
-        // Try to convert the list to a supported type.
-        // For empty lists, .every() returns true for all predicates,
-        // so String wins by position — a reasonable default.
+        // Untyped lists (List<Object> / List<dynamic>): element-check
+        // rather than hard-cast.  Empty untyped lists take the
+        // List<String> fallback because .every() is vacuously true.
         if (value.every((e) => e is String)) {
           attributes.add(
               AttributeCreate.create<List<String>>(key, value.cast<String>()));
