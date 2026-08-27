@@ -23,6 +23,7 @@ void main() {
       // Assert
       expect(meter.name, equals('test-meter'));
       expect(meter.version, isNotNull);
+      expect(meter.isEnabled(), isFalse);
       expect(meter.schemaUrl, isNotNull);
     });
 
