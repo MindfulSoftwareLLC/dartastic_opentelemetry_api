@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - **`OTelAPI.setErrorHandler` — a user-configurable global error handler**
-  (api#94). Internal misuse reports route through it instead of throwing;
+  ([api#102](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/102)). Internal misuse reports route through it instead of throwing;
   the default handler logs via `OTelLog` and never throws. A user-installed
   handler that throws propagates deliberately (strict mode), per
   error-handling.md. The handler is factory-held state: `OTelFactory`
@@ -27,16 +27,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   reported).
 
 ### Fixed (spec compliance)
-- **`Span.end()` no longer promotes status from Unset to Ok** (api#60).
+- **`Span.end()` no longer promotes status from Unset to Ok** ([api#102](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/102)).
   `Unset` stays `Unset`; analysis tools can no longer be misled by
   fabricated Ok statuses. The deprecated `spanStatus` parameter still
   flows through the `setStatus` rules when passed.
 - **`CompositePropagator.extract` walks propagators in the order they were
-  specified** (api#76), matching inject and every other OpenTelemetry SDK
+  specified** ([api#102](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/102)), matching inject and every other OpenTelemetry SDK
   (was reversed, so the last-registered propagator no longer wins extract).
 - **`Context.withSpanContext` returns a derived Context instead of throwing
   `ArgumentError`** when the context already holds a span from a different
-  trace (api#77) — a routine situation during extraction.
+  trace ([api#102](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/102)) — a routine situation during extraction.
 
 ### Added
 - **Semantic conventions regenerated from registry v1.44.0** (previously
@@ -170,7 +170,7 @@ since `0.9.1`.
 
 - **Breaking: the semantic-convention enums are now generated from the
   OpenTelemetry registry with OTel Weaver, one file per registry
-  namespace** (#50, #51). The hand-written `semantics.dart`,
+  namespace** ([#52](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/52)). The hand-written `semantics.dart`,
   `semantic_values.dart`, `semantic_metrics.dart`, `semantic_events.dart`,
   `gen_ai_semantics.dart`, and `ui_semantics.dart` are gone; generated
   files live under `lib/src/api/semantics/semconv/` (90 attribute
@@ -352,7 +352,7 @@ since `0.9.1`.
 
 ### Added
 
-- Full attribute-registry coverage (#51): 24 namespaces that were never
+- Full attribute-registry coverage ([#52](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/52)): 24 namespaces that were never
   modeled, including the `app.*` namespace and `app` entity from the
   issue — `App`, `Aspnetcore`, `Cpu`, `Cpython`, `Disk`, `Dotnet`,
   `Go`, `Jsonrpc`, `Jvm`, `Linux`, `Mainframe`, `Mcp`, `Nfs`,
@@ -360,7 +360,7 @@ since `0.9.1`.
   release candidate), `OracleCloud`, `Pprof`, `SecurityRule`, `Signalr`,
   `V8js`, `Zos` — plus complete member sets for every previously
   partial namespace.
-- **Entity enums** (#51): `<Ns>Entity` enums for all 64 registry
+- **Entity enums** ([#52](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/52)): `<Ns>Entity` enums for all 64 registry
   entities (24 namespaces), each member carrying the entity type string
   plus `identifying` / `descriptive` lists wired to the attribute-key
   enums — e.g. `AppEntity.app` identifies by `App.appBuildId`. New
@@ -389,7 +389,7 @@ since `0.9.1`.
 - `NonRecordingSpan` and `OTelAPI.nonRecordingSpan(SpanContext)` — the
   spec's "Wrapping a SpanContext in a Span" operation: the wrapped
   context is returned unchanged, `isRecording` is `false`, and all other
-  operations are no-ops (#40).
+  operations are no-ops ([#54](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/54)).
 - **Global `TextMapPropagator`** — `OTelAPI.textMapPropagator` getter/setter,
   implementing the spec's Global Propagators requirement: "The OpenTelemetry
   API MUST provide a way to obtain a propagator for each supported Propagator
@@ -397,16 +397,16 @@ since `0.9.1`.
   global is non-generic (`TextMapPropagator<dynamic, dynamic>`) and, like
   every other API object, routed through `OTelFactory`, so a replacement
   factory can substitute its own implementation. Isolate-local;
-  `OTelAPI.reset()` restores the no-op default (#42).
+  `OTelAPI.reset()` restores the no-op default ([#55](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/55)).
 - `OTelAPI.compositePropagator` / `OTelFactory.compositePropagator` —
   factory-routed construction for `CompositePropagator`, previously the
   only instantiable API object built by direct construction; its public
   constructor is now private (**Breaking**, construct via the factory)
-  (#42).
+  ([#55](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/55)).
 - **`NoopTextMapPropagator`** — the default value of the global, satisfying
   "The OpenTelemetry API MUST use no-op propagators unless explicitly
   configured otherwise": `inject` writes nothing and `extract` returns the
-  passed `Context` unchanged (#42).
+  passed `Context` unchanged ([#55](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/55)).
 
 ### Deprecated
 
@@ -470,13 +470,13 @@ since `0.9.1`.
 
 ### Fixed
 
-- **Wire format — emitted attribute keys change** (#50, #51). These fix
+- **Wire format — emitted attribute keys change** ([#52](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/52)). These fix
   the strings actually emitted, so backends keying on the spec names
   will now match:
 
   | Member (old) | Old emitted key | Correct key |
   | --- | --- | --- |
-  | `Kubernetes.k8sResourcepaceName` | `k8s.Resourcepace.name` | `K8s.k8sNamespaceName` → `k8s.namespace.name` (#50) |
+  | `Kubernetes.k8sResourcepaceName` | `k8s.Resourcepace.name` | `K8s.k8sNamespaceName` → `k8s.namespace.name` ([#52](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/52)) |
   | `SourceCode.codeResourcepace` | `code.Resourcepace` | `Code.codeNamespace` → `code.namespace` (#50; itself deprecated → `code.function.name`) |
   | `Hardware.*` (7 members) | `hardware.*` | `Hw.*` → `hw.*` |
   | `FeatureFlag.featureFlagProviderName` | `feature_flag.provider_name` | same identifier, now `feature_flag.provider.name` |
@@ -490,7 +490,7 @@ since `0.9.1`.
   `SpanContext` from the parent `Context` — explicit or implicit —
   unchanged; when the context has no span, it carries an empty
   `SpanContext` (all-zero trace/span IDs, unsampled flags). Previously
-  the API minted random valid IDs and returned recording spans (#40).
+  the API minted random valid IDs and returned recording spans ([#54](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/54)).
   SDK span creation is unaffected: the no-op behavior applies only when
   the installed factory `isAPIFactory`.
 - **`Baggage` now follows the spec for values, names, and no-SDK use.**
@@ -521,28 +521,28 @@ since `0.9.1`.
 ### Fixed
 - `OTelAPI.instrumentationScope()` recursed into itself when called before
   initialization, causing an immediate `StackOverflowError`; it now lazily
-  installs the no-op API factory like the other accessors (#27). Thanks
+  installs the no-op API factory like the other accessors ([#32](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/32)). Thanks
   @kevmoo.
 - `OTelAPI.tracer()` and `OTelAPI.logger()` threw a null-check error before
-  initialization instead of lazily installing the no-op API factory (#27).
+  initialization instead of lazily installing the no-op API factory ([#32](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/32)).
 - `TraceState.fromString` / `fromMap` / `empty`, `SpanContext.fromJson`, and
   `Baggage.fromJson` threw `StateError('Call initialize() first.')` instead
   of lazily installing the no-op API factory — `fromString` parses the W3C
   `tracestate` header (a propagator path) and the `fromJson`s run in fresh
-  isolates during deserialization, both classic pre-init calls (#33).
+  isolates during deserialization, both classic pre-init calls ([#34](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/34)).
 - `OTelAPI.tracerProviders()` / `meterProviders()` / `loggerProviders()`
   read OTelAPI's private factory cache instead of the global factory, so
   providers of a factory installed by an SDK were invisible until some
-  OTelAPI accessor ran (#33).
+  OTelAPI accessor ran ([#34](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/34)).
 - `OTelAPI.attributesFromMap`, `Attributes.of`, and `Map.toAttributes()` no
   longer bypass the factory via the static `attrsFromMap` "cheat" (obsolete
   since the beta.8 lazy-install lifecycle); a factory that overrides
-  `attributesFromMap` is now respected on all three paths (#33).
+  `attributesFromMap` is now respected on all three paths ([#34](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/34)).
 - `TraceState` multi-tenant `tracestate` keys (`tenant-id@system-id`) now
   match the W3C Trace Context key grammar: a `tenant-id` may start with a
   digit, and `tenant-id`/`system-id` are length-capped (241/14 chars).
   Previously a digit-leading tenant was rejected and over-long ids
-  accepted (#38).
+  accepted ([#38](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/38)).
 
 ## [1.0.0-beta.8] - 2026-07-11
 
