@@ -23,7 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   never declared. Spans no longer carry a fabricated `1.0.0` scope version.
   ([#108](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/108))
 
-## [0.11.0]
+## [0.11.0] - 2026-08-27
 
 Stable-channel republication of `1.0.0-rc.3`. The code is the rc's code with a
 stable version stamp, so users who have not opted into prereleases get the
