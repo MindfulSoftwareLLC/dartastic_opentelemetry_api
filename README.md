@@ -18,11 +18,7 @@ and it will work in a no-op fashion.
 
 This API is rarely used without an SDK. The SDK for this API is implemented by 
 `dartastic_opentelemetry`, the [Dartastic OpenTelemetry SDK](https://pub.dev/packages/dartastic_opentelemetry).
-To instrument Dart apps, include the latest `dartastic_opentelemetry` and use its `OTel` class.
-
-To instrument Flutter applications use the [Flutterrific OpenTelemetry SDK](https://pub.dev/packages/flutterrific_opentelemetry), 
-`flutterrific_opentelemetry` to gain almost automatic instrumentation for app routes, error catching 
-and web vitals metrics and much more. 
+To instrument Dart and Flutter apps, include the latest `dartastic_opentelemetry` and use its `OTel` class.
 
 ## Commercial Support
 
@@ -51,14 +47,13 @@ and web vitals metrics and much more.
 
 ## About the API - use the SDK
 
-This `dartastic_opentelemetry_api` OTel API for Dart exists as a standalone library to strictly adhere to the
+This `dartastic_opentelemetry_api` OTel API for Dart and Flutter exists as a standalone library to strictly adhere to the
 OpenTelemetry specification which separates API and the SDK. The specification
 requires that the API can be dropped into an app without an SDK and it will work in a no-op fashion. 
 You could include just `dartastic_opentelemetry_api` in your pubspec.yaml to get a no-op implementation
 as required by the OTel specification, though this would be a rare use case. Typically, 
-backend instrumenters will include `dartastic_opentelemetry` in their pubspec.yaml
-and this dartastic_opentelemetry_api will be a transitive dependency.  Flutter instrumentation developers 
-will include `flutterrific_opentelemetry`.
+instrumenters will include `dartastic_opentelemetry` in their pubspec.yaml
+and this dartastic_opentelemetry_api will be a transitive dependency.  
 
 Another direct use for this library is for developers who write instrumentation libraries.  
 This OpenTelemetry API is pluggable. You can create your own `OTelFactory` to
@@ -92,15 +87,12 @@ for an example.
   - Flutter apps
   - Dart CloudRun functions
   - Dart Cloud Functions (Firebase Functions in Dart)
-
--  **Flutter Demo** The [Wonderous OpenTelemetry Demo](https://github.com/MindfulSoftwareLLC/wondrous_opentelemetry) demonstrates  
-   gskinner's Wonderous App with instrumentation for OpenTelemetry with [Flutterrific](https://pub.dev/packages/flutterrific_opentelemetry) .
+  - Serverpod backends
 
 ## Getting Started
 
 Typically, you wouldn't use this library and will use Dartastic OTel `dartastic_opentelemetry` 
-or `flutterrific_opentelemetry` instead to get a working OTel implementation in your 
-Dart or Flutter application, respectively.  
+instead to get a working OTel implementation in your Dart or Flutter application.  
 
 ### Installation
 
@@ -125,12 +117,6 @@ This API is rarely used without an SDK. For a fully functional OpenTelemetry imp
   ```yaml
   dependencies:
     dartastic_opentelemetry: ^1.0.0
-  ```
-
-- **Flutter Applications**: Use the [Flutterrific OTel SDK](https://pub.dev/packages/flutterrific_opentelemetry).
-  ```yaml
-  dependencies:
-    flutterrific_opentelemetry: ^0.4.0
   ```
 
 Each layer exports all the relevant classes to the next layer so you only have to include one library in your pubspec.yaml.
@@ -438,7 +424,6 @@ EVERY character is reviewed by a human for and checked for compliance with the O
 
 - [OpenTelemetry Specification](https://opentelemetry.io/docs/specs/otel/)
 - [Dartastic OTel SDK](https://pub.dev/packages/dartastic_opentelemetry) - For Dart backend applications
-- [Flutterrific OTel SDK](https://pub.dev/packages/flutterrific_opentelemetry) - For Flutter applications
 - [Dartastic.io](https://dartastic.io/) - An OpenTelemetry backend for Dart and Flutter
 
 ## License
@@ -447,4 +432,4 @@ Apache 2.0 - See the [LICENSE](LICENSE) file for details.
 
 ## Acknowledgements
 
-This Dart API, the Dartastic SDK, and Flutterrific OTel are made with 💙 by Michael Bushe at [Dartastic.io](https://dartastic.io).
+This Dart API and the Dartastic SDK are made with 💙 by Michael Bushe at [Dartastic.io](https://dartastic.io).
