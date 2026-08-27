@@ -95,27 +95,19 @@ class APITracerProvider {
           'Invalid tracer name provided; using empty string as fallback.'));
     }
 
-    // Apply default values if none are provided
-    var effectiveVersion = version;
-    var effectiveSchemaUrl = schemaUrl;
-
-    // Only apply defaults if all optional parameters are missing
-    if (version == null && schemaUrl == null && attributes == null) {
-      effectiveVersion = OTelAPI.defaultServiceVersion;
-      effectiveSchemaUrl = OTelAPI.defaultSchemaUrl;
-    }
-
-    // Create a cache key based on the provided parameters.
-    final key = SignalInstanceKey(validatedName, effectiveVersion,
-        effectiveSchemaUrl, attributes, Signal.traces);
+    // Create a cache key based on the provided parameters. A caller who
+    // omits version/schemaUrl gets a tracer with a null scope version and
+    // schema URL — the API must not invent values the caller never stated.
+    final key = SignalInstanceKey(
+        validatedName, version, schemaUrl, attributes, Signal.traces);
 
     if (_tracerCache.containsKey(key)) {
       return _tracerCache[key]!;
     } else {
       final tracer = TracerCreate.create(
         name: validatedName,
-        version: effectiveVersion,
-        schemaUrl: effectiveSchemaUrl,
+        version: version,
+        schemaUrl: schemaUrl,
         attributes: attributes,
         timeProvider: timeProvider,
       );

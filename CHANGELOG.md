@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.0.0-rc.3-wip]
 
+### Fixed (spec compliance)
+- **`TracerProvider.getTracer` no longer invents a scope version or schema
+  URL** (api#64). A caller who omits `version`/`schemaUrl` now gets a tracer
+  — and spans from it — with a `null` scope version and schema URL, instead
+  of this package's own version constant and a schema URL the instrumented
+  library never declared. Tracer identity (the cache key) no longer varies
+  on these invented values either, so `getTracer('x')` and
+  `getTracer('x', attributes: a)` now differ only in the parameter the
+  caller actually set.
+
 ## [1.0.0-rc.2] - 2026-08-23
 
 ### Added
