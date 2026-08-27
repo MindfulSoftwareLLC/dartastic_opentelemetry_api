@@ -14,14 +14,12 @@ class CounterCreate {
     required String name,
     String? unit,
     String? description,
-    required bool enabled,
     required APIMeter meter,
   }) {
     return APICounter<T>(
       name,
       description,
       unit,
-      enabled,
       meter,
     );
   }

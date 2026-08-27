@@ -31,7 +31,7 @@ void main() {
       expect(counter.unit, equals('ms'));
       expect(counter.description, equals('A test counter'));
       expect(counter.meter, equals(meter));
-      expect(counter.enabled,
+      expect(counter.isEnabled(),
           isFalse); // API implementation is disabled by default
       expect(counter.isCounter, isTrue);
       expect(counter.isUpDownCounter, isFalse);

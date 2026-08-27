@@ -35,6 +35,7 @@ void main() {
       expect(tracer.version, equals('1.11.0.0'));
       expect(
           tracer.schemaUrl, equals('https://opentelemetry.io/schemas/1.11.0'));
+      expect(tracer.isEnabled(), isFalse);
     });
 
     test('creates span with name only', () {

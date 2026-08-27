@@ -31,7 +31,7 @@ void main() {
       expect(upDownCounter.unit, equals('bytes'));
       expect(upDownCounter.description, equals('A test up-down counter'));
       expect(upDownCounter.meter, equals(meter));
-      expect(upDownCounter.enabled,
+      expect(upDownCounter.isEnabled(),
           isFalse); // API implementation is disabled by default
       expect(upDownCounter.isCounter, isFalse);
       expect(upDownCounter.isUpDownCounter, isTrue);

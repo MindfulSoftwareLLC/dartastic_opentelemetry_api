@@ -31,8 +31,8 @@ void main() {
       expect(gauge.unit, equals('celsius'));
       expect(gauge.description, equals('A test gauge'));
       expect(gauge.meter, equals(meter));
-      expect(
-          gauge.enabled, isFalse); // API implementation is disabled by default
+      expect(gauge.isEnabled(),
+          isFalse); // API implementation is disabled by default
       expect(gauge.isCounter, isFalse);
       expect(gauge.isUpDownCounter, isFalse);
       expect(gauge.isGauge, isTrue);

@@ -382,7 +382,6 @@ class OTelAPIFactory extends OTelFactory {
       name: name,
       description: description,
       unit: unit,
-      enabled: false, // API implementation is always disabled
       meter: APIMeterCreate.create(name: '@api/default'),
     );
   }
@@ -394,7 +393,6 @@ class OTelAPIFactory extends OTelFactory {
       name: name,
       description: description,
       unit: unit,
-      enabled: false, // API implementation is always disabled
       meter: APIMeterCreate.create(name: '@api/default'),
     );
   }
@@ -405,7 +403,6 @@ class OTelAPIFactory extends OTelFactory {
       name: name,
       description: description,
       unit: unit,
-      enabled: false, // API implementation is always disabled
       meter: APIMeterCreate.create(name: '@api/default'),
     );
   }
@@ -417,7 +414,6 @@ class OTelAPIFactory extends OTelFactory {
       name: name,
       description: description,
       unit: unit,
-      enabled: false, // API implementation is always disabled
       meter: APIMeterCreate.create(name: '@api/default'),
       boundaries: boundaries,
     );
@@ -430,7 +426,6 @@ class OTelAPIFactory extends OTelFactory {
       name: name,
       description: description,
       unit: unit,
-      enabled: false, // API implementation is always disabled
       meter: APIMeterCreate.create(name: '@api/default'),
       callback: callback,
     );
@@ -443,7 +438,6 @@ class OTelAPIFactory extends OTelFactory {
       name: name,
       description: description,
       unit: unit,
-      enabled: false, // API implementation is always disabled
       meter: APIMeterCreate.create(name: '@api/default'),
       callback: callback,
     );
@@ -456,7 +450,6 @@ class OTelAPIFactory extends OTelFactory {
       name: name,
       description: description,
       unit: unit,
-      enabled: false, // API implementation is always disabled
       meter: APIMeterCreate.create(name: '@api/default'),
       callback: callback,
     );

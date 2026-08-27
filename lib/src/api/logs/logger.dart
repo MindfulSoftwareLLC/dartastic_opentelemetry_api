@@ -37,9 +37,20 @@ class APILogger {
     this.attributes,
   });
 
-  /// Returns true if the logger is enabled.
+  /// Returns whether this logger is enabled for the provided arguments.
   /// Refer https://opentelemetry.io/docs/specs/otel/logs/api/#enabled
-  bool get enabled => false;
+  ///
+  /// The returned value can change over time; instrumentation authors need
+  /// to call this each time before emitting a LogRecord to ensure they have
+  /// the most up-to-date response.
+  ///
+  /// [context] The Context to associate with a would-be LogRecord. Defaults
+  /// to the current Context when unspecified, per the spec.
+  /// [severityNumber] The optional Severity Number of a would-be LogRecord.
+  /// [eventName] The optional Event Name of a would-be LogRecord.
+  bool isEnabled(
+          {Context? context, Severity? severityNumber, String? eventName}) =>
+      false;
 
   /// Emit a LogRecord.
   ///
