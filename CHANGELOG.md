@@ -11,8 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **BREAKING**: Replaced the `enabled` getter with `isEnabled()` method on `APITracer`, `APILogger`, `APIInstrument` and all instrument subclasses. The `enabled` parameter has also been removed from all metric instrument creation API constructors and factories. This change allows SDKs to dynamically re-evaluate instrument enablement and enables adding parameters to `isEnabled()` in the future without breaking the API.
 
 ### Fixed (spec compliance)
-- `getTracer`/`getLogger`/`getMeter` no longer invent a scope version or
-  schema URL when the caller omits them
+  - `getTracer`/`getLogger`/`getMeter` no longer invent a scope version or
+    schema URL when the caller omits them
   ([#108](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/108)).
 
 ## [1.0.0-rc.2] - 2026-08-23

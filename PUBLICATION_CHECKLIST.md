@@ -6,10 +6,10 @@ This document outlines the steps to follow when publishing a new version of the 
 
 ### Code Quality
 - [ ] All tests are passing (`./tool/test.sh`)
-- [ ] Code coverage is at acceptable levels (>90%) (`./tool/coverage.sh`)
+- [ ] Code coverage is at acceptable levels (>95%) (`./tool/coverage.sh`)
 - [ ] No lint warnings (`dart analyze`)
 - [ ] Code is properly formatted (`dart format .`)
-- [ ] Package scores well on `pana` analysis
+- [ ] Package scores perfect (160) on `pana` analysis
 
 ### Documentation
 - [ ] Documentation is up-to-date with the current version
