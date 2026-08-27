@@ -14,6 +14,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `attributeStringList('k', [])` threw `ArgumentError`, and
   `Attributes.fromJson` silently dropped empty lists. Now all three paths
   store empty values correctly.
+- **Typed `Attributes` getters return null on a type mismatch** (api#81)
+  instead of throwing `StateError`, which is what their doc comments always
+  promised. Affects `getString`, `getBool`, `getInt`, `getDouble` and the
+  four list getters. The mismatch is reported through the error handler, so
+  a strict-mode handler still sees it.
 
 ## [1.0.0-rc.2] - 2026-08-23
 
