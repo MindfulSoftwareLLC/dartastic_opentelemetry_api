@@ -8,17 +8,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.0.0-rc.3-wip]
 
 ### Changed
-- **BREAKING**: Replaced the `enabled` getter with `isEnabled()` method on `APITracer`, `APILogger`, `APIInstrument` and all instrument subclasses. The `enabled` parameter has also been removed from all metric instrument creation API constructors and factories. This change allows SDKs to dynamically re-evaluate instrument enablement and enables adding parameters to `isEnabled()` in the future without breaking the API.
 
-### Fixed (spec compliance)
-  - `getTracer`/`getLogger`/`getMeter` no longer invent a scope version or
-    schema URL when the caller omits them
-  ([#108](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/108)).
+- **BREAKING**: `enabled` becomes `isEnabled()` on `APITracer`, `APILogger`,
+  `APIInstrument` and all instruments, and the `enabled` constructor parameter
+  is removed. Replace `x.enabled` with `x.isEnabled()`.
+  `APILogger.isEnabled()` now accepts `Context`, `SeverityNumber` and
+  `EventName`. The provider-level `enabled` getters are unchanged.
+  ([#105](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/105))
+- **BREAKING**: `getTracer`, `getLogger` and `getMeter` no longer invent a
+  scope version or schema URL. Omit them and `version` and `schemaUrl` are now
+  `null`, rather than this package's own version and a schema URL your library
+  never declared. Spans no longer carry a fabricated `1.0.0` scope version.
+  ([#108](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/108))
 
 ## [1.0.0-rc.2] - 2026-08-23
 
 ### Added
-- **`OTelAPI.setErrorHandler` — a user-configurable global error handler**
+- **`OTelAPI.setErrorHandler`, a user-configurable global error handler**
   ([api#102](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/102)). Internal misuse reports route through it instead of throwing;
   the default handler logs via `OTelLog` and never throws. A user-installed
   handler that throws propagates deliberately (strict mode), per
@@ -27,8 +33,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   for SDK factories, and a handler installed before any factory exists
   is buffered and adopted at factory installation. `Context.runIsolate`
   re-installs the parent's handler inside the child isolate (handlers
-  are copied; capture a `SendPort` to aggregate reports across isolates
-  — an unsendable handler degrades to the child default and is
+  are copied; capture a `SendPort` to aggregate reports across isolates,
+  an unsendable handler degrades to the child default and is
   reported).
 
 ### Fixed (spec compliance)
@@ -41,15 +47,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (was reversed, so the last-registered propagator no longer wins extract).
 - **`Context.withSpanContext` returns a derived Context instead of throwing
   `ArgumentError`** when the context already holds a span from a different
-  trace ([api#102](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/102)) — a routine situation during extraction.
+  trace ([api#102](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/102)), a routine situation during extraction.
 
 ### Added
 - **Semantic conventions regenerated from registry v1.44.0** (previously
   v1.43.0-21-g436fa257). Additive only, per the VERSIONING.md policy: 47
   new identifiers, no renames and no removals.
 
-  The substantial addition is the complete **`browser.web_vital.*`** set —
-  `name`, `value`, `delta`, `id`, `rating` and `navigation_type` — together
+  The substantial addition is the complete **`browser.web_vital.*`** set,
+  `name`, `value`, `delta`, `id`, `rating` and `navigation_type`, together
   with their value enums: `cls`, `lcp`, `fcp`, `inp`, `ttfb` and the
   obsoleted `fid`; `good` / `needs-improvement` / `poor`; and the six
   navigation types (`navigate`, `reload`, `back-forward`,
@@ -60,24 +66,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `k8s.node.filesystem.inode.count` / `.free`, and the `scaleway_cloud`
   and `scaleway_cloud_compute` members.
 
-- **`lib/src/api/semantics/candidates/` — a home for attribute keys that are
+- **`lib/src/api/semantics/candidates/`, a home for attribute keys that are
   not yet in the registry**, staged for upstream contribution, exported from
   the package barrel and marked `@experimental`.
 
-  This revisits the rc.1 position that "the API package now contains only
-  registry conventions". That rule was right about the *problem* — a private
-  dialect masquerading as OpenTelemetry — but it left no path for the
-  conventions we want to propose, which the semantic-conventions CONTRIBUTING
-  guide asks be "prototyped in the corresponding instrumentation(s)" first.
-  Candidates are kept in a separate directory, under a separate stability
-  promise, so a consumer can always tell a published convention from a
-  proposal.
+  rc.1 removed a private dialect masquerading as OpenTelemetry, which was
+  right, but left nowhere to stage conventions we want to propose upstream.
+  A separate directory under a separate stability promise keeps published
+  conventions distinguishable from proposals.
 
-  Candidates are **unstable in identity but deprecation-cycled**: a renamed,
-  reshaped or rejected candidate is `@Deprecated`, pointing at its
-  replacement, for a release before it is removed — the same cycle the
-  vendor/RUM enums completed. When one is accepted upstream it reappears in
-  generated `semconv/` output and the candidate is deprecated in its favor.
+  Candidates are **unstable in identity but deprecation-cycled**: a renamed or
+  rejected candidate is `@Deprecated`, pointing at its replacement, for one
+  release before removal. Accepted upstream, it reappears in generated
+  `semconv/` output and the candidate is deprecated in its favor.
 
   Staged: `app.start.type` (`cold`/`warm`/`hot`), `app.launch.id`,
   `app.screen.previous_id`, `app.screen.previous_name`,
@@ -85,7 +86,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `device.battery.level`, `device.battery.state`, `device.battery.save_mode`,
   `device.emulator`, and `browser.languages`.
 
-- **`doc/SEMCONV_CANDIDATES.md`** — the disposition of all 116 identifiers
+- **`doc/SEMCONV_CANDIDATES.md`**, the disposition of all 116 identifiers
   removed in rc.1. Most should return as *registry* conventions rather than
   candidates: the registry has since gained `app.crash`, `app.jank`,
   `app.screen.click`, `app.widget.click`, `device.app.lifecycle`,
@@ -96,7 +97,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.10.0] - 2026-08-23
 
-Stable-channel republication of `1.0.0-rc.2` — the first stable-channel
+Stable-channel republication of `1.0.0-rc.2`. The first stable-channel
 release since `0.9.1`. The code is the rc's code with a stable version
 stamp, so users who have not opted into prereleases get the fixes. See
 the `1.0.0-beta.*` through `1.0.0-rc.2` entries for the complete history
@@ -112,7 +113,7 @@ since `0.9.1`.
 
 ### Highlights
 
-- **`OTelAPI.setErrorHandler`** — configure where the library's internal
+- **`OTelAPI.setErrorHandler`**. Configure where the library's internal
   error reports go. The default logs and never throws; a strict handler
   can crash-fast in development; `Context.runIsolate` carries the
   handler into child isolates.
@@ -165,7 +166,7 @@ since `0.9.1`.
 
 - **`*Create` classes are now `@internal` and hidden from the public library.**
   They were internal by doc-comment convention only; the barrel exported them,
-  so `AttributesCreate.create()` etc. were callable by any consumer — an open
+  so `AttributesCreate.create()` etc. were callable by any consumer, an open
   factory-bypass door, contradicting the beta.8/9 removal of factory cheat
   paths. The analyzer now rejects outside-package use
   (`invalid_use_of_internal_member`). Factories and same-package code are
@@ -185,8 +186,8 @@ since `0.9.1`.
   [semantic-conventions](https://github.com/open-telemetry/semantic-conventions)
   `v1.43.0-21-g436fa257` (commit `436fa257`, schema `1.44.0-unreleased`).
   Regenerate with `tool/semconv/generate.sh`; verify freshness with
-  `tool/semconv/generate.sh --check`. There is no compatibility layer —
-  the tables below are the migration guide.
+  `tool/semconv/generate.sh --check`. There is no compatibility layer.
+  The tables below are the migration guide.
 
 - **Breaking: file restructure.** Every old semantics file is replaced:
 
@@ -210,7 +211,7 @@ since `0.9.1`.
   | --- | --- |
   | `Database` | `Db` |
   | `Kubernetes` | `K8s` |
-  | `Hardware` | `Hw` (all keys change too — see Fixed) |
+  | `Hardware` | `Hw` (all keys change too, see Fixed) |
   | `OperatingSystem` | `Os` |
   | `RPC` | `Rpc` |
   | `GraphQL` | `Graphql` |
@@ -225,7 +226,7 @@ since `0.9.1`.
   | `TelemetrySDK`, `TelemetryDistro` | `Telemetry` (merged) |
   | `ComputeInstance` | merged into `Host` (same member names) |
   | `SourceCode` | merged into `Code` (same member names) |
-  | `GenAI`, `GenAi` | `GenAi` (merged, deprecated — see below) |
+  | `GenAI`, `GenAi` | `GenAi` (merged, deprecated, see below) |
   | `Environment` | `Deployment.deploymentEnvironment` (`@Deprecated`) |
   | `General` | split: `Service.serviceName`/`serviceVersion`, `Telemetry.telemetrySdk*` |
   | `Version` | removed (see Removed) |
@@ -280,7 +281,7 @@ since `0.9.1`.
   `Hardware` → `Hw`: `hardwareId` → `hwId`, `hardwareName` → `hwName`,
   `hardwareParent` → `hwParent`, `hardwareSerialNumber` →
   `hwSerialNumber`, `hardwareType` → `hwType`, `hardwareVendor` →
-  `hwVendor`, `hardwareModel` → `hwModel` (key strings change too — see
+  `hwVendor`, `hardwareModel` → `hwModel` (key strings change too, see
   Fixed).
 
   `CloudEvents` → `Cloudevents`: `cloudEventsEventId` →
@@ -297,10 +298,10 @@ since `0.9.1`.
 
   `Aws`: `awsEcsLaunchType` → `awsEcsLaunchtype`.
 
-  All other attribute-key enums already followed the rule — their
+  All other attribute-key enums already followed the rule. Their
   members are unchanged.
 
-- **Breaking: metric enum members follow the same rule** — camelCase of
+- **Breaking: metric enum members follow the same rule**, camelCase of
   the full metric name instead of the old namespace-stripped short form.
   Every member of the 15 pre-existing metric enums gains its namespace
   prefix; the old name was exactly the new name minus that prefix (e.g.
@@ -343,7 +344,7 @@ since `0.9.1`.
   attribute's value enum is named `StateValue` to avoid colliding with
   Flutter's `State`.
 
-- **Breaking: legacy `az.*` keys moved out of `Azure`** — the registry
+- **Breaking: legacy `az.*` keys moved out of `Azure`**, the registry
   files deprecated ids by their real prefix, so `Azure.azNamespace` and
   `Azure.azServiceRequestId` are now `Az.azNamespace` and
   `Az.azServiceRequestId` (both `@Deprecated`) in `semconv/az.dart`.
@@ -359,23 +360,23 @@ since `0.9.1`.
 
 - Full attribute-registry coverage ([#52](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/52)): 24 namespaces that were never
   modeled, including the `app.*` namespace and `app` entity from the
-  issue — `App`, `Aspnetcore`, `Cpu`, `Cpython`, `Disk`, `Dotnet`,
+  issue, `App`, `Aspnetcore`, `Cpu`, `Cpython`, `Disk`, `Dotnet`,
   `Go`, `Jsonrpc`, `Jvm`, `Linux`, `Mainframe`, `Mcp`, `Nfs`,
   `Nodejs`, `OncRpc`, `Openai`, `Openshift`, `Oracle` (`oracle.db.*`,
   release candidate), `OracleCloud`, `Pprof`, `SecurityRule`, `Signalr`,
-  `V8js`, `Zos` — plus complete member sets for every previously
+  `V8js`, `Zos`, plus complete member sets for every previously
   partial namespace.
 - **Entity enums** ([#52](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/52)): `<Ns>Entity` enums for all 64 registry
   entities (24 namespaces), each member carrying the entity type string
   plus `identifying` / `descriptive` lists wired to the attribute-key
-  enums — e.g. `AppEntity.app` identifies by `App.appBuildId`. New
+  enums, e.g. `AppEntity.app` identifies by `App.appBuildId`. New
   `OTelEntity` interface in `semantics_base.dart`.
 - 14 new metric namespaces (`aspnetcore`, `azure`, `cpu`, `cpython`,
   `dotnet`, `go`, `hw`, `jvm`, `kestrel`, `nfs`, `nodejs`, `openshift`,
   `signalr`, `v8js`) alongside the regenerated 15.
 - `OTelSemanticIntValue` for int-valued registry value enums
   (`cpython.gc.generation`, `rpc.grpc.status_code`).
-- `SemconvRegistry` — a generated index of every semconv enum
+- `SemconvRegistry`, a generated index of every semconv enum
   (`allAttributeEnums`, `allValueEnums`, `allIntValueEnums`,
   `allMetricEnums`, `allEventEnums`, `allEntityEnums`) plus the pinned
   registry version/commit. Powers package-wide invariant tests
@@ -391,11 +392,11 @@ since `0.9.1`.
   event, and entity against the registry, plus source audits for
   `@Deprecated`/`Stability:` annotations.
 
-- `NonRecordingSpan` and `OTelAPI.nonRecordingSpan(SpanContext)` — the
+- `NonRecordingSpan` and `OTelAPI.nonRecordingSpan(SpanContext)`, the
   spec's "Wrapping a SpanContext in a Span" operation: the wrapped
   context is returned unchanged, `isRecording` is `false`, and all other
   operations are no-ops ([#54](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/54)).
-- **Global `TextMapPropagator`** — `OTelAPI.textMapPropagator` getter/setter,
+- **Global `TextMapPropagator`**, `OTelAPI.textMapPropagator` getter/setter,
   implementing the spec's Global Propagators requirement: "The OpenTelemetry
   API MUST provide a way to obtain a propagator for each supported Propagator
   type" (`TextMapPropagator` being the single supported type today). The
@@ -403,19 +404,19 @@ since `0.9.1`.
   every other API object, routed through `OTelFactory`, so a replacement
   factory can substitute its own implementation. Isolate-local;
   `OTelAPI.reset()` restores the no-op default ([#55](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/55)).
-- `OTelAPI.compositePropagator` / `OTelFactory.compositePropagator` —
+- `OTelAPI.compositePropagator` / `OTelFactory.compositePropagator`,
   factory-routed construction for `CompositePropagator`, previously the
   only instantiable API object built by direct construction; its public
   constructor is now private (**Breaking**, construct via the factory)
   ([#55](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/55)).
-- **`NoopTextMapPropagator`** — the default value of the global, satisfying
+- **`NoopTextMapPropagator`**, the default value of the global, satisfying
   "The OpenTelemetry API MUST use no-op propagators unless explicitly
   configured otherwise": `inject` writes nothing and `extract` returns the
   passed `Context` unchanged ([#55](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/55)).
 
 ### Deprecated
 
-- **All vendor/RUM enums** — they are not OpenTelemetry semantic
+- **All vendor/RUM enums**. They are not OpenTelemetry semantic
   conventions and will be removed from this package (future home: the
   Flutter RUM layer). Moved to `semantics/rum.dart`, names/keys/members
   unchanged: `AppLifecycleStates`, `AppLifecycleSemantics`,
@@ -424,7 +425,7 @@ since `0.9.1`.
   `InteractionSemantics`, `PerformanceSemantics`, `ErrorSemantics`,
   `NetworkSemantics`, `RumSessionView`, `NavigationAction`,
   `LifecycleState`.
-- **All of `GenAi`** — the `gen_ai.*` conventions moved upstream to
+- **All of `GenAi`**, the `gen_ai.*` conventions moved upstream to
   [semantic-conventions-genai](https://github.com/open-telemetry/semantic-conventions-genai)
   and are deprecated in the core registry; every member is annotated
   accordingly.
@@ -434,7 +435,7 @@ since `0.9.1`.
   `Otel.otelLibraryName`/`otelLibraryVersion`, `Enduser.*`,
   `EventAttributes.eventName`, `Code.codeNamespace`,
   `FeatureFlag.featureFlagVariant`, the legacy `net.*`/`az.*`/`http.*`
-  keys, and the deprecated `DbSystem` value enum — plus every other
+  keys, and the deprecated `DbSystem` value enum, plus every other
   `deprecated:` entry in the registry.
 
 ### Removed
@@ -460,22 +461,22 @@ since `0.9.1`.
   | `AppInfoSemantics` vendor keys as semconv | official identity is `App.appBuildId` / `Artifact.*` |
 - Value-enum members that do not exist in the registry:
   `TelemetrySdkLanguage.dart` (**note:** `dart` is missing from the
-  registry's `telemetry.sdk.language` well-known values — an upstream
+  registry's `telemetry.sdk.language` well-known values. An upstream
   semconv gap; SDKs should keep emitting the literal `dart`),
   `CloudPlatform.herokuDyno`, `NetworkConnectionType.mobile`,
   `ProfileFrameType.java`/`nodejs`/`python`, and
   `SystemMemoryState.slabReclaimable`/`slabUnreclaimable` (slab states
   moved upstream to `system.memory.linux.slab.state`).
-- `Version` enum — `schema.url` is not a registry attribute; schema URLs
+- `Version` enum, `schema.url` is not a registry attribute; schema URLs
   belong on providers/`InstrumentationScope`.
 - `General`, `SemanticEvent`, and the duplicate `GenAI` enum (see the
   rename/split tables above).
-- `genAiSpanName()` — not a convention; compose
+- `genAiSpanName()`, not a convention; compose
   `'<operation> <model>'` directly.
 
 ### Fixed
 
-- **Wire format — emitted attribute keys change** ([#52](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/52)). These fix
+- **Wire format, emitted attribute keys change** ([#52](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/52)). These fix
   the strings actually emitted, so backends keying on the spec names
   will now match:
 
@@ -492,14 +493,14 @@ since `0.9.1`.
   now follow trace/api.md's "Behavior of the API in the absence of an
   installed SDK": the returned span is non-recording (`isRecording` is
   `false` and every mutating operation is a no-op) and carries the
-  `SpanContext` from the parent `Context` — explicit or implicit —
-  unchanged; when the context has no span, it carries an empty
+  `SpanContext` from the parent `Context`. Explicit or implicit.
+  Unchanged; when the context has no span, it carries an empty
   `SpanContext` (all-zero trace/span IDs, unsampled flags). Previously
   the API minted random valid IDs and returned recording spans ([#54](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/54)).
   SDK span creation is unaffected: the no-op behavior applies only when
   the installed factory `isAPIFactory`.
 - **`Baggage` now follows the spec for values, names, and no-SDK use.**
-  Per the Baggage API spec, values are any valid UTF-8 string — the empty
+  Per the Baggage API spec, values are any valid UTF-8 string. The empty
   string is accepted (previously `ArgumentError`) and survives `Set`/`Get`
   and both `fromJson` paths (previously dropped). Invalid (empty) names are
   ignored with a warning instead of throwing. `copyWith` / `copyWithout` /
@@ -508,8 +509,8 @@ since `0.9.1`.
   installed SDK."
 - **`TraceState.put` / `remove` never throw.** Per the trace API spec,
   mutating operations validate input and "MUST NOT return `TraceState`
-  containing invalid data" while following the error-handling guidelines —
-  invalid keys/values are now ignored with a warning (previously
+  containing invalid data" while following the error-handling guidelines.
+  Invalid keys/values are now ignored with a warning (previously
   `ArgumentError`), and both operations work without an installed SDK
   (previously `StateError`).
 - **Provider accessors use safe defaults instead of throwing.** Per the
@@ -532,7 +533,7 @@ since `0.9.1`.
   initialization instead of lazily installing the no-op API factory ([#32](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/32)).
 - `TraceState.fromString` / `fromMap` / `empty`, `SpanContext.fromJson`, and
   `Baggage.fromJson` threw `StateError('Call initialize() first.')` instead
-  of lazily installing the no-op API factory — `fromString` parses the W3C
+  of lazily installing the no-op API factory, `fromString` parses the W3C
   `tracestate` header (a propagator path) and the `fromJson`s run in fresh
   isolates during deserialization, both classic pre-init calls ([#34](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/34)).
 - `OTelAPI.tracerProviders()` / `meterProviders()` / `loggerProviders()`
@@ -552,7 +553,7 @@ since `0.9.1`.
 ## [1.0.0-beta.8] - 2026-07-11
 
 ### Added
-- **`OTelFactory.isAPIFactory`** — identifies the API's auto-installed no-op
+- **`OTelFactory.isAPIFactory`**, identifies the API's auto-installed no-op
   factory. Defaults to `false` on `OTelFactory`; `OTelAPIFactory` overrides it
   to `true`. SDK factories (which extend `OTelAPIFactory`) must override it to
   return `false`. Lets SDK initialization replace the spec-mandated no-op API
@@ -581,7 +582,7 @@ since `0.9.1`.
 ## [1.0.0-beta.6] - 2026-05-11
 
 ### Added
-- `OTelAPI.attributesOf<E extends OTelSemantic>(Map<E, Object>)` — a
+- `OTelAPI.attributesOf<E extends OTelSemantic>(Map<E, Object>)`, a
   shorthand-friendly counterpart to `attributesFromSemanticMap`.
   Parameterized on a single concrete semconv enum [E], so Dart 3.10
   static dot-shorthand can drop the prefix at the call site:
@@ -617,7 +618,7 @@ since `0.9.1`.
   Covers every metric in the OTel attribute registry except the
   language-runtime namespaces (`jvm.*`, `go.*`, `nodejs.*`,
   `cpython.*`, `v8js.*`, `kestrel.*`, `aspnetcore.*`, `signalr.*`,
-  `openshift.*`, `nfs.*` — Dart apps don't emit those). Generated by
+  `openshift.*`, `nfs.*`, Dart apps don't emit those). Generated by
   parsing the OTel `model/*/metrics.yaml` files, so name / instrument
   kind / unit string travel together:
 
@@ -635,7 +636,7 @@ since `0.9.1`.
   unifies them; new `SemanticInstrument` enum names the four OTel
   instrument kinds.
 
-- **Spec event-name enum** in new `semantic_events.dart` — all 16
+- **Spec event-name enum** in new `semantic_events.dart`, all 16
   spec-defined event names (`exception`, `feature_flag.evaluation`,
   `browser.web_vital`, `gen_ai.client.inference.operation.details`,
   the per-protocol `*.exception` events for HTTP/RPC/messaging/FaaS,
@@ -646,7 +647,7 @@ since `0.9.1`.
 - **Breaking:** Dropped the `Resource` suffix from semconv-enum names where
   it didn't conflict with a built-in Dart / Flutter / common-package type.
   `HttpResource.requestMethod` is now `Http.requestMethod`,
-  `UrlResource.urlFull` is now `Url.urlFull`, etc. — a straight find-and-
+  `UrlResource.urlFull` is now `Url.urlFull`, etc.. A straight find-and-
   replace migration for ~60 enums. Migration: replace `XResource` →
   `X` for every enum below.
 
@@ -675,7 +676,7 @@ since `0.9.1`.
   `Profile`, `Source`, `System`, `Test`, `Thread`, `Tls`, `Vcs`,
   `Webengine`).
 
-- **Breaking — file restructure.** `lib/src/api/semantics/resource_semantics.dart`
+- **Breaking, file restructure.** `lib/src/api/semantics/resource_semantics.dart`
   → `lib/src/api/semantics/semantics.dart` (the new consolidated home
   for the `OTelSemantic` interface and every attribute-key enum);
   `lib/src/api/semantics/resource_values.dart` →
@@ -686,11 +687,11 @@ since `0.9.1`.
   are unaffected. Direct `src/api/semantics/...` imports need the
   new paths.
 
-- **Breaking — `UserSemantics` removed.** Use the new `User` enum in
+- **Breaking, `UserSemantics` removed.** Use the new `User` enum in
   `semantics.dart` instead. Migration: `UserSemantics.userId` →
   `User.userId`, etc.
 
-- **Breaking — `SessionViewSemantics` split.** OTel-spec keys
+- **Breaking, `SessionViewSemantics` split.** OTel-spec keys
   (`session.id`, `session.previous_id`) → `Session` in `semantics.dart`.
   Datadog/Dynatrace-style non-spec RUM keys (`session_id` underscored,
   `session.start`, `session.duration`, `view.*`, `action.count`,
@@ -699,7 +700,7 @@ since `0.9.1`.
   for Flutter / RUM non-spec conventions.
 
 ### Added
-- **Typed value-set enums** — a new `semantic_values.dart` file exposes
+- **Typed value-set enums**, a new `semantic_values.dart` file exposes
   enums for the 35+ OTel attributes whose spec entry defines a closed
   set of valid string values. Each value enum exposes its on-wire
   string via a `.value` getter and implements `OTelSemanticValue` for
@@ -751,94 +752,94 @@ since `0.9.1`.
 
   New enums (33):
 
-  - `AndroidResource` — `android.os.api_level`, `android.app.state`,
+  - `AndroidResource`, `android.os.api_level`, `android.app.state`,
     `android.state`
-  - `ArtifactResource` — software-artifact / supply-chain
+  - `ArtifactResource`, software-artifact / supply-chain
     (`artifact.attestation.*`, `artifact.hash`, `artifact.purl`,
     `artifact.version`, etc.)
-  - `AwsResource` — ECS / EKS / Lambda / S3 / CloudWatch Logs /
+  - `AwsResource`, ECS / EKS / Lambda / S3 / CloudWatch Logs /
     DynamoDB attributes (`aws.ecs.*`, `aws.eks.cluster.arn`,
     `aws.lambda.invoked_arn`, `aws.s3.*`, `aws.dynamodb.*`,
     `aws.log.*`, `aws.request_id`)
-  - `AzureResource` — `azure.client.id`, `azure.cosmosdb.*`, plus the
+  - `AzureResource`, `azure.client.id`, `azure.cosmosdb.*`, plus the
     legacy `az.namespace` / `az.service_request_id` keys still emitted
     by some SDKs
-  - `BrowserResource` — `browser.brands`, `browser.language`,
+  - `BrowserResource`, `browser.brands`, `browser.language`,
     `browser.mobile`, `browser.platform` (matches what the SDK web
     detector emits)
-  - `CassandraResource` — `cassandra.consistency.level`,
+  - `CassandraResource`, `cassandra.consistency.level`,
     `cassandra.coordinator.dc`, etc.
-  - `CicdResource` — pipeline / task / worker attributes
+  - `CicdResource`, pipeline / task / worker attributes
     (`cicd.pipeline.*`, `cicd.worker.*`, `cicd.system.component`)
-  - `CloudEventsResource` — `cloudevents.event_id`,
+  - `CloudEventsResource`, `cloudevents.event_id`,
     `cloudevents.event_source`, `cloudevents.event_spec_version`,
     `cloudevents.event_subject`, `cloudevents.event_type`
-  - `CloudfoundryResource` — Cloud Foundry platform attrs
+  - `CloudfoundryResource`, Cloud Foundry platform attrs
     (`cloudfoundry.app.*`, `cloudfoundry.org.*`,
     `cloudfoundry.process.*`, `cloudfoundry.space.*`,
     `cloudfoundry.system.*`)
-  - `CodeResource` — source-link attrs (`code.function.name`,
+  - `CodeResource`, source-link attrs (`code.function.name`,
     `code.file.path`, `code.line.number`, `code.column.number`,
     `code.namespace`, `code.stacktrace`)
-  - `DestinationResource` — `destination.address`,
+  - `DestinationResource`, `destination.address`,
     `destination.port` (mirror of `ServerResource` for outbound non-HTTP)
-  - `DnsResource` — `dns.question.name`, `dns.answers`
-  - `ElasticsearchResource` — `elasticsearch.cluster.name`,
+  - `DnsResource`, `dns.question.name`, `dns.answers`
+  - `ElasticsearchResource`, `elasticsearch.cluster.name`,
     `elasticsearch.node.name`, `elasticsearch.node.version`
-  - `EnduserResource` — `enduser.id`, `enduser.role`, `enduser.scope`
+  - `EnduserResource`, `enduser.id`, `enduser.role`, `enduser.scope`
     (separate from `user.*`; `enduser.*` is what services set about
     the end user they're serving)
-  - `EventResource` — `event.name` (used by the logs signal)
-  - `FaasResource` — Function-as-a-Service attrs (`faas.coldstart`,
+  - `EventResource`, `event.name` (used by the logs signal)
+  - `FaasResource`, Function-as-a-Service attrs (`faas.coldstart`,
     `faas.invoked_*`, `faas.trigger`, etc.)
-  - `GcpResource` — `gcp.client.service`, `gcp.cloud_run.job.*`,
+  - `GcpResource`, `gcp.client.service`, `gcp.cloud_run.job.*`,
     `gcp.gce.instance.*`
-  - `GeoResource` — `geo.continent.code`, `geo.country.iso_code`,
+  - `GeoResource`, `geo.continent.code`, `geo.country.iso_code`,
     `geo.locality.name`, `geo.location.lat`, `geo.location.lon`,
     `geo.postal_code`, `geo.region.iso_code`
-  - `HardwareResource` — `hardware.id`, `hardware.name`,
+  - `HardwareResource`, `hardware.id`, `hardware.name`,
     `hardware.parent`, `hardware.type`, `hardware.serial_number`,
     `hardware.vendor`, `hardware.model`
-  - `HerokuResource` — `heroku.app.id`, `heroku.release.commit`,
+  - `HerokuResource`, `heroku.app.id`, `heroku.release.commit`,
     `heroku.release.creation_timestamp`
-  - `IosResource` — `ios.app.state`, `ios.state`
-  - `LogResource` — `log.iostream`, `log.file.*`, `log.record.original`,
+  - `IosResource`, `ios.app.state`, `ios.state`
+  - `LogResource`, `log.iostream`, `log.file.*`, `log.record.original`,
     `log.record.uid`
-  - `NetworkResource` — added `networkProtocolName`
+  - `NetworkResource`, added `networkProtocolName`
     (`network.protocol.name`), `networkProtocolVersion`
     (`network.protocol.version`), and `networkTransport`
-    (`network.transport`) — current OTel semconv keys for the wire
+    (`network.transport`), current OTel semconv keys for the wire
     protocol an HTTP client / server is speaking over
-  - `OciResource` — `oci.manifest.digest`
-  - `OpentracingResource` — `opentracing.ref_type`
-  - `OtelResource` — `otel.scope.name`, `otel.scope.version`,
+  - `OciResource`, `oci.manifest.digest`
+  - `OpentracingResource`, `opentracing.ref_type`
+  - `OtelResource`, `otel.scope.name`, `otel.scope.version`,
     `otel.status_code`, `otel.status_description`,
     `otel.span.sampling_result`, plus the deprecated-but-still-emitted
     `otel.library.name` / `otel.library.version`
-  - `PeerResource` — `peer.service`
-  - `ProfileResource` — `profile.frame.type` (experimental profiling
+  - `PeerResource`, `peer.service`
+  - `ProfileResource`, `profile.frame.type` (experimental profiling
     signal)
-  - `SourceResource` — `source.address`, `source.port` (mirror of
+  - `SourceResource`, `source.address`, `source.port` (mirror of
     `ClientResource` for inbound non-HTTP)
-  - `SystemResource` — system-level metric attrs for CPU / memory /
+  - `SystemResource`, system-level metric attrs for CPU / memory /
     disk / network / filesystem / paging / process (used by the SDK's
     auto-collected runtime metrics)
-  - `TestResource` — `test.case.name`, `test.case.result.status`,
+  - `TestResource`, `test.case.name`, `test.case.result.status`,
     `test.suite.name`, `test.suite.run.status`
-  - `ThreadResource` — `thread.id`, `thread.name`
-  - `TlsResource` — full TLS connection attribute set
+  - `ThreadResource`, `thread.id`, `thread.name`
+  - `TlsResource`. Full TLS connection attribute set
     (`tls.cipher`, `tls.protocol.*`, `tls.client.*`, `tls.server.*`)
-  - `UserAgentResource` — `user_agent.original`, `user_agent.name`,
-    `user_agent.version` — the OTel semconv user-agent attributes set
+  - `UserAgentResource`, `user_agent.original`, `user_agent.name`,
+    `user_agent.version`. The OTel semconv user-agent attributes set
     by HTTP-client instrumentation (e.g. `dartastic_dio_otel`) on
     each outbound request
-  - `VcsResource` — version-control attrs
+  - `VcsResource`, version-control attrs
     (`vcs.repository.url.full`, `vcs.ref.head.*`, `vcs.change.*`,
     `vcs.owner.name`, `vcs.provider.name`, etc.)
-  - `WebengineResource` — `webengine.description`, `webengine.name`,
+  - `WebengineResource`, `webengine.description`, `webengine.name`,
     `webengine.version`
 
-- **Backfilled current-spec keys on `DatabaseResource`** — the older
+- **Backfilled current-spec keys on `DatabaseResource`**, the older
   `db.system` / `db.name` / `db.statement` / `db.operation` entries
   are retained for back-compat, with the newer formalized keys added
   alongside them: `dbSystemName` (`db.system.name`), `dbNamespace`
@@ -868,22 +869,22 @@ since `0.9.1`.
 
 ### Added
 - **Pluggable `TimeProvider` for span timestamps.** New abstraction with three pieces:
-  - `TimeProvider` (interface) and `SystemTimeProvider` (default, `DateTime.now`) — `lib/src/util/time_provider.dart`.
-  - `WebTimeProvider` — `window.performance.now()` + `timeOrigin` for sub-millisecond span timestamps on web. Lives in `lib/src/util/web_time_provider.dart` as a conditional facade (`web_time_provider_web.dart` on Dart-on-JS / Wasm; `web_time_provider_stub.dart` throws on native).
-  - `defaultTimeProvider` — platform-aware constant exported from `lib/src/util/default_time_provider.dart`. Native targets resolve to `SystemTimeProvider`; web targets to `WebTimeProvider`. Selected at compile time via `dart.library.js_interop`, the modern Wasm-compatible check.
+  - `TimeProvider` (interface) and `SystemTimeProvider` (default, `DateTime.now`), `lib/src/util/time_provider.dart`.
+  - `WebTimeProvider`, `window.performance.now()` + `timeOrigin` for sub-millisecond span timestamps on web. Lives in `lib/src/util/web_time_provider.dart` as a conditional facade (`web_time_provider_web.dart` on Dart-on-JS / Wasm; `web_time_provider_stub.dart` throws on native).
+  - `defaultTimeProvider`, platform-aware constant exported from `lib/src/util/default_time_provider.dart`. Native targets resolve to `SystemTimeProvider`; web targets to `WebTimeProvider`. Selected at compile time via `dart.library.js_interop`, the modern Wasm-compatible check.
 
   Plumbed through `APITracerProvider.timeProvider` → `APITracer.timeProvider` → `APISpan._timeProvider` so span starts, ends, and events all source their timestamps from the same clock. `APISpan.addEventNow` and `addEvents(Map)` now route through the span's `_timeProvider` rather than the static `OTelFactory.spanEventNow` shortcut, which was hardcoded to `DateTime.now` and silently dropped sub-millisecond precision when the provider was a `WebTimeProvider`.
 
-  **Why this matters on web.** `DateTime.now()` on Dart-on-JS is millisecond-precision — the underlying source is JS `Date.now()`, and `microsecondsSinceEpoch` returns `millisecondsSinceEpoch × 1000` (the lower three digits are always zero, regardless of the Int64 storage type used by OTLP). `WebTimeProvider` routes through the browser performance API: ~5µs nominal precision, browser-coarsened to ~100µs as a Spectre mitigation, still 10–200× better than `Date.now()`. Native targets are unaffected and stay at `DateTime.now`'s 1µs floor.
+  **Why this matters on web.** `DateTime.now()` on Dart-on-JS is millisecond-precision. The underlying source is JS `Date.now()`, and `microsecondsSinceEpoch` returns `millisecondsSinceEpoch × 1000` (the lower three digits are always zero, regardless of the Int64 storage type used by OTLP). `WebTimeProvider` routes through the browser performance API: ~5µs nominal precision, browser-coarsened to ~100µs as a Spectre mitigation, still 10 to 200× better than `Date.now()`. Native targets are unaffected and stay at `DateTime.now`'s 1µs floor.
 
-  **Auto-default on web.** Web users do not have to opt in — constructing an `APITracerProvider` on a web target automatically gets `WebTimeProvider` via `defaultTimeProvider`. To override (e.g., a fake clock in tests), assign `tracerProvider.timeProvider = customProvider`.
+  **Auto-default on web.** Web users do not have to opt in. Constructing an `APITracerProvider` on a web target automatically gets `WebTimeProvider` via `defaultTimeProvider`. To override (e.g., a fake clock in tests), assign `tracerProvider.timeProvider = customProvider`.
 ### Changed
-- README and the API example now use `OTelAPI.attributesFromSemanticMap({Enum.value: ...})` for typed-enum-keyed attribute maps in place of `OTelAPI.attributesFromMap({Enum.value.key: ...})` / `Attributes.of({Enum.value.key: ...})` / `<String, Object>{...}.toAttributes()`. The shorter form drops the `.key` accessor on every entry while keeping the typed-enum-key principle. Mixing different semconv enum types in one map is fine — the param is `Map<OTelSemantic, Object>` and every semconv enum implements `OTelSemantic`. No API surface change; `attributesFromSemanticMap` has existed since beta-era.
+- README and the API example now use `OTelAPI.attributesFromSemanticMap({Enum.value: ...})` for typed-enum-keyed attribute maps in place of `OTelAPI.attributesFromMap({Enum.value.key: ...})` / `Attributes.of({Enum.value.key: ...})` / `<String, Object>{...}.toAttributes()`. The shorter form drops the `.key` accessor on every entry while keeping the typed-enum-key principle. Mixing different semconv enum types in one map is fine. The param is `Map<OTelSemantic, Object>` and every semconv enum implements `OTelSemantic`. No API surface change; `attributesFromSemanticMap` has existed since beta-era.
 
 ## [1.0.0-beta.4] - 2026-05-10
 
 ### Added
-- `OTelAPI.loggerProviders()` — returns the global default `APILoggerProvider` plus any named providers added via `OTelAPI.addLoggerProvider(name)`. Parallel to the existing `tracerProviders()` and `meterProviders()`. Backed by a new `OTelFactory.getLoggerProviders()` so SDK implementations get the same enumeration. Lets `OTel.shutdown()` in the SDK iterate over named LoggerProviders the way it already does for tracer / meter providers — without this, `OTel.addLoggerProvider(name)` consumers had to remember to shut each one down manually.
+- `OTelAPI.loggerProviders()`. Returns the global default `APILoggerProvider` plus any named providers added via `OTelAPI.addLoggerProvider(name)`. Parallel to the existing `tracerProviders()` and `meterProviders()`. Backed by a new `OTelFactory.getLoggerProviders()` so SDK implementations get the same enumeration. Lets `OTel.shutdown()` in the SDK iterate over named LoggerProviders the way it already does for tracer / meter providers, without this, `OTel.addLoggerProvider(name)` consumers had to remember to shut each one down manually.
 
 ## [1.0.0-beta.3] - 2026-05-10
 
@@ -893,31 +894,31 @@ since `0.9.1`.
 ## [1.0.0-beta.2] - 2026-05-08
 
 ### Added
-- `DatabaseResource.dbCollectionName` (`db.collection.name`) — current OTel semconv key, replaces the deprecated `db.sql.table`.
-- `DatabaseResource.dbResponseReturnedRows` (`db.response.returned_rows`) — current OTel semconv key for the row count returned by a database operation.
-- `UserSemantics.userRoles` (`user.roles`) — current OTel semconv key, an array of roles assigned to a user.
+- `DatabaseResource.dbCollectionName` (`db.collection.name`), current OTel semconv key, replaces the deprecated `db.sql.table`.
+- `DatabaseResource.dbResponseReturnedRows` (`db.response.returned_rows`), current OTel semconv key for the row count returned by a database operation.
+- `UserSemantics.userRoles` (`user.roles`), current OTel semconv key, an array of roles assigned to a user.
 
 ### Changed
 - README and example renamed the placeholder `AppAttribute` enum to `ExampleAttribute` (so readers can't blindly copy the name) and dropped the redundant `app.` prefix from invented demo keys. Where current OTel semconv keys exist, the example now uses the API's typed enums (e.g. `DatabaseResource.dbCollectionName`, `UserSemantics.userRoles`) instead of an app-defined fallback.
 
 ### Removed
-- **Breaking:** `UserSemantics.userRole` (singular `user.role`). The singular form is an anti-pattern — users typically have multiple roles. Use `UserSemantics.userRoles` (`user.roles`) and pass a `List<String>` instead.
+- **Breaking:** `UserSemantics.userRole` (singular `user.role`). The singular form is an anti-pattern. Users typically have multiple roles. Use `UserSemantics.userRoles` (`user.roles`) and pass a `List<String>` instead.
 
 ## [1.0.0-beta.1] - 2026-05-07
 
 ### Fixed
-- `Context.runIsolate()` now marks the deserialized `SpanContext` as `isRemote = true` on the receiving side. Previously the parent isolate's local SpanContext (with `isRemote = false`) was restored verbatim, so `tracer.startSpan` in the new isolate fell into the "no parent" branch and produced a fresh root span instead of a child of the parent. This now matches the W3C trace-context-from-HTTP semantic — a SpanContext that crossed a process or isolate boundary is treated as remote and parented correctly.
+- `Context.runIsolate()` now marks the deserialized `SpanContext` as `isRemote = true` on the receiving side. Previously the parent isolate's local SpanContext (with `isRemote = false`) was restored verbatim, so `tracer.startSpan` in the new isolate fell into the "no parent" branch and produced a fresh root span instead of a child of the parent. This now matches the W3C trace-context-from-HTTP semantic, a SpanContext that crossed a process or isolate boundary is treated as remote and parented correctly.
 
 ## [1.0.0-beta] - 2026-05-07
 
 ### Added
-- (Thank you to Kevin Moore [@kevmoo](https://github.com/kevmoo)) `Context.run()` and `Context.runSync()` — Zone-based implicit context propagation. These are the spec-aligned way to attach a context for a scope of execution and ensure it propagates correctly across `await`s and async callbacks.
+- (Thank you to Kevin Moore [@kevmoo](https://github.com/kevmoo)) `Context.run()` and `Context.runSync()`. Zone-based implicit context propagation. These are the spec-aligned way to attach a context for a scope of execution and ensure it propagates correctly across `await`s and async callbacks.
 - (Thank you to Kevin Moore [@kevmoo](https://github.com/kevmoo)) `isTransferable` flag on `ContextKey` (default `false`) to opt custom keys into cross-isolate transfer via `Context.runIsolate()`.
 - `ServerResource` and `UrlResource` semantic resource enums.
 
 ### Changed
 - **Breaking:** `tracer.startSpan()` no longer automatically activates the span in the current context, aligning with the OpenTelemetry specification. Use `tracer.withSpan` / `withSpanAsync` (or `Context.runSync` / `Context.run`) to make a span active for a scope.
-- **Breaking:** `Context.currentWithBaggage()` is now pure — it returns a Context with Baggage but no longer mutates `Context.current`. Pair the returned Context with `runSync` / `run` if you need it active.
+- **Breaking:** `Context.currentWithBaggage()` is now pure. It returns a Context with Baggage but no longer mutates `Context.current`. Pair the returned Context with `runSync` / `run` if you need it active.
 - **Breaking:** Custom values stored via `ContextKey` are no longer transferred across isolate boundaries by default. Pass `isTransferable: true` when creating the key to opt in. Built-in `Baggage` and `SpanContext` continue to transfer unconditionally.
 - `APITracer.withSpan()` and `withSpanAsync()` now use Zone-based context propagation (`Context.runSync` / `Context.run`) for correct behavior across async boundaries (no-op implementation only).
 - README and example updated to demonstrate Zone-based context management.
@@ -928,7 +929,7 @@ since `0.9.1`.
 ### Fixed
 - `APITracer.createSpan()` now correctly inherits parent spans from the provided `context` parameter or `Context.current`. Previously these were ignored.
 - `Context.runIsolate()` now serializes the specific Context instance it was called on, not the global `Context.current`.
-- `Context.runIsolate()` no longer mutates the parent isolate's `_currentContext` on return — eliminates a case where Zone-bound context could leak into the parent's static field.
+- `Context.runIsolate()` no longer mutates the parent isolate's `_currentContext` on return. Eliminates a case where Zone-bound context could leak into the parent's static field.
 - `nowAsNanos()` no longer loses precision on JS. The 64-bit wrap now happens before the multiplication by 1000.
 
 ## [1.0.0-alpha] - 2025-12-22
