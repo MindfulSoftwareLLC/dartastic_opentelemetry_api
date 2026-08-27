@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.11.0] - 2026-08-27
+
+Stable-channel republication of `1.0.0-rc.3`. The code is the rc's code with a
+stable version stamp, so users who have not opted into prereleases get the
+fixes. See the `1.0.0-rc.3` entry for detail.
+
+### Breaking (relative to 0.10.0)
+
+- `enabled` is now `isEnabled()` on tracers, loggers and instruments, and the
+  `enabled` constructor parameter is removed. Replace `x.enabled` with
+  `x.isEnabled()`.
+  ([#105](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/105))
+- `getTracer`, `getLogger` and `getMeter` no longer invent a scope version or
+  schema URL. Both are `null` when you omit them.
+  ([#108](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/108))
+
 ## [1.0.0-rc.3] - 2026-08-27
 
 ### Changed
