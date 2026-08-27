@@ -17,7 +17,7 @@ class InstrumentationScopeCreate {
   /// @return A new InstrumentationScope instance
   static InstrumentationScope create({
     required String name,
-    String version = '1.0.0',
+    String? version,
     String? schemaUrl,
     Attributes? attributes,
   }) {

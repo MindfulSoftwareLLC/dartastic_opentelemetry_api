@@ -21,8 +21,8 @@ void main() {
 
       expect(logger, isNotNull);
       expect(logger.name, equals('test-logger'));
-      expect(logger.version, isNotNull);
-      expect(logger.schemaUrl, isNotNull);
+      expect(logger.version, isNull);
+      expect(logger.schemaUrl, isNull);
       expect(logger.attributes, isNull);
     });
 

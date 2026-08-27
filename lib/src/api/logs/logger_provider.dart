@@ -85,27 +85,19 @@ class APILoggerProvider {
           'Invalid log name provided; using empty string as fallback.'));
     }
 
-    // Apply default values if none are provided
-    var effectiveVersion = version;
-    var effectiveSchemaUrl = schemaUrl;
-
-    // Only apply defaults if all optional parameters are missing
-    if (version == null && schemaUrl == null && attributes == null) {
-      effectiveVersion = OTelAPI.defaultServiceVersion;
-      effectiveSchemaUrl = OTelAPI.defaultSchemaUrl;
-    }
-
-    // Create a cache key based on the provided parameters.
-    final key = SignalInstanceKey(validatedName, effectiveVersion,
-        effectiveSchemaUrl, attributes, Signal.logs);
+    // Create a cache key based on the provided parameters. A caller who
+    // omits version/schemaUrl gets a logger with a null scope version and
+    // schema URL — the API must not invent values the caller never stated.
+    final key = SignalInstanceKey(
+        validatedName, version, schemaUrl, attributes, Signal.logs);
 
     if (_loggerCache.containsKey(key)) {
       return _loggerCache[key]!;
     } else {
       final logger = LoggerCreate.create(
         name: validatedName,
-        version: effectiveVersion,
-        schemaUrl: effectiveSchemaUrl,
+        version: version,
+        schemaUrl: schemaUrl,
         attributes: attributes,
       );
       _loggerCache[key] = logger;

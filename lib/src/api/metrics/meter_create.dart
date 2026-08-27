@@ -23,18 +23,10 @@ class APIMeterCreate {
     String? schemaUrl,
     Attributes? attributes,
   }) {
-    // Only apply all defaults if none of version, schemaUrl, or attributes are provided
-    final setDefaults =
-        version == null && schemaUrl == null && attributes == null;
-
     return APIMeter._(
       name: name,
-      version: setDefaults
-          ? OTelAPI.defaultServiceVersion
-          : version, // Only set default if no parameters were provided
-      schemaUrl: setDefaults
-          ? OTelAPI.defaultSchemaUrl
-          : schemaUrl, // Only set default if no parameters were provided
+      version: version,
+      schemaUrl: schemaUrl,
       attributes: attributes,
     );
   }

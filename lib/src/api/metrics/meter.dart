@@ -3,7 +3,6 @@
 
 import 'package:meta/meta.dart';
 import '../common/attributes.dart';
-import '../otel_api.dart';
 import 'counter.dart';
 import 'gauge.dart';
 import 'histogram.dart';

@@ -26,8 +26,8 @@ void main() {
       // Assert
       expect(meter, isNotNull);
       expect(meter.name, equals('test-meter'));
-      expect(meter.version, isNotNull);
-      expect(meter.schemaUrl, isNotNull);
+      expect(meter.version, isNull);
+      expect(meter.schemaUrl, isNull);
     });
 
     test('creates meter with empty name as fallback if name is invalid', () {

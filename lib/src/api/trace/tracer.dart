@@ -239,7 +239,7 @@ class APITracer {
       name: name,
       instrumentationScope: InstrumentationScopeCreate.create(
           name: this.name,
-          version: version ?? '1.0.0',
+          version: version,
           schemaUrl: schemaUrl,
           attributes: attributes),
       spanContext: effectiveSpanContext,
