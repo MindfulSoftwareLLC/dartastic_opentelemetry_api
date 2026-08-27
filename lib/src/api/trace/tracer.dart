@@ -249,8 +249,8 @@ class APITracer {
       links: links,
       spanEvents: spanEvents,
       startTime: startTime,
-      isRecording:
-          isRecording ?? true && isEnabled(kind: kind, context: contextOfSpan),
+      isRecording: (isRecording ?? true) &&
+          isEnabled(kind: kind, context: contextOfSpan),
       timeProvider: timeProvider,
     );
     return apiSpan;
