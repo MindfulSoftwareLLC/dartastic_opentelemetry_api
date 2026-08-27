@@ -19,18 +19,16 @@ void main() {
       meterProvider = OTelAPI.meterProvider();
     });
 
-    test('applies all defaults when no optional parameters are provided', () {
+    test(
+        'does not invent a scope version or schema URL when no optional '
+        'parameters are provided', () {
       // Act
       final meter = meterProvider.getMeter(name: 'test-meter');
 
       // Assert
       expect(meter.name, equals('test-meter'));
-      expect(meter.version,
-          equals('1.11.0.0')); // Default version should be applied
-      expect(
-          meter.schemaUrl,
-          equals(
-              'https://opentelemetry.io/schemas/1.11.0')); // Default schema should be applied
+      expect(meter.version, isNull);
+      expect(meter.schemaUrl, isNull);
       expect(meter.attributes, isNull);
     });
 

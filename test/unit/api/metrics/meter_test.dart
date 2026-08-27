@@ -22,9 +22,9 @@ void main() {
     test('has correct properties', () {
       // Assert
       expect(meter.name, equals('test-meter'));
-      expect(meter.version, isNotNull);
+      expect(meter.version, isNull);
       expect(meter.isEnabled(), isFalse);
-      expect(meter.schemaUrl, isNotNull);
+      expect(meter.schemaUrl, isNull);
     });
 
     test('creates counter with valid name', () {

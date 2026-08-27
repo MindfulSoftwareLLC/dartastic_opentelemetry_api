@@ -217,16 +217,17 @@ void main() {
       expect(provider.getLogger('after-shutdown'), isNotNull);
     });
 
-    test('getLogger uses defaults when no optional parameters provided', () {
+    test(
+        'getLogger does not invent a scope version or schema URL when no '
+        'optional parameters are provided', () {
       final provider = OTelAPI.loggerProvider();
 
       final logger = provider.getLogger('test-lib');
 
       expect(logger, isNotNull);
       expect(logger.name, equals('test-lib'));
-      // When no parameters are provided, defaults should be applied
-      expect(logger.version, equals(OTelAPI.defaultServiceVersion));
-      expect(logger.schemaUrl, equals(OTelAPI.defaultSchemaUrl));
+      expect(logger.version, isNull);
+      expect(logger.schemaUrl, isNull);
     });
 
     test(
