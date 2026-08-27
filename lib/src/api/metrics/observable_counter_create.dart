@@ -14,7 +14,6 @@ class ObservableCounterCreate {
     required String name,
     String? unit,
     String? description,
-    required bool enabled,
     required APIMeter meter,
     ObservableCallback<T>? callback,
   }) {
@@ -22,7 +21,6 @@ class ObservableCounterCreate {
       name,
       description,
       unit,
-      enabled,
       meter,
       callback,
     );

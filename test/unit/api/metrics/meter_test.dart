@@ -33,7 +33,7 @@ void main() {
       // Assert
       expect(counter, isNotNull);
       expect(counter.name, equals('test-counter'));
-      expect(counter.enabled,
+      expect(counter.isEnabled(),
           isFalse); // API implementation is disabled by default
       expect(counter.isCounter, isTrue);
       expect(counter.isUpDownCounter, isFalse);
@@ -57,7 +57,7 @@ void main() {
       // Assert
       expect(upDownCounter, isNotNull);
       expect(upDownCounter.name, equals('test-up-down-counter'));
-      expect(upDownCounter.enabled,
+      expect(upDownCounter.isEnabled(),
           isFalse); // API implementation is disabled by default
       expect(upDownCounter.isCounter, isFalse);
       expect(upDownCounter.isUpDownCounter, isTrue);
@@ -80,7 +80,7 @@ void main() {
       // Assert
       expect(histogram, isNotNull);
       expect(histogram.name, equals('test-histogram'));
-      expect(histogram.enabled,
+      expect(histogram.isEnabled(),
           isFalse); // API implementation is disabled by default
       expect(histogram.isCounter, isFalse);
       expect(histogram.isUpDownCounter, isFalse);
@@ -103,8 +103,8 @@ void main() {
       // Assert
       expect(gauge, isNotNull);
       expect(gauge.name, equals('test-gauge'));
-      expect(
-          gauge.enabled, isFalse); // API implementation is disabled by default
+      expect(gauge.isEnabled(),
+          isFalse); // API implementation is disabled by default
       expect(gauge.isCounter, isFalse);
       expect(gauge.isUpDownCounter, isFalse);
       expect(gauge.isGauge, isTrue);
@@ -127,7 +127,7 @@ void main() {
       // Assert
       expect(observableCounter, isNotNull);
       expect(observableCounter.name, equals('test-observable-counter'));
-      expect(observableCounter.enabled,
+      expect(observableCounter.isEnabled(),
           isFalse); // API implementation is disabled by default
     });
 
@@ -149,7 +149,7 @@ void main() {
       expect(observableUpDownCounter, isNotNull);
       expect(observableUpDownCounter.name,
           equals('test-observable-up-down-counter'));
-      expect(observableUpDownCounter.enabled,
+      expect(observableUpDownCounter.isEnabled(),
           isFalse); // API implementation is disabled by default
     });
 
@@ -169,7 +169,7 @@ void main() {
       // Assert
       expect(observableGauge, isNotNull);
       expect(observableGauge.name, equals('test-observable-gauge'));
-      expect(observableGauge.enabled,
+      expect(observableGauge.isEnabled(),
           isFalse); // API implementation is disabled by default
     });
 

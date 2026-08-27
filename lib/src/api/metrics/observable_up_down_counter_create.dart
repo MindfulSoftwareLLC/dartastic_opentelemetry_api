@@ -14,7 +14,6 @@ class ObservableUpDownCounterCreate<T extends num> {
     required String name,
     String? unit,
     String? description,
-    required bool enabled,
     required APIMeter meter,
     ObservableCallback<T>? callback,
   }) {
@@ -22,7 +21,6 @@ class ObservableUpDownCounterCreate<T extends num> {
       name,
       description,
       unit,
-      enabled,
       meter,
       callback,
     );

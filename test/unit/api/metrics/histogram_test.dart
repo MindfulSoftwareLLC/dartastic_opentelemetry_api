@@ -44,7 +44,7 @@ void main() {
       expect(histogram.unit, equals('ms'));
       expect(histogram.description, equals('A test histogram'));
       expect(histogram.meter, equals(meter));
-      expect(histogram.enabled,
+      expect(histogram.isEnabled(),
           isFalse); // API implementation is disabled by default
       expect(histogram.isCounter, isFalse);
       expect(histogram.isUpDownCounter, isFalse);

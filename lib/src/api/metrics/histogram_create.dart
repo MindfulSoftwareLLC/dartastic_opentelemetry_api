@@ -14,7 +14,6 @@ class HistogramCreate {
     required String name,
     String? unit,
     String? description,
-    required bool enabled,
     required APIMeter meter,
     List<double>? boundaries,
   }) {
@@ -22,7 +21,6 @@ class HistogramCreate {
       name,
       description,
       unit,
-      enabled,
       meter,
       boundaries: boundaries,
     );

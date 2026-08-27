@@ -21,9 +21,6 @@ class APIUpDownCounter<T extends num> {
   /// The optional unit of measure for this up-down counter instrument.
   final String? _unit;
 
-  /// Whether this up-down counter is enabled for recording measurements.
-  final bool _enabled;
-
   /// The meter that created this up-down counter instrument.
   final APIMeter _meter;
 
@@ -34,13 +31,11 @@ class APIUpDownCounter<T extends num> {
   /// [_name] The name of the up-down counter instrument.
   /// [_description] Optional description of the up-down counter instrument.
   /// [_unit] Optional unit of measurement for the up-down counter.
-  /// [_enabled] Whether this up-down counter is enabled for recording measurements.
   /// [_meter] The meter that created this up-down counter instrument.
   APIUpDownCounter(
     this._name,
     this._description,
     this._unit,
-    this._enabled,
     this._meter,
   );
 
@@ -53,8 +48,13 @@ class APIUpDownCounter<T extends num> {
   /// Returns the unit of this UpDownCounter.
   String? get unit => _unit;
 
-  /// Returns whether this counter is enabled.
-  bool get enabled => _enabled;
+  /// Returns whether the instrument is enabled and will record measurements.
+  ///
+  /// The returned value can change over time; instrumentation authors need
+  /// to call this before each measurement to ensure they have the most
+  /// up-to-date response. The base API implementation always returns false;
+  /// SDK subclasses override this to compute the real, current value.
+  bool isEnabled() => false;
 
   /// Returns the meter that created this counter.
   APIMeter get meter => _meter;

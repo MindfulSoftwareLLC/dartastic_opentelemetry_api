@@ -21,9 +21,6 @@ class APIHistogram<T extends num> {
   /// The optional unit of measure for this histogram instrument.
   final String? _unit;
 
-  /// Whether this histogram is enabled for recording measurements.
-  final bool _enabled;
-
   /// The meter that created this histogram instrument.
   final APIMeter _meter;
 
@@ -37,11 +34,9 @@ class APIHistogram<T extends num> {
   /// [_name] The name of the histogram instrument.
   /// [_description] Optional description of the histogram instrument.
   /// [_unit] Optional unit of measurement for the histogram.
-  /// [_enabled] Whether this histogram is enabled for recording measurements.
   /// [_meter] The meter that created this histogram instrument.
   /// [boundaries] Optional explicit bucket boundaries for the histogram.
-  APIHistogram(
-      this._name, this._description, this._unit, this._enabled, this._meter,
+  APIHistogram(this._name, this._description, this._unit, this._meter,
       {List<double>? boundaries})
       : _boundaries = boundaries != null ? List.unmodifiable(boundaries) : null;
 
@@ -54,8 +49,13 @@ class APIHistogram<T extends num> {
   /// Returns the unit of this Histogram.
   String? get unit => _unit;
 
-  /// Returns whether this histogram is enabled.
-  bool get enabled => _enabled;
+  /// Returns whether the instrument is enabled and will record measurements.
+  ///
+  /// The returned value can change over time; instrumentation authors need
+  /// to call this before each measurement to ensure they have the most
+  /// up-to-date response. The base API implementation always returns false;
+  /// SDK subclasses override this to compute the real, current value.
+  bool isEnabled() => false;
 
   /// Returns the meter that created this histogram.
   APIMeter get meter => _meter;

@@ -37,7 +37,7 @@ void main() {
       expect(observableGauge.unit, equals('celsius'));
       expect(observableGauge.description, equals('A test observable gauge'));
       expect(observableGauge.meter, equals(meter));
-      expect(observableGauge.enabled,
+      expect(observableGauge.isEnabled(),
           isFalse); // API implementation is disabled by default
     });
 

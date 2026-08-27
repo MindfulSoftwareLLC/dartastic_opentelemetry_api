@@ -57,9 +57,17 @@ class APITracer {
     TimeProvider? timeProvider,
   }) : timeProvider = timeProvider ?? defaultTimeProvider;
 
-  /// Returns true if the tracer is enabled and will create sampling spans.
+  /// Returns whether this tracer is enabled for the provided arguments.
   /// This should be checked before performing expensive operations to create spans.
-  bool get enabled => false;
+  ///
+  /// The returned value can change over time; instrumentation authors need
+  /// to call this each time they create a new span to ensure they have the
+  /// most up-to-date response.
+  ///
+  /// No parameters are currently required by the spec, but this is a method
+  /// (not a getter) so parameters such as [kind] and [context] can be added
+  /// later without a breaking change.
+  bool isEnabled({SpanKind? kind, Context? context}) => false;
 
   /// Gets the currently active span from the current context
   APISpan? get currentSpan => Context.current.span;
@@ -241,7 +249,8 @@ class APITracer {
       links: links,
       spanEvents: spanEvents,
       startTime: startTime,
-      isRecording: isRecording ?? true && enabled,
+      isRecording:
+          isRecording ?? true && isEnabled(kind: kind, context: contextOfSpan),
       timeProvider: timeProvider,
     );
     return apiSpan;

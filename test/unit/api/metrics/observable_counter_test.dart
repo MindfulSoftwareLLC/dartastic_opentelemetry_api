@@ -37,7 +37,7 @@ void main() {
       expect(
           observableCounter.description, equals('A test observable counter'));
       expect(observableCounter.meter, equals(meter));
-      expect(observableCounter.enabled,
+      expect(observableCounter.isEnabled(),
           isFalse); // API implementation is disabled by default
     });
 

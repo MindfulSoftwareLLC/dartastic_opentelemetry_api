@@ -79,7 +79,7 @@ void main() {
       final logger = provider.getLogger('test-logger');
 
       // API logger is always disabled (no-op)
-      expect(logger.enabled, isFalse);
+      expect(logger.isEnabled(), isFalse);
     });
 
     test('emit does not throw with minimal parameters', () {

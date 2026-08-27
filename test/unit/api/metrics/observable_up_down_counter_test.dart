@@ -39,7 +39,7 @@ void main() {
       expect(observableUpDownCounter.description,
           equals('A test observable up-down counter'));
       expect(observableUpDownCounter.meter, equals(meter));
-      expect(observableUpDownCounter.enabled,
+      expect(observableUpDownCounter.isEnabled(),
           isFalse); // API implementation is disabled by default
     });
 

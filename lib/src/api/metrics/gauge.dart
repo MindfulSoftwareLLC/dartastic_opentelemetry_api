@@ -21,9 +21,6 @@ class APIGauge<T extends num> {
   /// The optional unit of measure for this gauge instrument.
   final String? _unit;
 
-  /// Whether this gauge is enabled for recording measurements.
-  final bool _enabled;
-
   /// The meter that created this gauge instrument.
   final APIMeter _meter;
 
@@ -34,13 +31,11 @@ class APIGauge<T extends num> {
   /// [_name] The name of the gauge instrument.
   /// [_description] Optional description of the gauge instrument.
   /// [_unit] Optional unit of measurement for the gauge.
-  /// [_enabled] Whether this gauge is enabled for recording measurements.
   /// [_meter] The meter that created this gauge instrument.
   APIGauge(
     this._name,
     this._description,
     this._unit,
-    this._enabled,
     this._meter,
   );
 
@@ -53,8 +48,13 @@ class APIGauge<T extends num> {
   /// Returns the unit of this Gauge.
   String? get unit => _unit;
 
-  /// Returns whether this gauge is enabled.
-  bool get enabled => _enabled;
+  /// Returns whether the instrument is enabled and will record measurements.
+  ///
+  /// The returned value can change over time; instrumentation authors need
+  /// to call this before each measurement to ensure they have the most
+  /// up-to-date response. The base API implementation always returns false;
+  /// SDK subclasses override this to compute the real, current value.
+  bool isEnabled() => false;
 
   /// Returns the meter that created this gauge.
   APIMeter get meter => _meter;

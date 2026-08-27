@@ -44,8 +44,13 @@ class APIMeter {
     this.attributes,
   });
 
-  /// Returns true if the meter is enabled and will create instruments.
-  bool get enabled => false;
+  /// Returns whether the meter is enabled and will create instruments.
+  ///
+  /// The returned value can change over time; instrumentation authors need
+  /// to call this before creating instruments to ensure they have the most
+  /// up-to-date response. The base API implementation always returns false;
+  /// SDK subclasses override this to compute the real, current value.
+  bool isEnabled() => false;
 
   /// Creates a [Counter] with the given name.
   ///
@@ -67,7 +72,6 @@ class APIMeter {
       name: name,
       unit: unit,
       description: description,
-      enabled: enabled,
       meter: this,
     );
   }
@@ -92,7 +96,6 @@ class APIMeter {
       name: name,
       unit: unit,
       description: description,
-      enabled: enabled,
       meter: this,
     );
   }
@@ -120,7 +123,6 @@ class APIMeter {
       name: name,
       unit: unit,
       description: description,
-      enabled: enabled,
       meter: this,
       boundaries: boundaries,
     );
@@ -147,7 +149,6 @@ class APIMeter {
       name: name,
       unit: unit,
       description: description,
-      enabled: enabled,
       meter: this,
     );
   }
@@ -175,7 +176,6 @@ class APIMeter {
       name: name,
       unit: unit,
       description: description,
-      enabled: enabled,
       meter: this,
       callback: callback,
     );
@@ -204,7 +204,6 @@ class APIMeter {
       name: name,
       unit: unit,
       description: description,
-      enabled: enabled,
       meter: this,
       callback: callback,
     );
@@ -233,7 +232,6 @@ class APIMeter {
       name: name,
       unit: unit,
       description: description,
-      enabled: enabled,
       meter: this,
       callback: callback,
     );

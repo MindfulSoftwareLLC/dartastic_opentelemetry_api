@@ -26,14 +26,12 @@ void main() {
       const name = 'test-instrument';
       const unit = 'ms';
       const description = 'A test instrument';
-      const enabled = true;
 
       // Act
       final instrument = TestAPIInstrument(
         name: name,
         unit: unit,
         description: description,
-        enabled: enabled,
         meter: meter,
       );
 
@@ -41,21 +39,19 @@ void main() {
       expect(instrument.name, equals(name));
       expect(instrument.unit, equals(unit));
       expect(instrument.description, equals(description));
-      expect(instrument.enabled, equals(enabled));
+      expect(instrument.isEnabled(), isFalse); // Base API default
       expect(instrument.meter, equals(meter));
     });
 
     test('instrument works with null unit and description', () {
       // Arrange
       const name = 'test-instrument';
-      const enabled = false;
 
       // Act
       final instrument = TestAPIInstrument(
         name: name,
         unit: null,
         description: null,
-        enabled: enabled,
         meter: meter,
       );
 
@@ -63,8 +59,19 @@ void main() {
       expect(instrument.name, equals(name));
       expect(instrument.unit, isNull);
       expect(instrument.description, isNull);
-      expect(instrument.enabled, equals(enabled));
+      expect(instrument.isEnabled(), isFalse); // Base API default
       expect(instrument.meter, equals(meter));
+    });
+
+    test('subclass can override isEnabled', () {
+      // Act
+      final instrument = OverriddenAPIInstrument(
+        name: 'test-instrument',
+        meter: meter,
+      );
+
+      // Assert
+      expect(instrument.isEnabled(), isTrue); // Confirm override path works
     });
 
     test('specific instrument types extend APIInstrument', () {
@@ -97,7 +104,17 @@ class TestAPIInstrument extends APIInstrument {
     required super.name,
     super.unit,
     super.description,
-    required super.enabled,
     required super.meter,
   });
+}
+
+/// Test implementation of APIInstrument overriding isEnabled
+class OverriddenAPIInstrument extends APIInstrument {
+  OverriddenAPIInstrument({
+    required super.name,
+    required super.meter,
+  });
+
+  @override
+  bool isEnabled() => true;
 }
