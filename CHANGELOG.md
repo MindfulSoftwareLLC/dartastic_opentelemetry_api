@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.0.0-rc.4-wip]
 
+### Fixed
+
+- `TraceState.put` now moves a new or updated key to the front of the
+  entries, per the W3C Trace Context rules for mutating `tracestate`.
+  Previously new keys were appended and updated keys kept their old
+  position, so the serialized header carried the changed entry in the
+  wrong place; overflow trimming also evicted the newest entry instead of
+  the oldest.
+  ([#115](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/115))
+
 ## [1.0.0-rc.3] - 2026-08-27
 
 ### Changed
