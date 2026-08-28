@@ -37,10 +37,12 @@ export 'src/api/logs/logger.dart' hide LoggerCreate;
 export 'src/api/logs/logger_provider.dart' hide LogProviderCreate;
 export 'src/api/logs/severity.dart';
 //Metrics
+export 'src/api/metrics/batch_callback.dart';
 export 'src/api/metrics/counter.dart' hide CounterCreate;
 export 'src/api/metrics/gauge.dart' hide GaugeCreate;
 export 'src/api/metrics/histogram.dart' hide HistogramCreate;
 export 'src/api/metrics/instrument.dart';
+export 'src/api/metrics/instrument_advisory.dart';
 export 'src/api/metrics/measurement.dart' hide MeasurementCreate;
 export 'src/api/metrics/meter.dart' hide APIMeterCreate;
 export 'src/api/metrics/meter_provider.dart' hide MeterProviderCreate;

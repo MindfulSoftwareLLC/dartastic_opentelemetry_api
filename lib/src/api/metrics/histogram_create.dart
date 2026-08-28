@@ -15,14 +15,14 @@ class HistogramCreate {
     String? unit,
     String? description,
     required APIMeter meter,
-    List<double>? boundaries,
+    InstrumentAdvisory? advisory,
   }) {
     return APIHistogram<T>(
       name,
       description,
       unit,
       meter,
-      boundaries: boundaries,
+      advisory: advisory,
     );
   }
 }

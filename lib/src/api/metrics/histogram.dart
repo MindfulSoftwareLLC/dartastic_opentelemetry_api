@@ -3,6 +3,7 @@
 
 import 'package:meta/meta.dart';
 import '../common/attributes.dart';
+import 'instrument_advisory.dart';
 import 'meter.dart';
 
 part 'histogram_create.dart';
@@ -24,8 +25,8 @@ class APIHistogram<T extends num> {
   /// The meter that created this histogram instrument.
   final APIMeter _meter;
 
-  /// The optional explicit bucket boundaries for this histogram.
-  final List<double>? _boundaries;
+  /// The optional advisory parameters for this histogram.
+  final InstrumentAdvisory? _advisory;
 
   /// Creates a new [APIHistogram] instrument.
   ///
@@ -35,10 +36,10 @@ class APIHistogram<T extends num> {
   /// [_description] Optional description of the histogram instrument.
   /// [_unit] Optional unit of measurement for the histogram.
   /// [_meter] The meter that created this histogram instrument.
-  /// [boundaries] Optional explicit bucket boundaries for the histogram.
+  /// [advisory] Optional advisory parameters for the histogram.
   APIHistogram(this._name, this._description, this._unit, this._meter,
-      {List<double>? boundaries})
-      : _boundaries = boundaries != null ? List.unmodifiable(boundaries) : null;
+      {InstrumentAdvisory? advisory})
+      : _advisory = advisory;
 
   /// Returns the name of this Histogram.
   String get name => _name;
@@ -60,8 +61,12 @@ class APIHistogram<T extends num> {
   /// Returns the meter that created this histogram.
   APIMeter get meter => _meter;
 
+  /// Returns the advisory parameters for this histogram.
+  InstrumentAdvisory? get advisory => _advisory;
+
   /// Returns the explicit bucket boundaries, if specified during creation.
-  List<double>? get boundaries => _boundaries;
+  @Deprecated('Use advisory?.explicitBucketBoundaries instead')
+  List<double>? get boundaries => _advisory?.explicitBucketBoundaries;
 
   /// Records a value in the histogram.
   ///
