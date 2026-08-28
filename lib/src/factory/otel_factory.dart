@@ -18,6 +18,7 @@ import '../api/logs/logger_provider.dart';
 import '../api/metrics/counter.dart';
 import '../api/metrics/gauge.dart';
 import '../api/metrics/histogram.dart';
+import '../api/metrics/instrument_advisory.dart';
 import '../api/metrics/measurement.dart';
 import '../api/metrics/meter_provider.dart';
 import '../api/metrics/observable_callback.dart';
@@ -443,30 +444,47 @@ abstract class OTelFactory {
   SpanEvent spanEvent(String name, Attributes? attributes, DateTime? timestamp);
 
   /// Creates a [APICounter] instrument with the given name
-  APICounter createCounter(String name, {String? description, String? unit});
+  APICounter createCounter(String name,
+      {String? description, String? unit, InstrumentAdvisory? advisory});
 
   /// Creates a [APIUpDownCounter] instrument with the given name
   APIUpDownCounter createUpDownCounter(String name,
-      {String? description, String? unit});
+      {String? description, String? unit, InstrumentAdvisory? advisory});
 
   /// Creates a [APIGauge] instrument with the given name
-  APIGauge createGauge(String name, {String? description, String? unit});
+  APIGauge createGauge(String name,
+      {String? description, String? unit, InstrumentAdvisory? advisory});
 
   /// Creates a [APIHistogram] instrument with the given name
   APIHistogram createHistogram(String name,
-      {String? description, String? unit, List<double>? boundaries});
+      {String? description,
+      String? unit,
+      List<double>? boundaries,
+      InstrumentAdvisory? advisory});
 
   /// Creates an [APIObservableCounter] instrument with the given name
   APIObservableCounter createObservableCounter(String name,
-      {String? description, String? unit, ObservableCallback? callback});
+      {String? description,
+      String? unit,
+      ObservableCallback? callback,
+      List<ObservableCallback> callbacks = const [],
+      InstrumentAdvisory? advisory});
 
   /// Creates an [APIObservableGauge] instrument with the given name
   APIObservableGauge createObservableGauge(String name,
-      {String? description, String? unit, ObservableCallback? callback});
+      {String? description,
+      String? unit,
+      ObservableCallback? callback,
+      List<ObservableCallback> callbacks = const [],
+      InstrumentAdvisory? advisory});
 
   /// Creates an [APIObservableUpDownCounter] instrument with the given name
   APIObservableUpDownCounter createObservableUpDownCounter(String name,
-      {String? description, String? unit, ObservableCallback? callback});
+      {String? description,
+      String? unit,
+      ObservableCallback? callback,
+      List<ObservableCallback> callbacks = const [],
+      InstrumentAdvisory? advisory});
 
   ///Creates a span context. Random trace and span ids
   ///will be generated if not provided.

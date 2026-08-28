@@ -2,10 +2,13 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import 'package:meta/meta.dart';
+
 import '../common/attributes.dart';
+import 'batch_callback.dart';
 import 'counter.dart';
 import 'gauge.dart';
 import 'histogram.dart';
+import 'instrument_advisory.dart';
 import 'observable_callback.dart';
 import 'observable_counter.dart';
 import 'observable_gauge.dart';
@@ -62,6 +65,7 @@ class APIMeter {
     required String name,
     String? unit,
     String? description,
+    InstrumentAdvisory? advisory,
   }) {
     if (name.isEmpty) {
       throw ArgumentError('Counter name must not be empty');
@@ -72,6 +76,7 @@ class APIMeter {
       unit: unit,
       description: description,
       meter: this,
+      advisory: advisory,
     );
   }
 
@@ -86,6 +91,7 @@ class APIMeter {
     required String name,
     String? unit,
     String? description,
+    InstrumentAdvisory? advisory,
   }) {
     if (name.isEmpty) {
       throw ArgumentError('UpDownCounter name must not be empty');
@@ -96,6 +102,7 @@ class APIMeter {
       unit: unit,
       description: description,
       meter: this,
+      advisory: advisory,
     );
   }
 
@@ -112,18 +119,26 @@ class APIMeter {
     required String name,
     String? unit,
     String? description,
+    @Deprecated(
+        'Use advisory: InstrumentAdvisory(explicitBucketBoundaries: ...) instead')
     List<double>? boundaries,
+    InstrumentAdvisory? advisory,
   }) {
     if (name.isEmpty) {
       throw ArgumentError('Histogram name must not be empty');
     }
+
+    // Precedence: explicit boundaries parameter wins over advisory.explicitBucketBoundaries
+    final effectiveAdvisory = boundaries != null
+        ? InstrumentAdvisory(explicitBucketBoundaries: boundaries)
+        : advisory;
 
     return HistogramCreate.create<T>(
       name: name,
       unit: unit,
       description: description,
       meter: this,
-      boundaries: boundaries,
+      advisory: effectiveAdvisory,
     );
   }
 
@@ -139,6 +154,7 @@ class APIMeter {
     required String name,
     String? unit,
     String? description,
+    InstrumentAdvisory? advisory,
   }) {
     if (name.isEmpty) {
       throw ArgumentError('Gauge name must not be empty');
@@ -149,6 +165,7 @@ class APIMeter {
       unit: unit,
       description: description,
       meter: this,
+      advisory: advisory,
     );
   }
 
@@ -165,18 +182,23 @@ class APIMeter {
     required String name,
     String? unit,
     String? description,
-    ObservableCallback<T>? callback,
+    InstrumentAdvisory? advisory,
+    List<ObservableCallback<T>> callbacks = const [],
+    @Deprecated('Use callbacks instead') ObservableCallback<T>? callback,
   }) {
     if (name.isEmpty) {
       throw ArgumentError('ObservableCounter name must not be empty');
     }
+
+    final merged = [if (callback != null) callback, ...callbacks];
 
     return ObservableCounterCreate.create<T>(
       name: name,
       unit: unit,
       description: description,
       meter: this,
-      callback: callback,
+      advisory: advisory,
+      callbacks: merged,
     );
   }
 
@@ -193,18 +215,23 @@ class APIMeter {
     required String name,
     String? unit,
     String? description,
-    ObservableCallback<T>? callback,
+    InstrumentAdvisory? advisory,
+    List<ObservableCallback<T>> callbacks = const [],
+    @Deprecated('Use callbacks instead') ObservableCallback<T>? callback,
   }) {
     if (name.isEmpty) {
       throw ArgumentError('ObservableUpDownCounter name must not be empty');
     }
+
+    final merged = [if (callback != null) callback, ...callbacks];
 
     return ObservableUpDownCounterCreate.create<T>(
       name: name,
       unit: unit,
       description: description,
       meter: this,
-      callback: callback,
+      advisory: advisory,
+      callbacks: merged,
     );
   }
 
@@ -221,19 +248,64 @@ class APIMeter {
     required String name,
     String? unit,
     String? description,
-    ObservableCallback<T>? callback,
+    InstrumentAdvisory? advisory,
+    List<ObservableCallback<T>> callbacks = const [],
+    @Deprecated('Use callbacks instead') ObservableCallback<T>? callback,
   }) {
     if (name.isEmpty) {
       throw ArgumentError('ObservableGauge name must not be empty');
     }
+
+    final merged = [if (callback != null) callback, ...callbacks];
 
     return ObservableGaugeCreate.create<T>(
       name: name,
       unit: unit,
       description: description,
       meter: this,
-      callback: callback,
+      advisory: advisory,
+      callbacks: merged,
     );
+  }
+
+  /// Registers a batch callback for multiple observable instruments.
+  APIBatchCallbackRegistration registerBatchCallback(
+    BatchObservableCallback callback,
+    Set<dynamic> instruments,
+  ) {
+    // Validate: each instrument must be an APIObservableCounter,
+    // APIObservableUpDownCounter, or APIObservableGauge, and
+    // instrument.meter must be identical(this).
+    for (final instrument in instruments) {
+      if (instrument is! APIObservableCounter &&
+          instrument is! APIObservableUpDownCounter &&
+          instrument is! APIObservableGauge) {
+        throw ArgumentError(
+          'registerBatchCallback: instrument $instrument is not an '
+          'observable instrument type.',
+        );
+      }
+      final APIMeter instrumentMeter;
+      final String instrumentName;
+      if (instrument is APIObservableCounter) {
+        instrumentMeter = instrument.meter;
+        instrumentName = instrument.name;
+      } else if (instrument is APIObservableUpDownCounter) {
+        instrumentMeter = instrument.meter;
+        instrumentName = instrument.name;
+      } else {
+        instrumentMeter = (instrument as APIObservableGauge).meter;
+        instrumentName = instrument.name;
+      }
+      if (!identical(instrumentMeter, this)) {
+        throw ArgumentError(
+          'registerBatchCallback: instrument "$instrumentName" '
+          'belongs to a different Meter instance.',
+        );
+      }
+    }
+    // No-op: return a stateless registration
+    return _NoopBatchCallbackRegistration();
   }
 
   @override
@@ -252,4 +324,9 @@ class APIMeter {
       version.hashCode ^
       schemaUrl.hashCode ^
       attributes.hashCode;
+}
+
+class _NoopBatchCallbackRegistration implements APIBatchCallbackRegistration {
+  @override
+  void unregister() {}
 }

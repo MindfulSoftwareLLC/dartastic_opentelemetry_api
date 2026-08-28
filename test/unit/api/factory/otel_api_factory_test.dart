@@ -129,8 +129,6 @@ void main() {
       );
 
       expect(provider, isA<APIMeterProvider>());
-      expect(provider.serviceName, equals('test-service'));
-      expect(provider.serviceVersion, equals('1.0.0'));
     });
 
     test('creates empty attributes', () {

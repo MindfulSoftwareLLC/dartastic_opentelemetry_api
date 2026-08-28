@@ -18,6 +18,7 @@ import '../logs/logger_provider.dart';
 import '../metrics/counter.dart';
 import '../metrics/gauge.dart';
 import '../metrics/histogram.dart';
+import '../metrics/instrument_advisory.dart';
 import '../metrics/meter.dart';
 import '../metrics/meter_provider.dart';
 import '../metrics/observable_callback.dart';
@@ -119,10 +120,7 @@ class OTelAPIFactory extends OTelFactory {
       {required String endpoint,
       String serviceName = OTelAPI.defaultServiceName,
       String? serviceVersion = OTelAPI.defaultServiceVersion}) {
-    return MeterProviderCreate.create(
-        endpoint: endpoint,
-        serviceName: serviceName,
-        serviceVersion: serviceVersion);
+    return MeterProviderCreate.create();
   }
 
   /// Creates a new instance of [APILoggerProvider] with the specified parameters.
@@ -377,82 +375,114 @@ class OTelAPIFactory extends OTelFactory {
   }
 
   @override
-  APICounter createCounter(String name, {String? description, String? unit}) {
+  APICounter createCounter(String name,
+      {String? description, String? unit, InstrumentAdvisory? advisory}) {
     return CounterCreate.create(
       name: name,
       description: description,
       unit: unit,
       meter: APIMeterCreate.create(name: '@api/default'),
+      advisory: advisory,
     );
   }
 
   @override
   APIUpDownCounter createUpDownCounter(String name,
-      {String? description, String? unit}) {
+      {String? description, String? unit, InstrumentAdvisory? advisory}) {
     return UpDownCounterCreate.create(
       name: name,
       description: description,
       unit: unit,
       meter: APIMeterCreate.create(name: '@api/default'),
+      advisory: advisory,
     );
   }
 
   @override
-  APIGauge createGauge(String name, {String? description, String? unit}) {
+  APIGauge createGauge(String name,
+      {String? description, String? unit, InstrumentAdvisory? advisory}) {
     return GaugeCreate.create(
       name: name,
       description: description,
       unit: unit,
       meter: APIMeterCreate.create(name: '@api/default'),
+      advisory: advisory,
     );
   }
 
   @override
   APIHistogram createHistogram(String name,
-      {String? description, String? unit, List<double>? boundaries}) {
+      {String? description,
+      String? unit,
+      List<double>? boundaries,
+      InstrumentAdvisory? advisory}) {
     return HistogramCreate.create(
       name: name,
       description: description,
       unit: unit,
       meter: APIMeterCreate.create(name: '@api/default'),
-      boundaries: boundaries,
+      advisory: advisory ??
+          (boundaries != null
+              ? InstrumentAdvisory(explicitBucketBoundaries: boundaries)
+              : null),
     );
   }
 
   @override
   APIObservableCounter createObservableCounter(String name,
-      {String? description, String? unit, ObservableCallback? callback}) {
+      {String? description,
+      String? unit,
+      ObservableCallback? callback,
+      List<ObservableCallback> callbacks = const [],
+      InstrumentAdvisory? advisory}) {
     return ObservableCounterCreate.create(
       name: name,
       description: description,
       unit: unit,
       meter: APIMeterCreate.create(name: '@api/default'),
-      callback: callback,
+      callbacks: _mergeCallbacks(callback, callbacks),
+      advisory: advisory,
     );
   }
 
   @override
   APIObservableGauge createObservableGauge(String name,
-      {String? description, String? unit, ObservableCallback? callback}) {
+      {String? description,
+      String? unit,
+      ObservableCallback? callback,
+      List<ObservableCallback> callbacks = const [],
+      InstrumentAdvisory? advisory}) {
     return ObservableGaugeCreate.create(
       name: name,
       description: description,
       unit: unit,
       meter: APIMeterCreate.create(name: '@api/default'),
-      callback: callback,
+      callbacks: _mergeCallbacks(callback, callbacks),
+      advisory: advisory,
     );
   }
 
   @override
   APIObservableUpDownCounter createObservableUpDownCounter(String name,
-      {String? description, String? unit, ObservableCallback? callback}) {
+      {String? description,
+      String? unit,
+      ObservableCallback? callback,
+      List<ObservableCallback> callbacks = const [],
+      InstrumentAdvisory? advisory}) {
     return ObservableUpDownCounterCreate.create(
       name: name,
       description: description,
       unit: unit,
       meter: APIMeterCreate.create(name: '@api/default'),
-      callback: callback,
+      callbacks: _mergeCallbacks(callback, callbacks),
+      advisory: advisory,
     );
+  }
+
+  List<ObservableCallback<T>> _mergeCallbacks<T extends num>(
+      ObservableCallback<T>? callback, List<ObservableCallback<T>> callbacks) {
+    if (callback == null) return callbacks;
+    return [callback, ...callbacks];
   }
 
   @override
