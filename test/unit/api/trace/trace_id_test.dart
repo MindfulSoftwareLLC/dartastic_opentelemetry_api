@@ -46,8 +46,6 @@ void main() {
       );
     });
 
-    // Both strings below are 32 characters, so only the character grammar
-    // can reject them.
     test('rejects a correctly sized uppercase hex string', () {
       expect(
         () => OTelAPI.traceIdFrom('4BF92F3577B34DA6A3CE929D0E0E4736'),
