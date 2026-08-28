@@ -9,9 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed (spec compliance)
 
+- **BREAKING**: `TraceFlags.fromString` returns null for anything outside two
+  lowercase hex digits.
 - **BREAKING**: `IdGenerator.hexToBytes`, and so `OTelAPI.traceIdFrom` and
   `OTelAPI.spanIdFrom`, no longer accept anything outside lowercase hex
   ([#112](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/112)).
+- Trace flags hold a single byte, so they always render as two hex digits.
 
 ## [1.0.0-rc.3] - 2026-08-27
 
