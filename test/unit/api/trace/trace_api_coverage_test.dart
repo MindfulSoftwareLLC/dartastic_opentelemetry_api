@@ -135,8 +135,11 @@ void main() {
       final traceState = OTelAPI.traceState(full);
       final evicted = traceState.put('overflow', 'v');
 
+      // Map/header order is left-to-right = newest-to-oldest (W3C), so
+      // key0 (first) is newest and key31 (last) is oldest and gets evicted.
       expect(evicted.get('overflow'), equals('v'));
-      expect(evicted.get('key0'), isNull, reason: 'oldest entry is evicted');
+      expect(evicted.get('key31'), isNull, reason: 'oldest entry is evicted');
+      expect(evicted.get('key0'), equals('value0'));
       expect(evicted.entries, hasLength(32));
     });
 
