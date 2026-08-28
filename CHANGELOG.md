@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **BREAKING**: `IdGenerator.hexToBytes`, and so `OTelAPI.traceIdFrom` and
   `OTelAPI.spanIdFrom`, no longer accept anything outside lowercase hex
-  ([#NNN](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/NNN)).
+  ([#112](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/112)).
 
 ## [1.0.0-rc.3] - 2026-08-27
 
