@@ -29,15 +29,55 @@ void main() {
       expect(IdGenerator.bytesToHex(bytes), equals('1234abcd'));
     });
 
-    test('converts hex to bytes', () {
-      final hex = '1234abcd';
-      final bytes = IdGenerator.hexToBytes(hex);
-      expect(bytes, equals([0x12, 0x34, 0xAB, 0xCD]));
-    });
+    group('hexToBytes', () {
+      test('converts hex to bytes', () {
+        final hex = '1234abcd';
+        final bytes = IdGenerator.hexToBytes(hex);
+        expect(bytes, equals([0x12, 0x34, 0xAB, 0xCD]));
+      });
 
-    test('returns null for invalid hex string', () {
-      expect(IdGenerator.hexToBytes('invalid'), isNull);
-      expect(IdGenerator.hexToBytes('123'), isNull);
+      test('accepts the full lowercase alphabet', () {
+        expect(
+          IdGenerator.hexToBytes('0123456789abcdef'),
+          equals([0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF]),
+        );
+      });
+
+      test('returns null for an odd-length string', () {
+        expect(IdGenerator.hexToBytes('invalid'), isNull);
+        expect(IdGenerator.hexToBytes('123'), isNull);
+      });
+
+      test('rejects non-hex letters', () {
+        expect(IdGenerator.hexToBytes('zz'), isNull);
+      });
+
+      test('rejects uppercase hex', () {
+        expect(IdGenerator.hexToBytes('1234abcd'.toUpperCase()), isNull);
+      });
+
+      test('rejects mixed-case hex', () {
+        expect(IdGenerator.hexToBytes('1234abcD'), isNull);
+        expect(IdGenerator.hexToBytes('Ab'), isNull);
+      });
+
+      test('rejects a plus sign', () {
+        expect(IdGenerator.hexToBytes('+f'), isNull);
+      });
+
+      test('rejects a minus sign rather than wrapping it to 0xff', () {
+        expect(IdGenerator.hexToBytes('-1'), isNull);
+      });
+
+      test('rejects surrounding whitespace', () {
+        expect(IdGenerator.hexToBytes(' f'), isNull);
+        expect(IdGenerator.hexToBytes('f '), isNull);
+        expect(IdGenerator.hexToBytes('\tf'), isNull);
+      });
+
+      test('decodes an empty string to an empty list', () {
+        expect(IdGenerator.hexToBytes(''), isEmpty);
+      });
     });
   });
 }

@@ -46,6 +46,24 @@ void main() {
       );
     });
 
+    // Both strings below are 32 characters, so only the character grammar
+    // can reject them.
+    test('rejects a correctly sized uppercase hex string', () {
+      expect(
+        () => OTelAPI.traceIdFrom('4BF92F3577B34DA6A3CE929D0E0E4736'),
+        throwsA(isA<FormatException>()),
+      );
+    });
+
+    test('rejects a signed hex string instead of corrupting the id', () {
+      // '-b' parsed to -11 and wrapped to 0xf5, so this returned an id that
+      // did not match the string it was built from.
+      expect(
+        () => OTelAPI.traceIdFrom('-bf92f3577b34da6a3ce929d0e0e4736'),
+        throwsA(isA<FormatException>()),
+      );
+    });
+
     test('provides access to raw bytes', () {
       final id = OTelAPI.traceId();
       expect(id.bytes.length, equals(16),
