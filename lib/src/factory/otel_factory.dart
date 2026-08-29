@@ -38,7 +38,7 @@ import '../api/trace/tracer_provider.dart';
 import '../util/otel_error_handler.dart';
 import '../util/otel_log.dart';
 
-/// A function that creates the OTel Factory, used bu initialize methods
+/// A function that creates the OTel Factory, used by initialize methods
 typedef OTelFactoryCreationFunction = OTelFactory Function(
     {required String apiEndpoint,
     required String apiServiceName,
