@@ -42,26 +42,17 @@ class TraceState {
     final entries = <String, String>{};
     final pairs = headerValue.split(',');
 
-    for (final pair in pairs) {
-      // The whitespace around a list member has no meaning. A space inside a
-      // value does have meaning, so this code trims the member, not the value.
-      final member = pair.trim();
-      // A value cannot contain "=", so the first "=" is the separator.
-      final separator = member.indexOf('=');
-      // A result of -1 is a member with no "=". A result of 0 is a member
-      // with an empty key. W3C allows an empty member, and this loop skips it.
-      if (separator < 1) continue;
-      final key = member.substring(0, separator);
-      final value = member.substring(separator + 1);
+    for (var pair in pairs) {
+      final keyValue = pair.trim().split('=');
       // W3C allows one entry for each key. A repeated key makes the header
-      // invalid, so this code keeps the first entry and drops the later one.
-      if (entries.containsKey(key) ||
-          !_isValidKey(key) ||
-          !_isValidValue(value)) {
-        continue;
+      // invalid, so the first entry stays and the later ones are dropped.
+      if (keyValue.length == 2 &&
+          !entries.containsKey(keyValue[0]) &&
+          _isValidKey(keyValue[0]) &&
+          _isValidValue(keyValue[1])) {
+        entries[keyValue[0]] = keyValue[1];
+        if (entries.length >= _maxKeyValuePairs) break;
       }
-      entries[key] = value;
-      if (entries.length >= _maxKeyValuePairs) break;
     }
 
     return factory.traceState(entries);
