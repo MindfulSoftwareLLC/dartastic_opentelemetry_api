@@ -24,12 +24,15 @@ class TraceState {
     _entries = entries ?? {};
   }
 
-  /// Create TraceState from a W3C trace context header string.
+  /// Creates a TraceState from a W3C trace context header string.
   ///
-  /// A list member that breaks the W3C grammar is dropped, so the result only
-  /// ever holds entries that are legal to propagate again. A key that repeats
-  /// is invalid: the first entry is kept and the later ones are dropped.
-  /// Parsing stops at the 32 member limit.
+  /// The parser drops a list member that breaks the W3C grammar. The result
+  /// holds only the entries that this package can send on again.
+  ///
+  /// W3C allows one entry for each key. If a key repeats, the parser keeps
+  /// the first entry and drops the later ones.
+  ///
+  /// The parser stops at the limit of 32 members.
   factory TraceState.fromString(String? headerValue) {
     final factory = OTelFactory.getOrCreateDefault();
     if (headerValue == null || headerValue.isEmpty) {
@@ -40,15 +43,18 @@ class TraceState {
     final pairs = headerValue.split(',');
 
     for (final pair in pairs) {
-      // Trim the whitespace around the list member, never inside the value -
-      // a leading space in a value is significant.
+      // The whitespace around a list member has no meaning. A space inside a
+      // value does have meaning, so this code trims the member, not the value.
       final member = pair.trim();
+      // A value cannot contain "=", so the first "=" is the separator.
       final separator = member.indexOf('=');
-      // No separator, or an empty key. An empty member is legal and ignored.
+      // A result of -1 is a member with no "=". A result of 0 is a member
+      // with an empty key. W3C allows an empty member, and this loop skips it.
       if (separator < 1) continue;
       final key = member.substring(0, separator);
       final value = member.substring(separator + 1);
-      // W3C allows one entry per key; a repeat makes the header invalid.
+      // W3C allows one entry for each key. A repeated key makes the header
+      // invalid, so this code keeps the first entry and drops the later one.
       if (entries.containsKey(key) ||
           !_isValidKey(key) ||
           !_isValidValue(value)) {
