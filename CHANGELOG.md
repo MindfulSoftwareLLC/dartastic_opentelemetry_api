@@ -14,10 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   a MUST. Comments only, no behavior change
   ([#121](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/121)).
 
-- `TraceState.fromString` drops a list member if the key repeats. Before, the
-  last member replaced the first one. W3C Trace Context allows one entry for
-  each key, so a repeated key makes the header invalid. This package parsed
-  such a header and then sent it on again.
+- `TraceState.fromString` drops a list member if the key repeats. W3C Trace
+  Context allows one entry for each key, so a repeated key makes the header
+  invalid.
   ([#116](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/116))
 
 ## [1.0.0-rc.3] - 2026-08-27
