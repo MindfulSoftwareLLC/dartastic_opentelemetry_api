@@ -50,7 +50,6 @@ void main() {
       final span = tracer.startSpan(
         'test-span',
         kind: SpanKind.internal,
-        parentSpan: null,
       );
 
       expect(span.isRecording, isTrue);
@@ -66,7 +65,6 @@ void main() {
       final span = tracer.startSpan(
         'test-span',
         kind: SpanKind.internal,
-        parentSpan: null,
       );
 
       final attrs = <String, Object>{
@@ -241,7 +239,8 @@ void main() {
       final childSpan = tracer.startSpan(
         'test-span',
         kind: SpanKind.internal,
-        parentSpan: rootSpan, // This sets up the parent-child relationship
+        context: Context.current
+            .withSpan(rootSpan), // This sets up the parent-child relationship
       );
 
       // Verify inheritance of trace ID
@@ -474,24 +473,6 @@ void main() {
       expect(span, isNotNull);
     });
 
-    test('span factory methods throw with invalid context', () {
-      final timestamp = DateTime.now();
-
-      // This should throw because we're using an invalid span context
-      expect(
-          () => tracer.createSpan(
-                name: 'test-span',
-                spanContext:
-                    OTelAPI.spanContextInvalid(), // Invalid span context
-                parentSpan: null,
-                kind: SpanKind.server,
-                startTime: timestamp,
-                attributes: Attributes.of({'key': 'value'}),
-                links: [],
-              ),
-          throwsArgumentError);
-    });
-
     test('span factory methods with valid context', () {
       final timestamp = DateTime.now();
 
@@ -500,12 +481,13 @@ void main() {
         traceId: OTelAPI.traceId(),
         spanId: OTelAPI.spanId(),
         traceFlags: OTelAPI.traceFlags(),
+        isRemote: true,
       );
 
       final span = tracer.createSpan(
         name: 'test-span',
-        spanContext: validSpanContext, // Valid span context
-        parentSpan: null,
+        context: Context.current
+            .copyWithSpanContext(validSpanContext), // Valid span context
         kind: SpanKind.server,
         startTime: timestamp,
         attributes: Attributes.of({'key': 'value'}),
