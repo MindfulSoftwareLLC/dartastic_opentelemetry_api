@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.0.0-rc.4-wip]
 
+### Fixed
+
+- `TraceState.fromString` drops a list member whose key repeats, instead of
+  letting the last one overwrite the first. W3C Trace Context allows one entry
+  per key, so a repeat made the header invalid and this package would parse it
+  and then propagate it again.
+  ([#NNN](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/NNN))
+
 ## [1.0.0-rc.3] - 2026-08-27
 
 ### Changed
