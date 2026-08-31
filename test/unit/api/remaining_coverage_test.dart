@@ -55,7 +55,7 @@ void main() {
       );
       final parent = OTelAPI.nonRecordingSpan(sc);
       final child = OTelAPI.tracer('no-sdk')
-          .createSpan(name: 'child', parentSpan: parent);
+          .createSpan(name: 'child', context: Context.current.withSpan(parent));
       expect(child, isA<NonRecordingSpan>());
       expect(child.spanContext, equals(sc));
     });

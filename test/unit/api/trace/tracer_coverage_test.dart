@@ -73,37 +73,8 @@ void main() {
       expect(tracer1.hashCode, isNot(equals(tracer3.hashCode)));
     });
 
-    test('tracer with parent span and incompatible trace ID throws', () {
-      final tracer = OTelAPI.tracer('test-tracer');
-
-      // Create two spans with different trace IDs
-      final span1 = tracer.createSpan(
-        name: 'span1',
-        spanContext: OTelAPI.spanContext(
-          traceId: OTelAPI.traceId(),
-          spanId: OTelAPI.spanId(),
-        ),
-      );
-
-      final span2 = tracer.createSpan(
-        name: 'span2',
-        spanContext: OTelAPI.spanContext(
-          traceId: OTelAPI.traceId(), // Different trace ID
-          spanId: OTelAPI.spanId(),
-        ),
-      );
-
-      // Trying to create a span with incompatible parent should throw
-      expect(() {
-        tracer.createSpan(
-          name: 'child-span',
-          spanContext: OTelAPI.spanContext(
-            traceId: span1.spanContext.traceId,
-            spanId: OTelAPI.spanId(),
-          ),
-          parentSpan: span2, // Different trace ID from spanContext
-        );
-      }, throwsArgumentError);
-    });
+    // The trace ID mismatch test was removed because we no longer throw on
+    // mismatched trace IDs; instead we use precedence to resolve the parent
+    // from the context.
   });
 }
