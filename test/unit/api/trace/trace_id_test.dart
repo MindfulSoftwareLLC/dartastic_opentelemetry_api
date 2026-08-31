@@ -62,6 +62,17 @@ void main() {
       );
     });
 
+    test('rejects lowercase hex that is not 32 characters', () {
+      expect(
+        () => OTelAPI.traceIdFrom('a1b2c3d4e5f67890a1b2c3d4e5f678'),
+        throwsA(isA<FormatException>()),
+      );
+      expect(
+        () => OTelAPI.traceIdFrom('a1b2c3d4e5f67890a1b2c3d4e5f6789012'),
+        throwsA(isA<FormatException>()),
+      );
+    });
+
     test('provides access to raw bytes', () {
       final id = OTelAPI.traceId();
       expect(id.bytes.length, equals(16),

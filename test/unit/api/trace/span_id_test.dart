@@ -60,6 +60,17 @@ void main() {
       );
     });
 
+    test('rejects lowercase hex that is not 16 characters', () {
+      expect(
+        () => OTelAPI.spanIdFrom('a1b2c3d4e5f678'),
+        throwsA(isA<FormatException>()),
+      );
+      expect(
+        () => OTelAPI.spanIdFrom('a1b2c3d4e5f6789012'),
+        throwsA(isA<FormatException>()),
+      );
+    });
+
     test('provides access to raw bytes', () {
       final id = OTelAPI.spanId();
       expect(id.bytes.length, equals(8), reason: 'Span ID should be 8 bytes');
