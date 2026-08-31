@@ -13,6 +13,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   implementations need to be safe for concurrent use, which logs/api.md makes
   a MUST. Comments only, no behavior change
   ([#121](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/121)).
+- Span events with an empty name are dropped, not thrown. `OTelAPI.spanEvent('')`,
+  `addEvent`, `addEventNow` and `addEvents` no longer throw an `ArgumentError`;
+  the event is dropped and the error goes to the error handler, per
+  error-handling.md
+  ([#117](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/117)).
 
 ## [1.0.0-rc.3] - 2026-08-27
 
