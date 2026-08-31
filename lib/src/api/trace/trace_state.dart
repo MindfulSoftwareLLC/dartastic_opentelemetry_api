@@ -24,7 +24,12 @@ class TraceState {
     _entries = entries ?? {};
   }
 
-  /// Create TraceState from a W3C trace context header string
+  /// Create TraceState from a W3C trace context header string.
+  ///
+  /// A list member that breaks the W3C grammar is dropped, so the result only
+  /// ever holds entries that are legal to propagate again. A key that repeats
+  /// is invalid: the first entry is kept and the later ones are dropped.
+  /// Parsing stops at the 32 member limit.
   factory TraceState.fromString(String? headerValue) {
     final factory = OTelFactory.getOrCreateDefault();
     if (headerValue == null || headerValue.isEmpty) {
@@ -32,16 +37,24 @@ class TraceState {
     }
 
     final entries = <String, String>{};
-    final pairs = headerValue.split(',');
 
-    for (var pair in pairs) {
-      final keyValue = pair.trim().split('=');
-      if (keyValue.length == 2 &&
-          _isValidKey(keyValue[0]) &&
-          _isValidValue(keyValue[1])) {
-        entries[keyValue[0]] = keyValue[1];
-        if (entries.length >= _maxKeyValuePairs) break;
+    for (final pair in headerValue.split(',')) {
+      // Trim the whitespace around the list member, never inside the value -
+      // a leading space in a value is significant.
+      final member = pair.trim();
+      final separator = member.indexOf('=');
+      // No separator, or an empty key. An empty member is legal and ignored.
+      if (separator < 1) continue;
+      final key = member.substring(0, separator);
+      final value = member.substring(separator + 1);
+      // W3C allows one entry per key; a repeat makes the header invalid.
+      if (entries.containsKey(key) ||
+          !_isValidKey(key) ||
+          !_isValidValue(value)) {
+        continue;
       }
+      entries[key] = value;
+      if (entries.length >= _maxKeyValuePairs) break;
     }
 
     return factory.traceState(entries);
