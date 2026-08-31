@@ -14,6 +14,7 @@
 
 import 'package:dartastic_opentelemetry_api/dartastic_opentelemetry_api.dart';
 import 'package:test/test.dart';
+import '../../test_util.dart';
 
 void main() {
   group('API error-class log sites route through the handler (api#94)', () {
@@ -63,6 +64,25 @@ void main() {
       expect(attrs.toList(), isEmpty, reason: 'the attribute is dropped');
       expect(reported, hasLength(1));
       expect(reported.single, isArgumentError);
+    });
+
+    test('a dropped span event (empty name) is reported (api#69)', () {
+      // The API alone makes non-recording spans, which ignore every
+      // event. A recording span is necessary to get to the drop. The
+      // factory holds the handler, so install the handler again after
+      // the factory changes.
+      installSdkLikeFactory();
+      OTelAPI.setErrorHandler((error, stackTrace) => reported.add(error));
+      final span = OTelAPI.tracerProvider().getTracer('t').startSpan('s');
+
+      span.addEventNow('');
+
+      expect(span.spanEvents ?? const <SpanEvent>[], isEmpty,
+          reason: 'the event is dropped');
+      expect(reported, hasLength(1));
+      expect(reported.single, isArgumentError);
+      expect(logged, isEmpty,
+          reason: 'the report replaces the warn-level log line');
     });
 
     test('an invalid (empty) tracer name is reported', () {

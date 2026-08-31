@@ -4,6 +4,7 @@
 import 'package:meta/meta.dart';
 import '../../factory/otel_factory.dart';
 import '../../util/default_time_provider.dart';
+import '../../util/otel_error_handler.dart';
 import '../../util/time_provider.dart';
 import '../common/attributes.dart';
 import '../common/instrumentation_scope.dart';
@@ -277,7 +278,7 @@ class APISpan {
   /// "standard event names and keys" which have prescribed semantic meanings.
   /// See https://github.com/open-telemetry/semantic-conventions/blob/main/docs/README.md
   void addEvent(SpanEvent spanEvent) {
-    if (_modifiable) {
+    if (_modifiable && !_dropsEmptyName(spanEvent.name)) {
       _spanEvents ??= [];
       _spanEvents!.add(spanEvent);
     }
@@ -288,7 +289,7 @@ class APISpan {
     if (OTelFactory.otelFactory == null) {
       throw StateError('Call initialize() first.');
     }
-    if (_modifiable) {
+    if (_modifiable && !_dropsEmptyName(name)) {
       _spanEvents ??= [];
       // Source the event timestamp from this span's TimeProvider so events
       // share the same clock as start/end. Bypasses the static
@@ -307,10 +308,26 @@ class APISpan {
     }
     if (_modifiable) {
       _spanEvents ??= [];
-      spanEvents.forEach((name, attributes) => _spanEvents!.add(OTelFactory
-          .otelFactory!
-          .spanEvent(name, attributes, _timeProvider.nowDateTime())));
+      spanEvents.forEach((name, attributes) {
+        if (_dropsEmptyName(name)) return;
+        _spanEvents!.add(OTelFactory.otelFactory!
+            .spanEvent(name, attributes, _timeProvider.nowDateTime()));
+      });
     }
+  }
+
+  /// Reports an empty event name and answers `true` when the caller must
+  /// drop the event.
+  ///
+  /// error-handling.md forbids a throw here, so an empty name drops the
+  /// event and goes to the error handler. The caller does this test before
+  /// it makes the event, because a dropped event must not be allocated.
+  /// See https://opentelemetry.io/docs/specs/otel/error-handling/#basic-error-handling-principles
+  bool _dropsEmptyName(String name) {
+    if (name.isNotEmpty) return false;
+    OTelErrorHandling.report(
+        ArgumentError('Span event names must be non-empty; event ignored.'));
+    return true;
   }
 
   /// Adds a link to this Span.

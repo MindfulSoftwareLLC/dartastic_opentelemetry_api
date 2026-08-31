@@ -345,13 +345,26 @@ void main() {
       expect(span.spanEvents, isNotNull);
     });
 
-    test('addEvent throws if name is empty', () {
-      // NOTE: becomes non-throwing under api#69 (#119), a separate issue.
+    test('an event with an empty name is dropped, not thrown (api#69)', () {
+      // error-handling.md: an API method must not throw when the user
+      // calls it incorrectly. Every event path drops the event instead.
+      // https://opentelemetry.io/docs/specs/otel/error-handling/#basic-error-handling-principles
       final span = tracer.startSpan('test');
-      expect(
-        () => span.addEvent(OTelAPI.spanEvent('')),
-        throwsArgumentError,
-      );
+
+      span.addEvent(OTelAPI.spanEvent(''));
+      span.addEventNow('');
+      span.addEvents({'': null});
+
+      expect(span.spanEvents ?? const <SpanEvent>[], isEmpty);
+    });
+
+    test('an empty name drops only that entry of addEvents (api#69)', () {
+      final span = tracer.startSpan('test');
+
+      span.addEvents({'': null, 'kept': null});
+
+      expect(span.spanEvents, hasLength(1));
+      expect(span.spanEvents!.single.name, equals('kept'));
     });
 
     test('end() is idempotent', () {

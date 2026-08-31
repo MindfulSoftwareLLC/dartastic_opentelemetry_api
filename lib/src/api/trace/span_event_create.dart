@@ -11,19 +11,18 @@ part of 'span_event.dart';
 class SpanEventCreate {
   /// Creates a new SpanEvent with the given parameters.
   ///
-  /// [name] The name of the event (required, must not be empty)
+  /// [name] The name of the event
   /// [timestamp] The time at which the event occurred
   /// [attributes] Optional attributes providing additional context
   ///
-  /// Throws an ArgumentError if name is empty.
+  /// This method does not throw. error-handling.md forbids a throw for
+  /// incorrect user input. A span drops an event that has an empty name.
+  /// See https://opentelemetry.io/docs/specs/otel/error-handling/#basic-error-handling-principles
   static SpanEvent create({
     required String name,
     required DateTime timestamp,
     Attributes? attributes,
   }) {
-    if (name.isEmpty) {
-      throw ArgumentError('name cannot be empty');
-    }
     return SpanEvent._(
         name: name, timestamp: timestamp, attributes: attributes);
   }
