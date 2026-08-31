@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed (spec compliance)
 
+- `TraceState` construction (`fromMap`, `OTelAPI`/`OTelFactory` `traceState(...)`)
+  now validates keys and values against the W3C tracestate grammar, dropping
+  invalid entries instead of silently accepting them
+  ([#119](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/119)).
 - **BREAKING**: `IdGenerator.hexToBytes`, and so `OTelAPI.traceIdFrom` and
   `OTelAPI.spanIdFrom`, no longer accept anything outside lowercase hex
   ([#112](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/112)).

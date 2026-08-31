@@ -47,6 +47,24 @@ void main() {
     });
   });
 
+  group('TraceState construction drops invalid entries', () {
+    test('fromMap drops an entry with an invalid key', () {
+      final result = TraceState.fromMap({'BadKey': 'a', 'goodkey': 'b'});
+      expect(result.entries, equals({'goodkey': 'b'}));
+    });
+
+    test('fromMap drops an entry with an invalid value', () {
+      final result = TraceState.fromMap({'vendor': 'a,b=c', 'goodkey': 'b'});
+      expect(result.entries, equals({'goodkey': 'b'}));
+    });
+
+    test('fromMap never produces a TraceState containing invalid data', () {
+      final result = TraceState.fromMap({'BadKey': 'a,b=c'});
+      expect(result.entries, isEmpty);
+      expect(result.toString(), isEmpty);
+    });
+  });
+
   group('TraceState works without an installed SDK', () {
     test('put works after reset', () {
       final traceState = TraceState.fromMap({'vendor': 'value'});
