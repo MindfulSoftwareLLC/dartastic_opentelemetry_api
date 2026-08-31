@@ -37,8 +37,9 @@ class TraceState {
     }
 
     final entries = <String, String>{};
+    final pairs = headerValue.split(',');
 
-    for (final pair in headerValue.split(',')) {
+    for (final pair in pairs) {
       // Trim the whitespace around the list member, never inside the value -
       // a leading space in a value is significant.
       final member = pair.trim();
