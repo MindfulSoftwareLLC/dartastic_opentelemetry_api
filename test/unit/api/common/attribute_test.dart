@@ -1,6 +1,7 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
+import 'package:dartastic_opentelemetry_api/src/api/common/any_value.dart';
 import 'package:dartastic_opentelemetry_api/src/api/otel_api.dart';
 import 'package:test/test.dart';
 
@@ -13,6 +14,54 @@ void main() {
         serviceName: 'test-service',
         serviceVersion: '1.0.0',
       );
+    });
+
+    group('AnyValue tests', () {
+      test('unwrap handles all AnyValue types', () {
+        expect(AnyValue.empty().unwrap(), isNull);
+        expect(AnyValue.fromString('test').unwrap(), equals('test'));
+        expect(AnyValue.fromBool(true).unwrap(), equals(true));
+        expect(AnyValue.fromInt(42).unwrap(), equals(42));
+        expect(AnyValue.fromDouble(3.14).unwrap(), equals(3.14));
+        expect(AnyValue.fromList([AnyValue.fromString('x')]).unwrap(),
+            equals(['x']));
+        expect(AnyValue.fromMap({'k': AnyValue.fromInt(1)}).unwrap(),
+            equals({'k': 1}));
+        expect(AnyValue.fromBytes([0, 1]).unwrap(), equals([0, 1]));
+      });
+
+      test('toJson is implemented', () {
+        final anyVal = AnyValue.fromMap({'k': AnyValue.fromInt(1)});
+        expect(anyVal.toJson(), equals({'k': 1}));
+      });
+
+      test('fromObject throws on invalid map key', () {
+        expect(() => AnyValue.fromObject({1: 'val'}),
+            throwsA(isA<ArgumentError>()));
+      });
+
+      test('equality and hashCode', () {
+        final nullVal1 = AnyValue.empty();
+        final nullVal2 = AnyValue.fromObject(null);
+        expect(nullVal1, equals(nullVal2));
+        expect(nullVal1.hashCode, equals(nullVal2.hashCode));
+        expect(nullVal1.value, isNull);
+
+        final mapVal1 = AnyValue.fromMap({'a': AnyValue.fromInt(1)});
+        final mapVal2 = AnyValue.fromObject({'a': 1});
+        expect(mapVal1, equals(mapVal2));
+        expect(mapVal1.hashCode, equals(mapVal2.hashCode));
+
+        final bytesVal1 = AnyValue.fromBytes([1, 2]);
+        final bytesVal2 = AnyValue.fromBytes([1, 2]);
+        expect(bytesVal1, equals(bytesVal2));
+        expect(bytesVal1.hashCode, equals(bytesVal2.hashCode));
+
+        final arrayVal1 = AnyValue.fromList([AnyValue.fromInt(1)]);
+        final arrayVal2 = AnyValue.fromObject([1]);
+        expect(arrayVal1, equals(arrayVal2));
+        expect(arrayVal1.hashCode, equals(arrayVal2.hashCode));
+      });
     });
 
     group('equality', () {
@@ -66,23 +115,16 @@ void main() {
         expect(doubleList.hashCode, isNot(equals(doubleList2.hashCode)));
       });
 
-      test('empty collections throw ArgumentError', () {
-        expect(
-          () => OTelAPI.attributeStringList('foo', []),
-          throwsArgumentError,
-        );
-        expect(
-          () => OTelAPI.attributeIntList('foo', []),
-          throwsArgumentError,
-        );
-        expect(
-          () => OTelAPI.attributeBoolList('foo', []),
-          throwsArgumentError,
-        );
-        expect(
-          () => OTelAPI.attributeDoubleList('foo', []),
-          throwsArgumentError,
-        );
+      test('empty collections are valid', () {
+        final stringList = OTelAPI.attributeStringList('foo', []);
+        final intList = OTelAPI.attributeIntList('foo', []);
+        final boolList = OTelAPI.attributeBoolList('foo', []);
+        final doubleList = OTelAPI.attributeDoubleList('foo', []);
+
+        expect((stringList.value as AnyValueArray).value, isEmpty);
+        expect((intList.value as AnyValueArray).value, isEmpty);
+        expect((boolList.value as AnyValueArray).value, isEmpty);
+        expect((doubleList.value as AnyValueArray).value, isEmpty);
       });
     });
   });

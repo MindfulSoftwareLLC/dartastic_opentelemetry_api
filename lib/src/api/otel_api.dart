@@ -9,6 +9,7 @@ import '../util/otel_error_handler.dart';
 import '../util/otel_log.dart';
 import 'baggage/baggage.dart';
 import 'baggage/baggage_entry.dart';
+import 'common/any_value.dart';
 import 'common/attribute.dart';
 import 'common/attributes.dart';
 import 'common/instrumentation_scope.dart';
@@ -440,54 +441,69 @@ class OTelAPI {
   }
 
   /// Create a string attribute key
-  static Attribute<String> attributeString(String name, String value) {
+  static Attribute attributeString(String name, String value) {
     _getAndCacheOtelFactory();
     return OTelFactory.otelFactory!.attributeString(name, value);
   }
 
   /// Create a boolean attribute key
-  static Attribute<bool> attributeBool(String name, bool value) {
+  static Attribute attributeBool(String name, bool value) {
     _getAndCacheOtelFactory();
     return OTelFactory.otelFactory!.attributeBool(name, value);
   }
 
   /// Create an integer attribute key
-  static Attribute<int> attributeInt(String name, int value) {
+  static Attribute attributeInt(String name, int value) {
     _getAndCacheOtelFactory();
     return OTelFactory.otelFactory!.attributeInt(name, value);
   }
 
   /// Create a double attribute key
-  static Attribute<double> attributeDouble(String name, double value) {
+  static Attribute attributeDouble(String name, double value) {
     _getAndCacheOtelFactory();
     return OTelFactory.otelFactory!.attributeDouble(name, value);
   }
 
   /// Create a string list attribute key
-  static Attribute<List<String>> attributeStringList(
-      String name, List<String> value) {
+  static Attribute attributeStringList(String name, List<String> value) {
     _getAndCacheOtelFactory();
     return OTelFactory.otelFactory!.attributeStringList(name, value);
   }
 
   /// Create a boolean list attribute key
-  static Attribute<List<bool>> attributeBoolList(
-      String name, List<bool> value) {
+  static Attribute attributeBoolList(String name, List<bool> value) {
     _getAndCacheOtelFactory();
     return OTelFactory.otelFactory!.attributeBoolList(name, value);
   }
 
   /// Create an integer list attribute key
-  static Attribute<List<int>> attributeIntList(String name, List<int> value) {
+  static Attribute attributeIntList(String name, List<int> value) {
     _getAndCacheOtelFactory();
     return OTelFactory.otelFactory!.attributeIntList(name, value);
   }
 
   /// Create a double list attribute key
-  static Attribute<List<double>> attributeDoubleList(
-      String name, List<double> value) {
+  static Attribute attributeDoubleList(String name, List<double> value) {
     _getAndCacheOtelFactory();
     return OTelFactory.otelFactory!.attributeDoubleList(name, value);
+  }
+
+  /// Create a map attribute key
+  static Attribute attributeMap(String name, Map<String, AnyValue> value) {
+    _getAndCacheOtelFactory();
+    return OTelFactory.otelFactory!.attributeMap(name, value);
+  }
+
+  /// Create an array attribute key
+  static Attribute attributeArray(String name, List<AnyValue> value) {
+    _getAndCacheOtelFactory();
+    return OTelFactory.otelFactory!.attributeArray(name, value);
+  }
+
+  /// Create a bytes attribute key
+  static Attribute attributeBytes(String name, List<int> value) {
+    _getAndCacheOtelFactory();
+    return OTelFactory.otelFactory!.attributeBytes(name, value);
   }
 
   /// Creates an `Attributes` collection from a list of [Attribute]s.

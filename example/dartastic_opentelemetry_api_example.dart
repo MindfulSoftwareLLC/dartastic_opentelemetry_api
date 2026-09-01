@@ -127,12 +127,14 @@ void main() {
     final logger = defaultGlobalAPINOOPLoggerProvider
         .getLogger('dart-otel-api-example-service');
 
-    logger.emit(eventName: 'heartbeat', body: 'Service is healthy.');
+    logger.emit(
+        eventName: 'heartbeat',
+        body: AnyValue.fromObject('Service is healthy.'));
 
     logger.emit(
       eventName: 'user_login',
       severityNumber: Severity.INFO,
-      body: 'User successfully logged in.',
+      body: AnyValue.fromObject('User successfully logged in.'),
       attributes: OTelAPI.attributesFromSemanticMap({
         User.userId: 42,
         ExampleAttribute.authMethod: 'password',
@@ -142,7 +144,7 @@ void main() {
     logger.emit(
       eventName: 'cache_miss',
       severityText: 'WARN',
-      body: 'Cache miss for requested key.',
+      body: AnyValue.fromObject('Cache miss for requested key.'),
       attributes: OTelAPI.attributesFromSemanticMap({
         ExampleAttribute.cacheKey: 'profile_42',
         ExampleAttribute.cacheRegion: 'us-east-1',
@@ -158,7 +160,7 @@ void main() {
     logger.emit(
       eventName: 'order_update',
       severityNumber: Severity.INFO,
-      body: 'Order update completed.',
+      body: AnyValue.fromObject('Order update completed.'),
       attributes: attrs,
     );
 
@@ -168,11 +170,11 @@ void main() {
       // Body is a user-defined structure (per the OTel logs spec) — its
       // inner keys are not span/log attributes, so they don't go through
       // an OTelSemantic enum.
-      body: [
+      body: AnyValue.fromObject([
         {'job': 'resize_images', 'status': 'ok'},
         {'job': 'generate_thumbnails', 'status': 'ok'},
         {'job': 'sync_metadata', 'status': 'failed'},
-      ],
+      ]),
       attributes: OTelAPI.attributesFromSemanticMap({
         ExampleAttribute.batchId: 'batch-2025-11-15-01',
         ExampleAttribute.jobsTotal: 3,
@@ -182,7 +184,7 @@ void main() {
     logger.emit(
       eventName: 'payment_failure',
       severityText: 'ERROR',
-      body: 'Payment could not be processed.',
+      body: AnyValue.fromObject('Payment could not be processed.'),
       attributes: OTelAPI.attributesFromSemanticMap({
         ExampleAttribute.paymentUserId: 101,
         ExampleAttribute.paymentMethod: 'credit_card',

@@ -43,9 +43,9 @@ void main() {
       expect(events?.first.name, equals('exception'));
 
       final attrs = events?.first.attributes?.toMap() ?? {};
-      expect(attrs['exception.type']?.value, contains('Exception'));
-      expect(
-          attrs['exception.message']?.value, equals('Exception: Test error'));
+      expect(attrs['exception.type']?.value.unwrap(), contains('Exception'));
+      expect(attrs['exception.message']?.value.unwrap(),
+          equals('Exception: Test error'));
     });
 
     test('records exception with stack trace', () {
@@ -59,8 +59,8 @@ void main() {
       expect(events, hasLength(1));
 
       final attrs = events?.first.attributes?.toMap() ?? {};
-      expect(attrs['exception.stacktrace']?.value, isNotNull);
-      expect(attrs['exception.stacktrace']?.value.toString(),
+      expect(attrs['exception.stacktrace']?.value.unwrap(), isNotNull);
+      expect(attrs['exception.stacktrace']?.value.unwrap().toString(),
           contains('test/unit/api/trace/span_exception_test.dart'));
     });
 
@@ -70,7 +70,7 @@ void main() {
 
       final events = span.spanEvents;
       final attrs = events?.first.attributes?.toMap() ?? {};
-      expect(attrs['exception.escaped']?.value, true);
+      expect(attrs['exception.escaped']?.value.unwrap(), true);
     });
 
     test('records exception with additional attributes', () {
@@ -83,10 +83,10 @@ void main() {
 
       final events = span.spanEvents;
       final attrs = events?.first.attributes?.toMap() ?? {};
-      expect(attrs['custom.attribute']?.value, equals('value'));
-      expect(attrs['exception.type']?.value, contains('Exception'));
-      expect(
-          attrs['exception.message']?.value, equals('Exception: Test error'));
+      expect(attrs['custom.attribute']?.value.unwrap(), equals('value'));
+      expect(attrs['exception.type']?.value.unwrap(), contains('Exception'));
+      expect(attrs['exception.message']?.value.unwrap(),
+          equals('Exception: Test error'));
     });
 
     test('additional attributes override default exception attributes', () {
@@ -100,8 +100,9 @@ void main() {
 
       final events = span.spanEvents;
       final attrs = events?.first.attributes?.toMap() ?? {};
-      expect(attrs['exception.type']?.value, equals('CustomType'));
-      expect(attrs['exception.message']?.value, equals('Custom message'));
+      expect(attrs['exception.type']?.value.unwrap(), equals('CustomType'));
+      expect(
+          attrs['exception.message']?.value.unwrap(), equals('Custom message'));
     });
 
     test('handles exceptions after span is ended', () {
@@ -119,9 +120,11 @@ void main() {
 
       final events = span.spanEvents;
       expect(events, hasLength(2));
-      expect(events?[0].attributes?.toMap()['exception.message']?.value,
+      expect(
+          events?[0].attributes?.toMap()['exception.message']?.value.unwrap(),
           equals('Exception: Error 1'));
-      expect(events?[1].attributes?.toMap()['exception.message']?.value,
+      expect(
+          events?[1].attributes?.toMap()['exception.message']?.value.unwrap(),
           equals('Exception: Error 2'));
     });
 

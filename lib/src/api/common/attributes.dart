@@ -9,6 +9,7 @@ import 'package:collection/collection.dart';
 import 'package:meta/meta.dart';
 import '../../factory/otel_factory.dart';
 import '../../util/otel_error_handler.dart';
+import 'any_value.dart';
 import 'attribute.dart';
 
 part 'attributes_create.dart';
@@ -17,7 +18,7 @@ part 'attributes_create.dart';
 /// Create with the OTelFactory methods.
 @immutable
 class Attributes {
-  final Map<String, Attribute<Object>> _entries = {};
+  final Map<String, Attribute> _entries = {};
 
   /// Creates an Attributes instance from a map of key-value pairs.
   /// Uses the appropriate factory method (OTelFactory or OTelAPIFactory) based on initialization state.
@@ -31,58 +32,15 @@ class Attributes {
   /// Creates an Attributes instance from a JSON map.
   /// This is a utility method for deserialization from logs or exports.
   static Attributes fromJson(Map<String, dynamic> json) {
-    final attributes = <Attribute<Object>>[];
+    final attributes = <Attribute>[];
 
     for (final entry in json.entries) {
-      final key = entry.key;
-      final value = entry.value;
-
-      if (value is String) {
-        attributes.add(AttributeCreate.create<String>(key, value));
-      } else if (value is bool) {
-        attributes.add(AttributeCreate.create<bool>(key, value));
-      } else if (value is int) {
-        attributes.add(AttributeCreate.create<int>(key, value));
-      } else if (value is double) {
-        attributes.add(AttributeCreate.create<double>(key, value));
-      } else if (value is List<String>) {
-        attributes.add(AttributeCreate.create<List<String>>(key, value));
-      } else if (value is List<bool>) {
-        attributes.add(AttributeCreate.create<List<bool>>(key, value));
-      } else if (value is List<int>) {
-        attributes.add(AttributeCreate.create<List<int>>(key, value));
-      } else if (value is List<double>) {
-        attributes.add(AttributeCreate.create<List<double>>(key, value));
-      } else if (value is List) {
-        // Try to convert the list to a supported type
-        if (value.isNotEmpty) {
-          if (value.every((e) => e is String)) {
-            attributes.add(AttributeCreate.create<List<String>>(
-                key, value.cast<String>()));
-          } else if (value.every((e) => e is bool)) {
-            attributes.add(
-                AttributeCreate.create<List<bool>>(key, value.cast<bool>()));
-          } else if (value.every((e) => e is int)) {
-            attributes
-                .add(AttributeCreate.create<List<int>>(key, value.cast<int>()));
-          } else if (value.every((e) => e is double || e is int)) {
-            // Convert all to double
-            attributes.add(AttributeCreate.create<List<double>>(
-                key,
-                value
-                    .map((e) => e is int ? e.toDouble() : e as double)
-                    .toList()));
-          } else {
-            OTelErrorHandling.report(ArgumentError(
-                'Ignoring attribute $key because the list contains unsupported types. Only String, bool, int, double lists are allowed by the OTel specification.'));
-          }
-        } else {
-          OTelErrorHandling.report(ArgumentError(
-              'Ignoring attribute $key because empty lists are not allowed by the OTel specification.'));
-        }
-      } else {
+      try {
+        final anyValue = AnyValue.fromObject(entry.value);
+        attributes.add(AttributeCreate.create(entry.key, anyValue));
+      } catch (e) {
         OTelErrorHandling.report(ArgumentError(
-            'Ignoring attribute $key because the value is not a valid attribute type. Only String, bool, int, double and Lists of those types are allowed by the OTel specification.'));
+            'Ignoring attribute ${entry.key} because it contains unsupported types: $e'));
       }
     }
 
@@ -149,12 +107,41 @@ class Attributes {
     final attribute = _entries[key];
     if (attribute == null) return null;
 
-    // Ensure the value matches the expected type `T`
-    if (attribute.value is T) {
-      return attribute.value as T;
-    } else {
-      throw StateError('Value for key "$key" is not of type $T');
+    final anyValue = attribute.value;
+
+    if (T == String && anyValue is AnyValueString) {
+      return anyValue.value as T;
     }
+    if (T == bool && anyValue is AnyValueBool) {
+      return anyValue.value as T;
+    }
+    if (T == int && anyValue is AnyValueInt) {
+      return anyValue.value as T;
+    }
+    if (T == double && anyValue is AnyValueDouble) {
+      return anyValue.value as T;
+    }
+
+    if (anyValue is AnyValueArray) {
+      if (anyValue.value.every((e) => e is AnyValueString)) {
+        final result = anyValue.value.map((e) => e.value as String).toList();
+        if (result is T) return result as T;
+      }
+      if (anyValue.value.every((e) => e is AnyValueBool)) {
+        final result = anyValue.value.map((e) => e.value as bool).toList();
+        if (result is T) return result as T;
+      }
+      if (anyValue.value.every((e) => e is AnyValueInt)) {
+        final result = anyValue.value.map((e) => e.value as int).toList();
+        if (result is T) return result as T;
+      }
+      if (anyValue.value.every((e) => e is AnyValueDouble)) {
+        final result = anyValue.value.map((e) => e.value as double).toList();
+        if (result is T) return result as T;
+      }
+    }
+
+    throw StateError('Value for key "$key" is not of type $T');
   }
 
   /// Creates a new Attributes instance with a String attribute added or updated.
@@ -165,7 +152,7 @@ class Attributes {
   Attributes copyWithStringAttribute(String name, String value) {
     return AttributesCreate.create([
       ..._entries.values,
-      AttributeCreate.create<String>(name, value),
+      AttributeCreate.create(name, AnyValueString(value)),
     ]);
   }
 
@@ -177,7 +164,7 @@ class Attributes {
   Attributes copyWithBoolAttribute(String name, bool value) {
     return AttributesCreate.create([
       ..._entries.values,
-      AttributeCreate.create<bool>(name, value),
+      AttributeCreate.create(name, AnyValueBool(value)),
     ]);
   }
 
@@ -189,7 +176,7 @@ class Attributes {
   Attributes copyWithIntAttribute(String name, int value) {
     return AttributesCreate.create([
       ..._entries.values,
-      AttributeCreate.create<int>(name, value),
+      AttributeCreate.create(name, AnyValueInt(value)),
     ]);
   }
 
@@ -201,7 +188,7 @@ class Attributes {
   Attributes copyWithDoubleAttribute(String name, double value) {
     return AttributesCreate.create([
       ..._entries.values,
-      AttributeCreate.create<double>(name, value),
+      AttributeCreate.create(name, AnyValueDouble(value)),
     ]);
   }
 
@@ -213,7 +200,8 @@ class Attributes {
   Attributes copyWithStringListAttribute(String name, List<String> value) {
     return AttributesCreate.create([
       ..._entries.values,
-      AttributeCreate.create<List<String>>(name, value),
+      AttributeCreate.create(
+          name, AnyValueArray(value.map(AnyValueString.new).toList())),
     ]);
   }
 
@@ -225,7 +213,8 @@ class Attributes {
   Attributes copyWithBoolListAttribute(String name, List<bool> value) {
     return AttributesCreate.create([
       ..._entries.values,
-      AttributeCreate.create<List<bool>>(name, value),
+      AttributeCreate.create(
+          name, AnyValueArray(value.map(AnyValueBool.new).toList())),
     ]);
   }
 
@@ -237,7 +226,8 @@ class Attributes {
   Attributes copyWithIntListAttribute(String name, List<int> value) {
     return AttributesCreate.create([
       ..._entries.values,
-      AttributeCreate.create<List<int>>(name, value),
+      AttributeCreate.create(
+          name, AnyValueArray(value.map(AnyValueInt.new).toList())),
     ]);
   }
 
@@ -249,7 +239,8 @@ class Attributes {
   Attributes copyWithDoubleListAttribute(String name, List<double> value) {
     return AttributesCreate.create([
       ..._entries.values,
-      AttributeCreate.create<List<double>>(name, value),
+      AttributeCreate.create(
+          name, AnyValueArray(value.map(AnyValueDouble.new).toList())),
     ]);
   }
 
@@ -302,7 +293,7 @@ class Attributes {
   Map<String, dynamic> toJson() {
     final result = <String, dynamic>{};
     for (final entry in _entries.entries) {
-      result[entry.key] = entry.value.value;
+      result[entry.key] = entry.value.value.unwrap();
     }
     return result;
   }
@@ -324,7 +315,6 @@ class Attributes {
 /// Extension to create Attributes from a simple Map
 extension AttributesExtension on Map<String, Object> {
   /// Convert this map to Attributes
-  /// Empty string are not allowed and are skipped
   Attributes toAttributes() {
     return OTelFactory.getOrCreateDefault().attributesFromMap(this);
   }

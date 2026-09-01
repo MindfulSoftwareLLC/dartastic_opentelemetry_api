@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import 'package:meta/meta.dart';
+import '../common/any_value.dart';
 import '../common/attributes.dart';
 import '../context/context.dart';
 import 'severity.dart';
@@ -61,7 +62,7 @@ class APILogger {
     Context? context,
     Severity? severityNumber,
     String? severityText,
-    dynamic body,
+    AnyValue? body,
     Attributes? attributes,
     String? eventName,
   }) {

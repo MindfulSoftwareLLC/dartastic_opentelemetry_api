@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.0.0-rc.4-wip]
 
+### Changed
+
+- **BREAKING**: Replaced generic `Attribute<T>` with a concrete `Attribute` class containing an `AnyValue` payload. If you were instantiating `Attribute` directly (bypassing the factory), you must now wrap your value in the appropriate `AnyValue` subclass.
+  ([#95](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/95))
+- **BREAKING**: Strict OpenTelemetry spec compliance for attributes (`attrsFromMap` / `AnyValue.fromObject`). The previous permissive behavior of silently converting unsupported objects via `.toString()` is removed. Attributes built via `attrsFromMap` for values that previously silently stringified (e.g. custom objects) will now be silently dropped from the resulting `Attributes` and reported via `OTelErrorHandling`. `DateTime` values are natively supported and converted to UTC ISO-8601 strings.
+  ([#95](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/95))
+- **BREAKING**: `LogRecord.body` and `APILogger.emit(body: ...)` now use `AnyValue?` instead of `Object?` for strong spec compliance. Replace direct object passing with `AnyValue.fromObject(...)` or a specific subclass like `AnyValueString(...)`.
+  ([#95](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/95))
 ## [1.0.0-rc.3] - 2026-08-27
 
 ### Changed
