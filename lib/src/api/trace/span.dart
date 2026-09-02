@@ -42,6 +42,11 @@ enum SpanStatusCode {
 /// the user. API implementations MAY leak memory or other resources (including,
 /// for example, CPU time for periodic work that iterates all spans)
 /// if the user forgot to end the span.
+///
+/// All methods of this class are safe for concurrent use by default:
+/// implementations must remain correct when methods are invoked from
+/// interleaved asynchronous tasks within an isolate. See
+/// [Trace API, concurrency requirements](https://github.com/open-telemetry/opentelemetry-specification/blob/v1.60.0/specification/trace/api.md#concurrency-requirements).
 class APISpan {
   String _name;
   final SpanContext _spanContext;
