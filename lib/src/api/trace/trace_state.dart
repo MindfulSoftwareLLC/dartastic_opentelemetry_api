@@ -83,24 +83,14 @@ class TraceState {
     }
     final factory = OTelFactory.getOrCreateDefault();
 
-    final newEntries = Map<String, String>.from(_entries);
-
-    // If we already have this key, just update its value
-    if (newEntries.containsKey(key)) {
-      newEntries[key] = value;
-      return factory.traceState(newEntries);
-    }
-
-    // If adding a new key would exceed the limit, remove the oldest entry
-    if (newEntries.length >= _maxKeyValuePairs) {
-      // Remove the first key to make room
-      if (newEntries.isNotEmpty) {
-        final oldestKey = newEntries.keys.first;
-        newEntries.remove(oldestKey);
+    // Per W3C Trace Context, an updated or new entry moves to the front
+    // (left) of the list, so build the new map starting with it.
+    final newEntries = <String, String>{key: value};
+    for (final entry in _entries.entries) {
+      if (entry.key != key && newEntries.length < _maxKeyValuePairs) {
+        newEntries[entry.key] = entry.value;
       }
     }
-
-    newEntries[key] = value;
     return factory.traceState(newEntries);
   }
 
