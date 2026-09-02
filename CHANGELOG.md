@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - The logs API now documents that `APILoggerProvider` and `APILogger`
   implementations need to be safe for concurrent use, which logs/api.md makes
-  a MUST. Comments only, no behaviour change
+  a MUST. Comments only, no behavior change
   ([#121](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/121)).
 
 ## [1.0.0-rc.3] - 2026-08-27
