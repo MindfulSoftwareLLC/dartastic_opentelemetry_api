@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.0.0-rc.4-wip]
 
+### Fixed
+- `APIMeterProvider.getMeter` on the no-op API meter provider no longer validates arguments or logs warnings (e.g., when called after shutdown or with an empty name), complying with the OpenTelemetry Metrics No-Op spec requirements
+([#71](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/issues/71)).
+
 ## [1.0.0-rc.3] - 2026-08-27
 
 ### Changed

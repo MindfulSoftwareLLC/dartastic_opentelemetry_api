@@ -30,7 +30,7 @@ void main() {
       expect(meter.schemaUrl, isNull);
     });
 
-    test('creates meter with empty name as fallback if name is invalid', () {
+    test('creates meter with empty name', () {
       // Arrange & Act
       final meter = meterProvider.getMeter(name: '');
 
