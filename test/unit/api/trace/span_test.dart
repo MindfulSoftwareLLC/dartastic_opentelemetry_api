@@ -62,6 +62,27 @@ void main() {
       expect(span.attributes.length, equals(0));
     });
 
+    test('creates non-recording span when isRecording is false', () {
+      final span = tracer.startSpan(
+        'test-span',
+        isRecording: false,
+      );
+
+      expect(span.isRecording, isFalse);
+
+      // Mutating operations should be no-ops
+      span.setStringAttribute<String>('key', 'value');
+      span.setStatus(SpanStatusCode.Error, 'Error');
+      span.updateName('new-name');
+      span.addEventNow('test-event');
+
+      expect(span.attributes.length, equals(0));
+      expect(span.status, equals(SpanStatusCode.Unset));
+      expect(span.statusDescription, isNull);
+      expect(span.name, equals('test-span'));
+      expect(span.spanEvents, isNull);
+    });
+
     test('handles attribute updates correctly', () {
       final span = tracer.startSpan(
         'test-span',

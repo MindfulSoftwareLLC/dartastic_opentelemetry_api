@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.0.0-rc.4-wip]
 
+### Fixed
+- **`APISpan` now natively honors the `isRecording` state provided at creation** ([#96](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/issues/96)).
+  Previously, mutating operations (like `setAttribute`, `addEvent`) would always execute regardless of the `isRecording` flag unless the span had ended. Now, if a span is created as non-recording, all mutations are correctly ignored as no-ops per the spec.
+- **`APITracer.isEnabled()` correctly checks API factory status**.
+  A latent bug where the API Tracer unconditionally returned `false` for `isEnabled()` has been resolved. It now correctly returns `!OTelFactory.otelFactory!.isAPIFactory`, ensuring that direct use of the API Tracer with custom or no SDK behaves properly without inadvertently marking all spans as non-recording.
+
 ## [1.0.0-rc.3] - 2026-08-27
 
 ### Changed
