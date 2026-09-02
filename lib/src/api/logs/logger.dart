@@ -12,6 +12,11 @@ part 'logger_create.dart';
 /// The API prefix indicates that it's part of the API and not the SDK
 /// and generally should not be used since an API without an SDK is a noop.
 /// Use the Logger from the SDK instead.
+///
+/// All methods of this class are safe for concurrent use by default:
+/// implementations must remain correct when methods are invoked from
+/// interleaved asynchronous tasks within an isolate. See
+/// [Logs API, concurrency requirements](https://github.com/open-telemetry/opentelemetry-specification/blob/v1.60.0/specification/logs/api.md#concurrency-requirements).
 class APILogger {
   /// Gets the name of the logger, usually of a library, package or module
   final String name;
