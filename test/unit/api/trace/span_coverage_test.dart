@@ -161,11 +161,13 @@ void main() {
       expect(events, hasLength(1));
 
       final eventAttrs = events![0].attributes!.toMap();
-      expect(eventAttrs['exception.type']?.value, contains('Exception'));
-      expect(eventAttrs['exception.message']?.value, contains('Test error'));
-      expect(eventAttrs['exception.stacktrace']?.value, isNotNull);
-      expect(eventAttrs['exception.escaped']?.value, isTrue);
-      expect(eventAttrs['custom']?.value, equals('attribute'));
+      expect(
+          eventAttrs['exception.type']?.value.unwrap(), contains('Exception'));
+      expect(eventAttrs['exception.message']?.value.unwrap(),
+          contains('Test error'));
+      expect(eventAttrs['exception.stacktrace']?.value.unwrap(), isNotNull);
+      expect(eventAttrs['exception.escaped']?.value.unwrap(), isTrue);
+      expect(eventAttrs['custom']?.value.unwrap(), equals('attribute'));
     });
 
     test('createSpan throws ArgumentError for invalid span context', () {

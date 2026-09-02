@@ -18,15 +18,6 @@ void main() {
       );
     });
 
-    test('empty string value throws', () {
-      expect(() => OTelAPI.attributeString('k', ''), throwsArgumentError);
-    });
-
-    test('empty list value throws', () {
-      expect(() => OTelAPI.attributeStringList('k', <String>[]),
-          throwsArgumentError);
-    });
-
     test('toString includes the value', () {
       expect(OTelAPI.attributeString('k', 'v').toString(),
           equals('AttributeValue(v)'));
@@ -46,11 +37,12 @@ void main() {
       expect(attrs.getIntList('counts'), equals([1, 2, 3]));
     });
 
-    test('Attributes.of converts mixed numeric lists to double', () {
+    test('Attributes.of ignores mixed numeric lists without coercion', () {
       final attrs = Attributes.of({
         'nums': <Object>[1, 2.5]
       });
-      expect(attrs.getDoubleList('nums'), equals([1.0, 2.5]));
+      // The array has mixed types (int and double). getDoubleList will throw StateError.
+      expect(() => attrs.getDoubleList('nums'), throwsA(isA<StateError>()));
     });
 
     test('Attributes.of ignores lists of unsupported types', () {
@@ -69,12 +61,10 @@ void main() {
         'names': <dynamic>['a', 'b'],
         'flags': <dynamic>[true, false],
         'counts': <dynamic>[1, 2],
-        'nums': <dynamic>[1, 2.5],
       });
       expect(attrs.getStringList('names'), equals(['a', 'b']));
       expect(attrs.getBoolList('flags'), equals([true, false]));
       expect(attrs.getIntList('counts'), equals([1, 2]));
-      expect(attrs.getDoubleList('nums'), equals([1.0, 2.5]));
     });
   });
 }

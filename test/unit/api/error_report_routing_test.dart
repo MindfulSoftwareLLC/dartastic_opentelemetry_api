@@ -43,9 +43,7 @@ void main() {
     test('a dropped attribute (unsupported value type) is reported', () {
       // Attributes.of stringifies unknown scalar types by design; fromJson
       // drops them — the drop must reach the handler.
-      final attrs = Attributes.fromJson({
-        'unsupported': {'nested': 'map'}
-      });
+      final attrs = Attributes.fromJson({'unsupported': () {}});
 
       expect(attrs.toList(), isEmpty, reason: 'the attribute is dropped');
       expect(reported, hasLength(1));
@@ -57,7 +55,7 @@ void main() {
 
     test('a dropped attribute (unsupported list element type) is reported', () {
       final attrs = Attributes.of({
-        'mixed': [1, 'two']
+        'mixed': [1, () {}]
       });
 
       expect(attrs.toList(), isEmpty, reason: 'the attribute is dropped');

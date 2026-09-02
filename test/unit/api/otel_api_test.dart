@@ -488,6 +488,24 @@ void main() {
       expect(messages.join('\n'),
           contains('replacing the installed no-op API factory'));
     });
+
+    test('creates attributeMap, attributeArray, attributeBytes', () {
+      final mapAttr =
+          OTelAPI.attributeMap('map-key', {'nested': AnyValue.fromObject(1)});
+      expect(mapAttr.key, equals('map-key'));
+      expect(
+          (mapAttr.value as AnyValueMap).value['nested']?.unwrap(), equals(1));
+
+      final arrAttr =
+          OTelAPI.attributeArray('arr-key', [AnyValue.fromObject('value')]);
+      expect(arrAttr.key, equals('arr-key'));
+      expect(
+          (arrAttr.value as AnyValueArray).value[0].unwrap(), equals('value'));
+
+      final bytesAttr = OTelAPI.attributeBytes('bytes-key', [0, 1, 2]);
+      expect(bytesAttr.key, equals('bytes-key'));
+      expect((bytesAttr.value as AnyValueBytes).value, equals([0, 1, 2]));
+    });
   });
 }
 

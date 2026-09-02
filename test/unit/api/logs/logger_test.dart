@@ -68,9 +68,9 @@ void main() {
 
       expect(logger, isNotNull);
       expect(logger.attributes, isNotNull);
-      expect(logger.attributes?.toMap()['library.name']?.value,
+      expect(logger.attributes?.toMap()['library.name']?.value.unwrap(),
           equals('test-logger'));
-      expect(logger.attributes?.toMap()['library.language']?.value,
+      expect(logger.attributes?.toMap()['library.language']?.value.unwrap(),
           equals('dart'));
     });
 
@@ -94,7 +94,8 @@ void main() {
       final provider = OTelAPI.loggerProvider();
       final logger = provider.getLogger('test-logger');
 
-      expect(() => logger.emit(body: 'test log message'), returnsNormally);
+      expect(() => logger.emit(body: AnyValue.fromObject('test log message')),
+          returnsNormally);
     });
 
     test('emit does not throw with severity', () {
@@ -177,7 +178,7 @@ void main() {
           context: context,
           severityNumber: Severity.WARN,
           severityText: 'WARN',
-          body: 'This is a warning message',
+          body: AnyValue.fromObject('This is a warning message'),
           attributes: attributes,
           eventName: 'test.warning.event',
         ),
@@ -190,19 +191,23 @@ void main() {
       final logger = provider.getLogger('test-logger');
 
       // String body
-      expect(() => logger.emit(body: 'string message'), returnsNormally);
+      expect(() => logger.emit(body: AnyValue.fromObject('string body')),
+          returnsNormally);
 
       // Number body
-      expect(() => logger.emit(body: 42), returnsNormally);
+      expect(() => logger.emit(body: AnyValue.fromObject(42)), returnsNormally);
 
       // Boolean body
-      expect(() => logger.emit(body: true), returnsNormally);
+      expect(
+          () => logger.emit(body: AnyValue.fromObject(true)), returnsNormally);
 
       // Map body
-      expect(() => logger.emit(body: {'key': 'value'}), returnsNormally);
+      expect(() => logger.emit(body: AnyValue.fromObject({'key': 'value'})),
+          returnsNormally);
 
       // List body
-      expect(() => logger.emit(body: ['item1', 'item2']), returnsNormally);
+      expect(() => logger.emit(body: AnyValue.fromObject(['item1', 'item2'])),
+          returnsNormally);
     });
 
     test('emit with different severity levels', () {
@@ -227,9 +232,15 @@ void main() {
 
       expect(
         () {
-          logger.emit(body: 'message 1', severityNumber: Severity.INFO);
-          logger.emit(body: 'message 2', severityNumber: Severity.WARN);
-          logger.emit(body: 'message 3', severityNumber: Severity.ERROR);
+          logger.emit(
+              body: AnyValue.fromObject('message 1'),
+              severityNumber: Severity.INFO);
+          logger.emit(
+              body: AnyValue.fromObject('message 2'),
+              severityNumber: Severity.WARN);
+          logger.emit(
+              body: AnyValue.fromObject('message 3'),
+              severityNumber: Severity.ERROR);
         },
         returnsNormally,
       );

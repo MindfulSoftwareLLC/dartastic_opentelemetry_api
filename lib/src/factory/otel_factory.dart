@@ -5,6 +5,7 @@ import 'dart:typed_data';
 
 import '../api/baggage/baggage.dart';
 import '../api/baggage/baggage_entry.dart';
+import '../api/common/any_value.dart';
 import '../api/common/attribute.dart';
 import '../api/common/attributes.dart';
 import '../api/common/instrumentation_scope.dart';
@@ -358,29 +359,38 @@ abstract class OTelFactory {
   /// are converted into `BaggageEntry`s without metadata.
   Baggage baggageForMap(Map<String, String> keyValuePairs);
 
-  /// Creates an `AttributeValue` for the given String.
-  Attribute<String> attributeString(String key, String value);
+  /// Creates an `Attribute` for the given String.
+  Attribute attributeString(String key, String value);
 
-  /// Creates an `AttributeValue` for the given boolean.
-  Attribute<bool> attributeBool(String key, bool value);
+  /// Creates an `Attribute` for the given boolean.
+  Attribute attributeBool(String key, bool value);
 
-  /// Creates an `AttributeValue` for the given int.
-  Attribute<int> attributeInt(String key, int value);
+  /// Creates an `Attribute` for the given int.
+  Attribute attributeInt(String key, int value);
 
-  /// Creates an `AttributeValue` for the given double.
-  Attribute<double> attributeDouble(String key, double value);
+  /// Creates an `Attribute` for the given double.
+  Attribute attributeDouble(String key, double value);
 
-  /// Creates an `AttributeValue` for the given String.
-  Attribute<List<String>> attributeStringList(String key, List<String> value);
+  /// Creates an `Attribute` for the given String.
+  Attribute attributeStringList(String key, List<String> value);
 
-  /// Creates an `AttributeValue` for the given boolean.
-  Attribute<List<bool>> attributeBoolList(String key, List<bool> value);
+  /// Creates an `Attribute` for the given boolean.
+  Attribute attributeBoolList(String key, List<bool> value);
 
-  /// Creates an `AttributeValue` for the given int.
-  Attribute<List<int>> attributeIntList(String key, List<int> value);
+  /// Creates an `Attribute` for the given int.
+  Attribute attributeIntList(String key, List<int> value);
 
-  /// Creates an `AttributeValue` for the given double.
-  Attribute<List<double>> attributeDoubleList(String key, List<double> value);
+  /// Creates an `Attribute` for the given double.
+  Attribute attributeDoubleList(String key, List<double> value);
+
+  /// Creates an `Attribute` for the given map of string to AnyValue.
+  Attribute attributeMap(String key, Map<String, AnyValue> value);
+
+  /// Creates an `Attribute` for the given list of AnyValue.
+  Attribute attributeArray(String key, List<AnyValue> value);
+
+  /// Creates an `Attribute` for the given byte array.
+  Attribute attributeBytes(String key, List<int> value);
 
   /// Creates an `Attributes` collection.
   Attributes attributes([List<Attribute>? entries]);
