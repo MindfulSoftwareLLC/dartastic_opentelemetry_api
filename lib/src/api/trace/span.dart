@@ -56,6 +56,7 @@ class APISpan {
   List<SpanLink>? _spanLinks;
   SpanStatusCode? _spanStatusCode;
   String? _statusDescription;
+  final bool _isRecordingAtCreation;
 
   APISpan._({
     required String name,
@@ -68,6 +69,7 @@ class APISpan {
     List<SpanLink>? spanLinks,
     DateTime? startTime,
     TimeProvider? timeProvider,
+    required bool isRecording,
   })  : _name = name,
         _instrumentationScope = instrumentationScope,
         _spanContext = spanContext,
@@ -78,7 +80,8 @@ class APISpan {
         _startTime =
             startTime ?? (timeProvider ?? defaultTimeProvider).nowDateTime(),
         _spanLinks = spanLinks,
-        _spanEvents = spanEvents {
+        _spanEvents = spanEvents,
+        _isRecordingAtCreation = isRecording {
     // Set initial status to unset per spec
     _spanStatusCode = SpanStatusCode.Unset;
 
@@ -114,7 +117,7 @@ class APISpan {
   /// Whether mutating operations currently apply. The default is
   /// "until the span ends"; [NonRecordingSpan] overrides this to make
   /// every mutation a no-op, per the spec.
-  bool get _modifiable => !isEnded;
+  bool get _modifiable => _isRecordingAtCreation && !isEnded;
 
   /// The status of this [APISpan].
   SpanStatusCode get status => _spanStatusCode ?? SpanStatusCode.Unset;
@@ -150,7 +153,7 @@ class APISpan {
       _spanLinks == null ? null : List.unmodifiable(_spanLinks!);
 
   /// Returns true if this Span is recording information like events, attributes, status, etc.
-  bool get isRecording => !isEnded;
+  bool get isRecording => _isRecordingAtCreation && !isEnded;
 
   /// Only exposed for testing.  Spans are not meant to be used to propagate
   /// information within a process. To prevent misuse, implementations
