@@ -24,7 +24,15 @@ class TraceState {
     _entries = entries ?? {};
   }
 
-  /// Create TraceState from a W3C trace context header string
+  /// Creates a TraceState from a W3C trace context header string.
+  ///
+  /// The parser drops a list member that breaks the W3C grammar. The result
+  /// holds only the entries that this package can send on again.
+  ///
+  /// W3C allows one entry for each key. If a key repeats, the parser keeps
+  /// the first entry and drops the later ones.
+  ///
+  /// The parser stops at the limit of 32 members.
   factory TraceState.fromString(String? headerValue) {
     final factory = OTelFactory.getOrCreateDefault();
     if (headerValue == null || headerValue.isEmpty) {
@@ -36,7 +44,10 @@ class TraceState {
 
     for (var pair in pairs) {
       final keyValue = pair.trim().split('=');
+      // W3C allows one entry for each key. A repeated key makes the header
+      // invalid, so the first entry stays and the later ones are dropped.
       if (keyValue.length == 2 &&
+          !entries.containsKey(keyValue[0]) &&
           _isValidKey(keyValue[0]) &&
           _isValidValue(keyValue[1])) {
         entries[keyValue[0]] = keyValue[1];
