@@ -42,7 +42,8 @@ void main() {
         'span getters: spanId, instrumentationScope, isValid,'
         ' parentSpanContext', () {
       final parent = tracer.createSpan(name: 'parent');
-      final child = tracer.createSpan(name: 'child', parentSpan: parent);
+      final child = tracer.createSpan(
+          name: 'child', context: Context.current.withSpan(parent));
 
       expect(child.spanId, equals(child.spanContext.spanId));
       expect(child.instrumentationScope.name, equals('coverage-tracer'));
@@ -160,6 +161,42 @@ void main() {
           .createSpan(name: 'rootless', context: Context.root);
       expect(span, isA<NonRecordingSpan>());
       expect(span.spanContext.isValid, isFalse);
+    });
+
+    test(
+        'createSpan with root: true without an SDK returns an invalid'
+        ' non-recording span', () {
+      final sc = OTelAPI.spanContext(
+        traceId: OTelAPI.traceId(),
+        spanId: OTelAPI.spanId(),
+      );
+      final span = OTelAPI.tracer('no-sdk').createSpan(
+          name: 'rootless',
+          root: true,
+          context: Context.root.withSpanContext(sc));
+      expect(span, isA<NonRecordingSpan>());
+      expect(span.spanContext.isValid, isFalse);
+    });
+
+    test(
+        'createSpan without an SDK prefers a remote SpanContext over a local '
+        'span in the same Context (propagator extract flow)', () {
+      final tracer = OTelAPI.tracer('no-sdk');
+
+      final localSpan = tracer.createSpan(name: 'local');
+      var ctx = Context.current.withSpan(localSpan);
+
+      final remoteCtx = OTelAPI.spanContext(
+        traceId: OTelAPI.traceId(), // different trace
+        spanId: OTelAPI.spanId(),
+        isRemote: true,
+      );
+      ctx = ctx.withSpanContext(remoteCtx);
+
+      final span = tracer.createSpan(name: 'handler', context: ctx);
+
+      expect(span, isA<NonRecordingSpan>());
+      expect(span.spanContext.traceId, equals(remoteCtx.traceId));
     });
 
     test('createSpan carries a context-only SpanContext through unchanged', () {

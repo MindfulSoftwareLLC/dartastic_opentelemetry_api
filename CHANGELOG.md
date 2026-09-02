@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.0.0-rc.4-wip]
 
+### Changed
+- **BREAKING**: `parentSpan` and `spanContext` parameters have been removed from
+  `APITracer.startSpan`, `APITracer.createSpan`, and `OTelAPI.nonRecordingSpan`.
+  Span creation now always uses the parent span or remote context stored in the
+  provided `Context` (or `Context.current` if omitted). To parent a new span to
+  a specific `Span` or remote `SpanContext`, use `Context.withSpan` or
+  `Context.withSpanContext`:
+  `tracer.startSpan('name', context: Context.current.withSpan(parent))`.
+  ([#83](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/issues/83))
+- **BREAKING**: `APITracer.startSpan` and `APITracer.createSpan` now accept a
+  `root: true` parameter to force the creation of a root span, even when a
+  parent span is active in the context.
+  ([#83](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/issues/83))
+- **BREAKING**: `APITracer.startSpan` now accepts an optional `startTime` parameter.
+  ([#83](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/issues/83))
+
 ## [1.0.0-rc.3] - 2026-08-27
 
 ### Changed

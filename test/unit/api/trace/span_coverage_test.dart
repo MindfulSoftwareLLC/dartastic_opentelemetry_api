@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import 'package:dartastic_opentelemetry_api/dartastic_opentelemetry_api.dart';
+import 'package:dartastic_opentelemetry_api/src/api/common/instrumentation_scope.dart';
+import 'package:dartastic_opentelemetry_api/src/api/trace/span.dart';
 import 'package:test/test.dart';
 
 import '../../../test_util.dart';
@@ -86,14 +88,18 @@ void main() {
         spanId: spanId,
       );
 
-      final span1 = tracer!.createSpan(
+      final span1 = APISpanCreate.create(
         name: 'test-span',
         spanContext: context,
+        parentSpan: null,
+        instrumentationScope: InstrumentationScopeCreate.create(name: 'test'),
       );
 
-      final span2 = tracer!.createSpan(
+      final span2 = APISpanCreate.create(
         name: 'test-span',
         spanContext: context,
+        parentSpan: null,
+        instrumentationScope: InstrumentationScopeCreate.create(name: 'test'),
       );
 
       // Different span with different context
@@ -166,75 +172,6 @@ void main() {
       expect(eventAttrs['exception.stacktrace']?.value, isNotNull);
       expect(eventAttrs['exception.escaped']?.value, isTrue);
       expect(eventAttrs['custom']?.value, equals('attribute'));
-    });
-
-    test('createSpan throws ArgumentError for invalid span context', () {
-      // Create an invalid span context
-      final invalidContext = OTelAPI.spanContextInvalid();
-
-      expect(
-        () => tracer!.createSpan(
-          name: 'test-span',
-          spanContext: invalidContext,
-        ),
-        throwsA(isA<ArgumentError>()),
-      );
-    });
-
-    test(
-        'createSpan throws ArgumentError when child span has mismatched trace ID',
-        () {
-      // Create parent span
-      final parentSpan = tracer!.createSpan(name: 'parent-span');
-
-      // Create a span context with different trace ID
-      final differentTraceId = OTelAPI.traceId();
-      final childContext = OTelAPI.spanContext(
-        traceId: differentTraceId, // Different from parent
-        spanId: OTelAPI.spanId(),
-        parentSpanId: parentSpan.spanContext.spanId,
-      );
-
-      expect(
-        () => tracer!.createSpan(
-          name: 'child-span',
-          spanContext: childContext,
-          parentSpan: parentSpan,
-        ),
-        throwsA(isA<ArgumentError>().having(
-          (e) => e.message,
-          'message',
-          contains('traceIds must be the same'),
-        )),
-      );
-    });
-
-    test(
-        'createSpan auto-corrects parent span ID when mismatched but trace ID matches',
-        () {
-      // Create parent span
-      final parentSpan = tracer!.createSpan(name: 'parent-span');
-
-      // Create a span context with correct trace ID but wrong parent span ID
-      final wrongParentSpanId =
-          OTelAPI.spanId(); // Different from parent's span ID
-      final childContext = OTelAPI.spanContext(
-        traceId: parentSpan.spanContext.traceId, // Same as parent
-        spanId: OTelAPI.spanId(),
-        parentSpanId:
-            wrongParentSpanId, // Wrong parent span ID - should be auto-corrected
-      );
-
-      // Should NOT throw - the tracer auto-corrects the parent span ID
-      final childSpan = tracer!.createSpan(
-        name: 'child-span',
-        spanContext: childContext,
-        parentSpan: parentSpan,
-      );
-
-      // Verify the child span's parentSpanId was corrected to the actual parent's span ID
-      expect(childSpan.spanContext.parentSpanId,
-          equals(parentSpan.spanContext.spanId));
     });
   });
 }

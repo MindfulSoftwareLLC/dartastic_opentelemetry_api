@@ -63,12 +63,129 @@ void main() {
         attributes: attributes,
         links: links,
         startTime: startTime,
-        spanContext: parentContext, // Using spanContext parameter correctly
+        context: Context.current.withSpan(parentSpan),
       );
 
       expect(span, isNotNull);
       expect(span.name, equals('test-span'));
       expect(span.kind, equals(SpanKind.client));
+    });
+
+    test('startSpan accepts and respects startTime', () {
+      final tracer = OTelAPI.tracer('test-tracer');
+      final startTime = DateTime.now().subtract(const Duration(minutes: 5));
+      final span = tracer.startSpan('test-span', startTime: startTime);
+
+      expect(span.startTime, equals(startTime));
+    });
+
+    test('startSpan with root: true creates root even with active parent', () {
+      final tracer = OTelAPI.tracer('test-tracer');
+      final parent = tracer.startSpan('parent');
+
+      tracer.withSpan(parent, () {
+        final child = tracer.startSpan('child', root: true);
+        expect(child.spanContext.parentSpanId?.isValid, isFalse);
+        expect(child.spanContext.traceId,
+            isNot(equals(parent.spanContext.traceId)));
+      });
+    });
+
+    test(
+        'startSpan with root: true and custom startTime produces span with that exact startTime',
+        () {
+      final tracer = OTelAPI.tracer('test-tracer');
+      final parent = tracer.startSpan('parent');
+      final startTime = DateTime.now().subtract(const Duration(hours: 1));
+
+      tracer.withSpan(parent, () {
+        final child =
+            tracer.startSpan('child', root: true, startTime: startTime);
+        expect(child.spanContext.parentSpanId?.isValid, isFalse);
+        expect(child.startTime, equals(startTime));
+      });
+    });
+
+    test(
+        'remote SpanContext wrapped in NonRecordingSpan and placed in Context '
+        'preserves isRemote through createSpan', () {
+      final tracer = OTelAPI.tracer('test-tracer');
+
+      // Simulate extracting a remote SpanContext from e.g. a traceparent header
+      final remoteSpanContext = OTelAPI.spanContext(
+        traceId: OTelAPI.traceId(),
+        spanId: OTelAPI.spanId(),
+        isRemote: true,
+      );
+      expect(remoteSpanContext.isRemote, isTrue);
+
+      // Wrap in NonRecordingSpan and put into Context — this is the
+      // spec-required pattern for propagating a remote parent
+      final remoteSpan = OTelAPI.nonRecordingSpan(remoteSpanContext);
+      final ctx = Context.current.withSpan(remoteSpan);
+
+      // Create a child span using the context
+      final childSpan = tracer.createSpan(name: 'server-handler', context: ctx);
+
+      // The child must inherit the remote parent's trace ID
+      expect(childSpan.spanContext.traceId, equals(remoteSpanContext.traceId));
+
+      // The child must have a new span ID (not the remote's)
+      expect(childSpan.spanContext.spanId,
+          isNot(equals(remoteSpanContext.spanId)));
+
+      // The child's parent span ID must be the remote span's ID
+      expect(
+          childSpan.spanContext.parentSpanId, equals(remoteSpanContext.spanId));
+    });
+
+    test(
+        'remote SpanContext in Context (without NonRecordingSpan wrap) '
+        'also preserves isRemote and creates correct child', () {
+      final tracer = OTelAPI.tracer('test-tracer');
+
+      // Remote context placed directly on Context via copyWithSpanContext
+      // (the propagator extract path)
+      final remoteSpanContext = OTelAPI.spanContext(
+        traceId: OTelAPI.traceId(),
+        spanId: OTelAPI.spanId(),
+        isRemote: true,
+      );
+      final ctx = Context.current.copyWithSpanContext(remoteSpanContext);
+
+      final childSpan = tracer.createSpan(name: 'server-handler', context: ctx);
+
+      expect(childSpan.spanContext.traceId, equals(remoteSpanContext.traceId));
+      expect(
+          childSpan.spanContext.parentSpanId, equals(remoteSpanContext.spanId));
+    });
+
+    test(
+        'createSpan with context that has both a local span and a different-trace '
+        'remote SpanContext uses the remote SpanContext as parent (propagator extract flow)',
+        () {
+      final tracer = OTelAPI.tracer('test-tracer');
+
+      // Local span on trace A
+      final localSpan = tracer.createSpan(name: 'local');
+      var ctx = Context.current.withSpan(localSpan);
+
+      // Propagator extracts remote context from trace B
+      final remoteCtx = OTelAPI.spanContext(
+        traceId: OTelAPI.traceId(), // different trace
+        spanId: OTelAPI.spanId(),
+        isRemote: true,
+      );
+      ctx = ctx.withSpanContext(remoteCtx);
+
+      // Sanity: context now has conflicting trace IDs
+      expect(ctx.span!.spanContext.traceId, isNot(equals(remoteCtx.traceId)));
+      expect(ctx.spanContext!.traceId, equals(remoteCtx.traceId));
+
+      // createSpan must NOT throw — it should use the remote SpanContext
+      final child = tracer.createSpan(name: 'handler', context: ctx);
+      expect(child.spanContext.traceId, equals(remoteCtx.traceId));
+      expect(child.spanContext.parentSpanId, equals(remoteCtx.spanId));
     });
 
     test('creates span with parent context from current context', () {
