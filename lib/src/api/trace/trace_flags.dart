@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import 'package:meta/meta.dart';
+import '../id/id_generator.dart';
 import 'span_context.dart' show SpanContext;
 
 part 'trace_flags_create.dart';
@@ -39,15 +40,14 @@ class TraceFlags {
 
   /// Creates TraceFlags from a hexadecimal string representation.
   ///
-  /// This parses the provided hex string and creates appropriate TraceFlags.
-  /// If the string cannot be parsed, returns TraceFlags with no flags set.
+  /// [hex] Two lowercase hexadecimal digits.
   ///
-  /// [hex] A hexadecimal string representation of the flags.
-  ///
-  /// Returns a new TraceFlags instance with the parsed flags.
-  factory TraceFlags.fromString(String hex) {
-    final flags = int.tryParse(hex, radix: 16) ?? NONE_FLAG;
-    return TraceFlagsCreate.create(flags);
+  /// Returns a new TraceFlags instance, or null if [hex] is anything else.
+  static TraceFlags? fromString(String hex) {
+    if (hex.length != 2) return null;
+    final bytes = IdGenerator.hexToBytes(hex);
+    if (bytes == null) return null;
+    return TraceFlagsCreate.create(bytes[0]);
   }
 
   /// Returns the byte representation of the TraceFlags
