@@ -4,7 +4,6 @@
 // ignore_for_file: unnecessary_getters_setters
 
 import 'package:meta/meta.dart';
-import '../../util/otel_error_handler.dart';
 import '../common/attributes.dart';
 import '../common/signal_instance_key.dart';
 import '../otel_api.dart';
@@ -78,27 +77,15 @@ class APIMeterProvider {
       String? version,
       String? schemaUrl,
       Attributes? attributes}) {
-    if (_isShutdown) {
-      OTelErrorHandling.report(StateError(
-          'getMeter called after shutdown; returning a no-op meter.'));
-    }
-
-    // Validate the meter name; if invalid (empty), report and use empty string.
-    final validatedName = name.isEmpty ? '' : name;
-    if (validatedName.isEmpty) {
-      OTelErrorHandling.report(ArgumentError(
-          'Invalid meter name provided; using empty string as fallback.'));
-    }
-
     // Create a cache key based on the provided parameters.
-    final key = SignalInstanceKey(
-        validatedName, version, schemaUrl, attributes, Signal.metrics);
+    final key =
+        SignalInstanceKey(name, version, schemaUrl, attributes, Signal.metrics);
 
     if (_meterCache.containsKey(key)) {
       return _meterCache[key]!;
     } else {
       final meter = APIMeterCreate.create(
-        name: validatedName,
+        name: name,
         version: version,
         schemaUrl: schemaUrl,
         attributes: attributes,
