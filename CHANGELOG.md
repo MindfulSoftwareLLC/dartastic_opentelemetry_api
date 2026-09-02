@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.0.0-rc.4-wip]
 
+### Fixed (spec compliance)
+
+- The trace API now documents that `APITracerProvider`, `APITracer` and
+  `APISpan` implementations need to be safe for concurrent use, which
+  trace/api.md makes a MUST. Comments only, no behaviour change
+  ([#120](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/120)).
+
 ## [1.0.0-rc.3] - 2026-08-27
 
 ### Changed
