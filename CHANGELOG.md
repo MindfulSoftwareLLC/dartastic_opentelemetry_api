@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.0.0-rc.4-wip]
 
+### Fixed
+
+- `TraceState` construction (`fromMap`, `OTelAPI`/`OTelFactory` `traceState(...)`)
+  now validates keys and values against the W3C tracestate grammar, dropping
+  invalid entries instead of silently accepting them.
+
 ## [1.0.0-rc.3] - 2026-08-27
 
 ### Changed
