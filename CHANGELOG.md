@@ -111,6 +111,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   because the W3C grammar allows them
   ([#116](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/116)).
 
+### Changed
+
+- **BREAKING**: Removed `copyWithValue` from `Context` because it generated a key the caller could never retrieve. Use `OTelAPI.contextKey` and `Context.copyWith` instead
+  ([#79](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/issues/79)).
+
 ## [1.0.0-rc.3] - 2026-08-27
 
 ### Changed
