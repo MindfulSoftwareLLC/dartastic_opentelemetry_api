@@ -235,21 +235,6 @@ class Context {
   }
 
   /// Creates a new Context with the specified value for the given key
-  /// Creates a new Context with a new key-value pair added.
-  ///
-  /// This generates a new ContextKey with the given name and adds the value to a new Context.
-  /// A new unique ID is generated for the key.
-  Context copyWithValue<T>(String name, T contextValue,
-      {bool isTransferable = false}) {
-    return ContextCreate.create(contextMap: {
-      ..._values,
-      _getAndCacheOTelFactory().contextKey<T>(
-          name, ContextKey.generateContextKeyId(),
-          isTransferable: isTransferable): contextValue,
-    });
-  }
-
-  /// Creates a new Context with the specified value for the given key
   Context copyWith<T>(ContextKey<T> key, T value) {
     return ContextCreate.create(contextMap: {
       ..._values,
