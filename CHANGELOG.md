@@ -46,6 +46,19 @@ fixes. See the `1.0.0-rc.3` entry for detail.
   schema URL. Both are `null` when you omit them.
   ([#108](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/108))
 
+### Fixed (spec compliance)
+- **Empty string and empty array attribute values are now stored** (api#80).
+  The OTel specification requires that empty strings and empty arrays be
+  valid attribute values. Previously `attributeString('k', '')` and
+  `attributeStringList('k', [])` threw `ArgumentError`, and
+  `Attributes.fromJson` silently dropped empty lists. Now all three paths
+  store empty values correctly.
+- **Typed `Attributes` getters return null on a type mismatch** (api#81)
+  instead of throwing `StateError`, which is what their doc comments always
+  promised. Affects `getString`, `getBool`, `getInt`, `getDouble` and the
+  four list getters. The mismatch is reported through the error handler, so
+  a strict-mode handler still sees it.
+
 ## [1.0.0-rc.2] - 2026-08-23
 
 ### Added

@@ -54,31 +54,28 @@ class Attributes {
       } else if (value is List<double>) {
         attributes.add(AttributeCreate.create<List<double>>(key, value));
       } else if (value is List) {
-        // Try to convert the list to a supported type
-        if (value.isNotEmpty) {
-          if (value.every((e) => e is String)) {
-            attributes.add(AttributeCreate.create<List<String>>(
-                key, value.cast<String>()));
-          } else if (value.every((e) => e is bool)) {
-            attributes.add(
-                AttributeCreate.create<List<bool>>(key, value.cast<bool>()));
-          } else if (value.every((e) => e is int)) {
-            attributes
-                .add(AttributeCreate.create<List<int>>(key, value.cast<int>()));
-          } else if (value.every((e) => e is double || e is int)) {
-            // Convert all to double
-            attributes.add(AttributeCreate.create<List<double>>(
-                key,
-                value
-                    .map((e) => e is int ? e.toDouble() : e as double)
-                    .toList()));
-          } else {
-            OTelErrorHandling.report(ArgumentError(
-                'Ignoring attribute $key because the list contains unsupported types. Only String, bool, int, double lists are allowed by the OTel specification.'));
-          }
+        // Untyped lists (List<Object> / List<dynamic>): element-check
+        // rather than hard-cast.  Empty untyped lists take the
+        // List<String> fallback because .every() is vacuously true.
+        if (value.every((e) => e is String)) {
+          attributes.add(
+              AttributeCreate.create<List<String>>(key, value.cast<String>()));
+        } else if (value.every((e) => e is bool)) {
+          attributes
+              .add(AttributeCreate.create<List<bool>>(key, value.cast<bool>()));
+        } else if (value.every((e) => e is int)) {
+          attributes
+              .add(AttributeCreate.create<List<int>>(key, value.cast<int>()));
+        } else if (value.every((e) => e is double || e is int)) {
+          // Convert all to double
+          attributes.add(AttributeCreate.create<List<double>>(
+              key,
+              value
+                  .map((e) => e is int ? e.toDouble() : e as double)
+                  .toList()));
         } else {
           OTelErrorHandling.report(ArgumentError(
-              'Ignoring attribute $key because empty lists are not allowed by the OTel specification.'));
+              'Ignoring attribute $key because the list contains unsupported types. Only String, bool, int, double lists are allowed by the OTel specification.'));
         }
       } else {
         OTelErrorHandling.report(ArgumentError(
@@ -144,17 +141,24 @@ class Attributes {
   /// Returns the number of attributes in this collection.
   int get length => _entries.length;
 
-  /// Returns the value associated with the given [key], or null if not present.
+  /// Returns the value associated with the given [key], or null if the key
+  /// is not present or the stored value is not of type [T].
+  ///
+  /// error-handling.md: API methods MUST NOT throw unhandled exceptions
+  /// when used incorrectly by end users. A type mismatch is reported
+  /// through [OTelErrorHandling] and null is returned.
   T? _getTyped<T>(String key) {
     final attribute = _entries[key];
     if (attribute == null) return null;
 
-    // Ensure the value matches the expected type `T`
-    if (attribute.value is T) {
-      return attribute.value as T;
-    } else {
-      throw StateError('Value for key "$key" is not of type $T');
+    final value = attribute.value;
+    if (value is T) {
+      return value as T;
     }
+    OTelErrorHandling.report(
+        StateError('Attribute value for key "$key" is a ${value.runtimeType}, '
+            'not a $T; returning null.'));
+    return null;
   }
 
   /// Creates a new Attributes instance with a String attribute added or updated.
@@ -324,7 +328,7 @@ class Attributes {
 /// Extension to create Attributes from a simple Map
 extension AttributesExtension on Map<String, Object> {
   /// Convert this map to Attributes
-  /// Empty string are not allowed and are skipped
+  /// Empty strings and empty lists are stored per the OTel spec
   Attributes toAttributes() {
     return OTelFactory.getOrCreateDefault().attributesFromMap(this);
   }
