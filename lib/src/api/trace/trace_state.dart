@@ -9,6 +9,15 @@ part 'trace_state_create.dart';
 
 /// Key-value pairs carried along with a span context.
 /// TraceState follows the W3C Trace Context specification.
+///
+/// Size policy: the grammar limits (W3C §3.3.1.1) — a maximum of 32
+/// list-members and the per-key/per-value length rules — are enforced on
+/// every path. [toString] serializes exactly what the state holds and
+/// does not truncate beyond them; [toHeaderString] applies the §3.3.1.5
+/// truncation procedure for callers that need a bounded header value.
+/// Vendors SHOULD propagate at least 512 characters of the combined
+/// header, so 512 is a floor the procedure keeps whole entries within,
+/// not a ceiling imposed on the state itself.
 class TraceState {
   static const int _maxKeyValuePairs = 32;
   static final RegExp _simpleKeyFormat = RegExp(r'^[a-z][a-z0-9_\-*/]{0,255}$');
@@ -117,6 +126,41 @@ class TraceState {
   @override
   String toString() {
     return _entries.entries.map((e) => '${e.key}=${e.value}').join(',');
+  }
+
+  /// Produces the W3C `tracestate` header value, applying the truncation
+  /// procedure of W3C Trace Context §3.3.1.5.
+  ///
+  /// Entries over 128 characters are removed first, then entries are removed
+  /// from the end until the joined value fits the 512-character budget.
+  /// Only whole entries are removed, and every dropped entry is reported
+  /// through [OTelErrorHandling]. Unlike [toString], this may return a value
+  /// that no longer contains all entries.
+  String toHeaderString() {
+    final entries = List<MapEntry<String, String>>.from(_entries.entries);
+
+    // W3C §3.3.1.5: entries larger than 128 characters should be removed
+    // first. The length of a list-member is its `key=value` size.
+    final overlong = entries
+        .where((e) => '${e.key}=${e.value}'.length > 128)
+        .toList(growable: false);
+    for (final entry in overlong) {
+      entries.remove(entry);
+      OTelErrorHandling.report(StateError(
+          'TraceState entry ${entry.key} exceeds 128 characters; dropped.'));
+    }
+
+    // Then entries should be removed starting from the end of the
+    // tracestate until the value fits the 512-character budget.
+    var value = entries.map((e) => '${e.key}=${e.value}').join(',');
+    while (value.length > 512 && entries.isNotEmpty) {
+      final entry = entries.removeLast();
+      OTelErrorHandling.report(StateError(
+          'TraceState exceeds 512 characters; entry ${entry.key} dropped.'));
+      value = entries.map((e) => '${e.key}=${e.value}').join(',');
+    }
+
+    return value;
   }
 
   /// Validate a tracestate key: a simple key, or a multi-tenant
