@@ -40,10 +40,12 @@ void main() {
       );
 
       // Create a context with both baggage and span context
+      final customKey =
+          OTelAPI.contextKey<String>('custom-key', isTransferable: true);
       final context = Context.root
           .withBaggage(baggage)
           .withSpanContext(spanContext)
-          .copyWithValue('custom-key', 'custom-value', isTransferable: true);
+          .copyWith(customKey, 'custom-value');
 
       // Serialize the context
       final serialized = context.serialize();
@@ -183,7 +185,7 @@ void main() {
       expect(context.get<String>(stringKey), equals('string-value'));
     });
 
-    test('Context.copyWithValue with a mismatched type adds a new key', () {
+    test('Context allows keys with same name but different instances', () {
       // Create a context with an int key and int value
       final intKey = OTelAPI.contextKey<int>('int-key');
       final context = Context.root.copyWith(intKey, 123);
@@ -192,8 +194,9 @@ void main() {
       expect(context.get<int>(intKey), equals(123));
 
       // Add a mismatched value (string with key name 'int-key')
-      final badContext =
-          context.copyWithValue('int-key', 'not-an-int', isTransferable: true);
+      final newStringKey =
+          OTelAPI.contextKey<String>('int-key', isTransferable: true);
+      final badContext = context.copyWith(newStringKey, 'not-an-int');
 
       // We should be able to access the int value still
       expect(badContext.get<int>(intKey), equals(123),
@@ -225,16 +228,18 @@ void main() {
     test('Context allows multiple keys with the same name but different types',
         () {
       // Create a context with a string value
-      final context = Context.root
-          .copyWithValue('mixed-key', 'string-value', isTransferable: true);
+      final strKey =
+          OTelAPI.contextKey<String>('mixed-key', isTransferable: true);
+      final context = Context.root.copyWith(strKey, 'string-value');
 
       // Add an int value with the same key name
-      final mixedContext =
-          context.copyWithValue('mixed-key', 42, isTransferable: true);
+      final intKey = OTelAPI.contextKey<int>('mixed-key', isTransferable: true);
+      final mixedContext = context.copyWith(intKey, 42);
 
       // Add a boolean value with the same key name
-      final finalContext =
-          mixedContext.copyWithValue('mixed-key', true, isTransferable: true);
+      final boolKey =
+          OTelAPI.contextKey<bool>('mixed-key', isTransferable: true);
+      final finalContext = mixedContext.copyWith(boolKey, true);
 
       // Serialize to check the context contents
       final serialized = finalContext.serialize();
