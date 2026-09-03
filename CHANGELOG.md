@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed (spec compliance)
 
+- The trace API now documents that `APITracerProvider`, `APITracer` and
+  `APISpan` implementations need to be safe for concurrent use, which
+  trace/api.md makes a MUST. Comments only, no behaviour change
+  ([#120](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/120)).
 - The logs API now documents that `APILoggerProvider` and `APILogger`
   implementations need to be safe for concurrent use, which logs/api.md makes
   a MUST. Comments only, no behavior change
