@@ -9,6 +9,15 @@ part 'trace_state_create.dart';
 
 /// Key-value pairs carried along with a span context.
 /// TraceState follows the W3C Trace Context specification.
+///
+/// Size policy: the grammar limits (W3C §3.3.1.1) — a maximum of 32
+/// list-members and the per-key/per-value length rules — are enforced on
+/// every path. [toString] serializes exactly what the state holds and
+/// does not truncate beyond them; [toHeaderString] applies the §3.3.1.5
+/// truncation procedure for callers that need a bounded header value.
+/// Vendors SHOULD propagate at least 512 characters of the combined
+/// header, so 512 is a floor the procedure keeps whole entries within,
+/// not a ceiling imposed on the state itself.
 class TraceState {
   static const int _maxKeyValuePairs = 32;
   static final RegExp _simpleKeyFormat = RegExp(r'^[a-z][a-z0-9_\-*/]{0,255}$');
