@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.0.0-rc.4-wip]
 
+### Changed
+
+- **BREAKING**: `Baggage.getAllValues()` now returns a `Map<String, BaggageEntry>` instead of a `List<String>`. This correctly implements the OpenTelemetry Baggage API's "Get All Values" operation which requires returning the name/value pairs. Existing callers should migrate by expecting a map instead of a list.
+  ([#78](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/issues/78))
 ### Fixed (spec compliance)
 
 - The trace API now documents that `APITracerProvider`, `APITracer` and

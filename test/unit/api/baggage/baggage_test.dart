@@ -48,6 +48,21 @@ void main() {
       expect(baggage['nonexistent'], isNull);
     });
 
+    test('gets all entries (Get All Values spec operation)', () {
+      final entry1 = OTelAPI.baggageEntry('value1', 'metadata1');
+      final entry2 = OTelAPI.baggageEntry('value2', 'metadata2');
+
+      final baggage = OTelAPI.baggage({
+        'key1': entry1,
+        'key2': entry2,
+      });
+
+      final entries = baggage.getAllEntries();
+      expect(entries.length, equals(2));
+      expect(entries['key1'], equals(entry1));
+      expect(entries['key2'], equals(entry2));
+    });
+
     test('gets all values', () {
       final entry1 = OTelAPI.baggageEntry('value1', 'metadata1');
       final entry2 = OTelAPI.baggageEntry('value2', 'metadata2');
@@ -58,8 +73,9 @@ void main() {
       });
 
       final values = baggage.getAllValues();
-      expect(values, containsAll(['value1', 'value2']));
       expect(values.length, equals(2));
+      expect(values['key1'], equals(entry1));
+      expect(values['key2'], equals(entry2));
     });
 
     test('adds entry with copyWith', () {
