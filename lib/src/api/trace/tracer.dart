@@ -44,6 +44,9 @@ class APITracer {
   /// `WebTimeProvider`).
   final TimeProvider timeProvider;
 
+  /// The instrumentation scope for this tracer.
+  late final InstrumentationScope _instrumentationScope;
+
   /// Creates a new [APITracer].
   /// You cannot create a Tracer directly; you must use [TracerProvider]:
   /// ```dart
@@ -55,7 +58,14 @@ class APITracer {
     this.version,
     this.attributes,
     TimeProvider? timeProvider,
-  }) : timeProvider = timeProvider ?? defaultTimeProvider;
+  }) : timeProvider = timeProvider ?? defaultTimeProvider {
+    _instrumentationScope = InstrumentationScopeCreate.create(
+      name: name,
+      version: version,
+      schemaUrl: schemaUrl,
+      attributes: attributes,
+    );
+  }
 
   /// Returns whether this tracer is enabled for the provided arguments.
   /// This should be checked before performing expensive operations to create spans.
@@ -168,9 +178,12 @@ class APITracer {
     // delegates span creation here with its own factory installed, so
     // this branch only applies when no SDK is present.
     if (OTelFactory.otelFactory!.isAPIFactory) {
-      final parentSpanContext = spanContext ??
-          effectiveParentSpan?.spanContext ??
-          contextOfSpan.spanContext;
+      final parent = effectiveParentSpan;
+      if (spanContext == null && parent != null && !parent.isRecording) {
+        return parent; // already non-recording: return directly per spec
+      }
+      final parentSpanContext =
+          spanContext ?? parent?.spanContext ?? contextOfSpan.spanContext;
       return NonRecordingSpan(
           parentSpanContext ?? OTelFactory.otelFactory!.spanContextInvalid());
     }
@@ -237,11 +250,7 @@ class APITracer {
 
     final apiSpan = APISpanCreate.create(
       name: name,
-      instrumentationScope: InstrumentationScopeCreate.create(
-          name: this.name,
-          version: version,
-          schemaUrl: schemaUrl,
-          attributes: attributes),
+      instrumentationScope: _instrumentationScope,
       spanContext: effectiveSpanContext,
       parentSpan: effectiveParentSpan,
       spanKind: kind,

@@ -13,6 +13,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   implementations need to be safe for concurrent use, which logs/api.md makes
   a MUST. Comments only, no behavior change
   ([#121](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/121)).
+- `createSpan` now returns the parent span directly when called without an installed
+  SDK and the parent context already holds a non-recording span, matching the API
+  spec's requirement to avoid instantiating new spans in this case
+  ([#63](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/issues/63)).
+- The `APITracer` now builds its `InstrumentationScope` exactly once upon creation
+  using the tracer's attributes and version, preventing per-span attributes from
+  leaking into the scope identity of the telemetry
+  ([#65](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/issues/65)).
 
 ## [1.0.0-rc.3] - 2026-08-27
 
