@@ -72,9 +72,11 @@ class TraceState {
   /// Returns an immutable map of the key-value pairs in this trace state.
   Map<String, String> asMap() => Map.unmodifiable(_entries);
 
-  ///  Creates a new [TraceState] with the given key-value pair added.
-  ///  If adding this pair would exceed the 32 key-value pair limit,
-  ///  the oldest entries are removed to make room.
+  ///  Creates a new [TraceState] with the given key-value pair added or
+  ///  updated. Per W3C Trace Context, the new or updated entry moves to
+  ///  the beginning of the list; entries further to the right are older.
+  ///  If adding this pair would exceed the 32 key-value pair limit, the
+  ///  oldest (rightmost) entries are removed to make room.
   TraceState put(String key, String value) {
     if (!_isValidKey(key) || !_isValidValue(value)) {
       OTelErrorHandling.report(
@@ -87,9 +89,13 @@ class TraceState {
     // (left) of the list, so build the new map starting with it.
     final newEntries = <String, String>{key: value};
     for (final entry in _entries.entries) {
-      if (entry.key != key && newEntries.length < _maxKeyValuePairs) {
-        newEntries[entry.key] = entry.value;
+      if (entry.key == key) continue;
+      if (newEntries.length >= _maxKeyValuePairs) {
+        // Cap reached; remaining entries are older (further right) and
+        // are evicted.
+        break;
       }
+      newEntries[entry.key] = entry.value;
     }
     return factory.traceState(newEntries);
   }
