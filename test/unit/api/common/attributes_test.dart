@@ -1,6 +1,8 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
+import 'dart:convert';
+
 import 'package:dartastic_opentelemetry_api/dartastic_opentelemetry_api.dart';
 import 'package:test/test.dart';
 
@@ -481,12 +483,41 @@ void main() {
       expect(attrs.getDoubleList('key'), equals([1.0, 2.5, 3.0]));
     });
 
-    test('fromJson ignores empty list with warning', () {
+    test('fromJson stores empty list per OTel spec', () {
       final json = <String, dynamic>{'key': <dynamic>[]};
       final attrs = Attributes.fromJson(json);
 
-      // Empty lists are ignored per OTel spec
-      expect(attrs.isEmpty, isTrue);
+      // Empty lists are stored per the OTel spec: they are meaningful values.
+      expect(attrs.isEmpty, isFalse);
+      expect(attrs.getStringList('key'), equals(<String>[]));
+    });
+
+    test('fromJson round-trips empty string and empty list', () {
+      final json = <String, dynamic>{
+        'emptyStr': '',
+        'emptyList': <String>[],
+      };
+      final attrs = Attributes.fromJson(json);
+
+      expect(attrs.getString('emptyStr'), equals(''));
+      expect(attrs.getStringList('emptyList'), equals(<String>[]));
+
+      final decoded = jsonDecode(jsonEncode(attrs.toJson())) as Map<String, dynamic>;
+      final roundTripped = Attributes.fromJson(decoded);
+      expect(roundTripped.getString('emptyStr'), equals(''));
+      expect(roundTripped.getStringList('emptyList'), equals(<String>[]));
+    });
+
+    test('empty typed list loses element type through real JSON round-trip', () {
+      final attrs = Attributes.of({'k': <int>[]});
+      expect(attrs.getIntList('k'), equals(<int>[]));
+
+      final decoded = jsonDecode(jsonEncode(attrs.toJson())) as Map<String, dynamic>;
+      final roundTripped = Attributes.fromJson(decoded);
+
+      // JSON has no element-type information, so the empty list comes back
+      // as List<dynamic> and falls through to the List<String> fallback.
+      expect(roundTripped.getStringList('k'), equals(<String>[]));
     });
 
     test('fromJson ignores unsupported list types with warning', () {

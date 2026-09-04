@@ -66,23 +66,19 @@ void main() {
         expect(doubleList.hashCode, isNot(equals(doubleList2.hashCode)));
       });
 
-      test('empty collections throw ArgumentError', () {
-        expect(
-          () => OTelAPI.attributeStringList('foo', []),
-          throwsArgumentError,
-        );
-        expect(
-          () => OTelAPI.attributeIntList('foo', []),
-          throwsArgumentError,
-        );
-        expect(
-          () => OTelAPI.attributeBoolList('foo', []),
-          throwsArgumentError,
-        );
-        expect(
-          () => OTelAPI.attributeDoubleList('foo', []),
-          throwsArgumentError,
-        );
+      test('empty collections are stored per OTel spec', () {
+        final stringList = OTelAPI.attributeStringList('foo', []);
+        expect(stringList.value, equals([]));
+        expect(stringList.key, equals('foo'));
+
+        final intList = OTelAPI.attributeIntList('foo', []);
+        expect(intList.value, equals([]));
+
+        final boolList = OTelAPI.attributeBoolList('foo', []);
+        expect(boolList.value, equals([]));
+
+        final doubleList = OTelAPI.attributeDoubleList('foo', []);
+        expect(doubleList.value, equals([]));
       });
     });
   });
