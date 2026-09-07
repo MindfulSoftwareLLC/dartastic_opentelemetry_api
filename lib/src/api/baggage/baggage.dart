@@ -36,18 +36,12 @@ class Baggage {
   BaggageEntry? getEntry(String key) => _entries[key];
 
   /// Returns all entries in this Baggage as an immutable map.
-  ///
-  /// This implements the "Get All Values" operation from the OpenTelemetry
-  /// Baggage specification, which requires returning the name/value pairs.
   Map<String, BaggageEntry> getAllEntries() => _entries;
 
   /// Retrieves a Baggage value for the given key, or `null` if not present.
   String? getValue(String key) => _entries[key]?.value;
 
   /// Returns all name/value pairs in this Baggage as an immutable map.
-  ///
-  /// This implements the "Get All Values" operation from the OpenTelemetry
-  /// Baggage specification, which requires returning the name/value pairs.
   Map<String, BaggageEntry> getAllValues() => _entries;
 
   /// Operator overload for getting a value
