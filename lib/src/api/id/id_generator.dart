@@ -51,8 +51,13 @@ class IdGenerator {
     return true;
   }
 
-  /// Lowercase hex digits, indexed by the value each one represents.
-  static final List<int> _hexDigitCodeUnits = '0123456789abcdef'.codeUnits;
+  /// Value of a lowercase hex digit, or -1 if [codeUnit] is not one.
+  static int _hexDigitValue(int codeUnit) {
+    // '0'..'9' are 0x30..0x39; 'a'..'f' are 0x61..0x66 and stand for 10..15.
+    if (codeUnit >= 0x30 && codeUnit <= 0x39) return codeUnit - 0x30;
+    if (codeUnit >= 0x61 && codeUnit <= 0x66) return codeUnit - 0x61 + 10;
+    return -1;
+  }
 
   /// Parse a lowercase hex string to bytes.
   /// Returns null for an odd length or any non-lowercase-hex character.
@@ -62,8 +67,8 @@ class IdGenerator {
     final bytes = Uint8List(hex.length ~/ 2);
 
     for (var i = 0; i < bytes.length; i++) {
-      final high = _hexDigitCodeUnits.indexOf(hex.codeUnitAt(i * 2));
-      final low = _hexDigitCodeUnits.indexOf(hex.codeUnitAt((i * 2) + 1));
+      final high = _hexDigitValue(hex.codeUnitAt(i * 2));
+      final low = _hexDigitValue(hex.codeUnitAt((i * 2) + 1));
       if (high < 0 || low < 0) return null;
       bytes[i] = (high << 4) | low;
     }

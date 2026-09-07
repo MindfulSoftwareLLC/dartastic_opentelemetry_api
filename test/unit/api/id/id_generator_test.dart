@@ -52,6 +52,13 @@ void main() {
         expect(IdGenerator.hexToBytes('zz'), isNull);
       });
 
+      test('rejects the characters adjacent to the 0-9 and a-f ranges', () {
+        for (final c in ['/', ':', '`', 'g']) {
+          expect(IdGenerator.hexToBytes('0$c'), isNull, reason: c);
+          expect(IdGenerator.hexToBytes('${c}0'), isNull, reason: c);
+        }
+      });
+
       test('rejects uppercase hex', () {
         expect(IdGenerator.hexToBytes('1234abcd'.toUpperCase()), isNull);
       });
