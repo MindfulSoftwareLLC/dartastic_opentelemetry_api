@@ -12,6 +12,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **BREAKING**: `IdGenerator.hexToBytes`, and so `OTelAPI.traceIdFrom` and
   `OTelAPI.spanIdFrom`, no longer accept anything outside lowercase hex
   ([#112](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/112)).
+- The trace API now documents that `APITracerProvider`, `APITracer` and
+  `APISpan` implementations need to be safe for concurrent use, which
+  trace/api.md makes a MUST. Comments only, no behaviour change
+  ([#120](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/120)).
+- The logs API now documents that `APILoggerProvider` and `APILogger`
+  implementations need to be safe for concurrent use, which logs/api.md makes
+  a MUST. Comments only, no behavior change
+  ([#121](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/121)).
 
 ## [1.0.0-rc.3] - 2026-08-27
 
