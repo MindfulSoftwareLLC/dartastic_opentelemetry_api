@@ -15,14 +15,18 @@ class SpanEventCreate {
   /// [timestamp] The time at which the event occurred
   /// [attributes] Optional attributes providing additional context
   ///
-  /// This method does not throw. error-handling.md forbids a throw for
-  /// incorrect user input. A span drops an event that has an empty name.
+  /// A span drops an event that has an empty name.
   /// See https://opentelemetry.io/docs/specs/otel/error-handling/#basic-error-handling-principles
   static SpanEvent create({
     required String name,
     required DateTime timestamp,
     Attributes? attributes,
   }) {
+    if (name.isEmpty) {
+      OTelErrorHandling.report(
+        ArgumentError('Span event names must be non-empty; event will be ignored.'),
+      );
+    }
     return SpanEvent._(
         name: name, timestamp: timestamp, attributes: attributes);
   }

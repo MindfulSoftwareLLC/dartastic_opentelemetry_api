@@ -358,6 +358,34 @@ void main() {
       expect(span.spanEvents ?? const <SpanEvent>[], isEmpty);
     });
 
+    test('an empty event name reaches the error handler (api#69)', () {
+      final reported = <Object>[];
+      OTelAPI.setErrorHandler((error, stackTrace) => reported.add(error));
+      final span = tracer.startSpan('test');
+
+      span.addEventNow('');
+      expect(reported, hasLength(1));
+      expect(reported.single, isA<ArgumentError>());
+
+      reported.clear();
+      span.addEvents({'': null});
+      expect(reported, hasLength(1));
+      expect(reported.single, isA<ArgumentError>());
+
+      reported.clear();
+      OTelAPI.spanEvent('');
+      expect(reported, hasLength(1),
+          reason: 'making the event reports, even without a span');
+
+      reported.clear();
+      span.addEvent(OTelAPI.spanEvent(''));
+      expect(reported, hasLength(2),
+          reason: 'once when the event is made, once when the span drops it');
+
+      expect(span.spanEvents ?? const <SpanEvent>[], isEmpty);
+      OTelAPI.setErrorHandler(null);
+    });
+
     test('an empty name drops only that entry of addEvents (api#69)', () {
       final span = tracer.startSpan('test');
 

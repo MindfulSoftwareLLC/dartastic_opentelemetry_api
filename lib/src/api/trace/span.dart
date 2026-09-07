@@ -278,7 +278,7 @@ class APISpan {
   /// "standard event names and keys" which have prescribed semantic meanings.
   /// See https://github.com/open-telemetry/semantic-conventions/blob/main/docs/README.md
   void addEvent(SpanEvent spanEvent) {
-    if (_modifiable && !_dropsEmptyName(spanEvent.name)) {
+    if (_modifiable && !_hasEmptyName(spanEvent.name)) {
       _spanEvents ??= [];
       _spanEvents!.add(spanEvent);
     }
@@ -289,7 +289,7 @@ class APISpan {
     if (OTelFactory.otelFactory == null) {
       throw StateError('Call initialize() first.');
     }
-    if (_modifiable && !_dropsEmptyName(name)) {
+    if (_modifiable && !_hasEmptyName(name)) {
       _spanEvents ??= [];
       // Source the event timestamp from this span's TimeProvider so events
       // share the same clock as start/end. Bypasses the static
@@ -309,7 +309,7 @@ class APISpan {
     if (_modifiable) {
       _spanEvents ??= [];
       spanEvents.forEach((name, attributes) {
-        if (_dropsEmptyName(name)) return;
+        if (_hasEmptyName(name)) return;
         _spanEvents!.add(OTelFactory.otelFactory!
             .spanEvent(name, attributes, _timeProvider.nowDateTime()));
       });
@@ -323,7 +323,7 @@ class APISpan {
   /// event and goes to the error handler. The caller does this test before
   /// it makes the event, because a dropped event must not be allocated.
   /// See https://opentelemetry.io/docs/specs/otel/error-handling/#basic-error-handling-principles
-  bool _dropsEmptyName(String name) {
+  bool _hasEmptyName(String name) {
     if (name.isNotEmpty) return false;
     OTelErrorHandling.report(
         ArgumentError('Span event names must be non-empty; event ignored.'));
