@@ -42,13 +42,12 @@ void main() {
     OTelAPI.contextKey<String>('via-otel-api');
     expect(sdkFactory.contextKeyCalls, 1,
         reason: 'OTelAPI must delegate to the newly installed factory');
-
-    // Context must do the same: copyWithValue creates its key through the
+    // Context must do the same: deserialize creates its context through the
     // factory, which must now be the SDK-installed one, not the cached no-op.
-    Context.current.copyWithValue<String>('via-context', 'value');
-    expect(sdkFactory.contextKeyCalls, 2,
-        reason: 'Context must delegate to the newly installed factory, '
-            'not a no-op factory cached before the SDK initialized');
+    Context.deserialize({});
+    expect(sdkFactory.contextCalls, 1,
+        reason: 'Context.deserialize must delegate to the newly installed '
+            'factory, not a no-op factory cached before the SDK initialized');
   });
 }
 
@@ -57,6 +56,7 @@ void main() {
 /// whether Context actually delegates to it.
 class _RecordingFactory extends OTelAPIFactory {
   int contextKeyCalls = 0;
+  int contextCalls = 0;
 
   _RecordingFactory({
     required super.apiEndpoint,
@@ -72,5 +72,11 @@ class _RecordingFactory extends OTelAPIFactory {
       {bool isTransferable = false}) {
     contextKeyCalls++;
     return super.contextKey<T>(name, id, isTransferable: isTransferable);
+  }
+
+  @override
+  Context context({Baggage? baggage}) {
+    contextCalls++;
+    return super.context(baggage: baggage);
   }
 }
