@@ -24,7 +24,8 @@ class SpanEventCreate {
   }) {
     if (name.isEmpty) {
       OTelErrorHandling.report(
-        ArgumentError('Span event names must be non-empty; event will be ignored.'),
+        ArgumentError(
+            'Span event names must be non-empty; event will be ignored.'),
       );
     }
     return SpanEvent._(
