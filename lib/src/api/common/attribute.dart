@@ -22,20 +22,7 @@ class Attribute<T extends Object> {
 
   Attribute._(String key, T value)
       : _key = key,
-        _value = value {
-    if (_value is String && (_value as String).isEmpty) {
-      throw ArgumentError('Attribute _value must not be an empty string');
-    }
-    if (_value is List) {
-      final valueList = _value as List;
-      if (valueList.isEmpty) {
-        throw ArgumentError('Attribute _value list must not be empty');
-      }
-      // No null-element guard: attributes are only created with
-      // non-nullable element types (List<String>, List<bool>, List<int>,
-      // List<double>), so sound null safety already rules nulls out.
-    }
-  }
+        _value = value;
 
   /// Gets the key (name) of this attribute.
   String get key => _key;
