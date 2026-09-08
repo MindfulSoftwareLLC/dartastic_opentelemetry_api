@@ -29,8 +29,13 @@ class TraceState {
   /// The parser drops a list member that breaks the W3C grammar. The result
   /// holds only the entries that this package can send on again.
   ///
-  /// W3C allows one entry for each key. If a key repeats, the parser keeps
-  /// the first entry and drops the later ones.
+  /// Only one entry per key is allowed, because the entry represents that
+  /// last position in the trace; vendors must overwrite their entry upon
+  /// reentry to their tracing system. If a key repeats, the parser keeps the
+  /// first entry and drops the later ones.
+  ///
+  /// A member with an invalid key or value is reported to the error handler
+  /// (see `OTelAPI.setErrorHandler`) and dropped.
   ///
   /// The parser stops at the limit of 32 members.
   factory TraceState.fromString(String? headerValue) {
@@ -44,15 +49,20 @@ class TraceState {
 
     for (var pair in pairs) {
       final keyValue = pair.trim().split('=');
-      // W3C allows one entry for each key. A repeated key makes the header
-      // invalid, so the first entry stays and the later ones are dropped.
-      if (keyValue.length == 2 &&
-          !entries.containsKey(keyValue[0]) &&
-          _isValidKey(keyValue[0]) &&
-          _isValidValue(keyValue[1])) {
-        entries[keyValue[0]] = keyValue[1];
-        if (entries.length >= _maxKeyValuePairs) break;
+      if (keyValue.length != 2 ||
+          !_isValidKey(keyValue[0]) ||
+          !_isValidValue(keyValue[1])) {
+        OTelErrorHandling.report(ArgumentError(
+            'Invalid TraceState list member "$pair"; entry ignored.'));
+        continue;
       }
+      // Only one entry per key is allowed, because the entry represents that
+      // last position in the trace; vendors must overwrite their entry upon
+      // reentry to their tracing system. The first entry stays and the later
+      // ones are dropped.
+      if (entries.containsKey(keyValue[0])) continue;
+      entries[keyValue[0]] = keyValue[1];
+      if (entries.length >= _maxKeyValuePairs) break;
     }
 
     return factory.traceState(entries);

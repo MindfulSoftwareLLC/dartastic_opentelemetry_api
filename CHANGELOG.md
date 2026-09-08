@@ -15,8 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#121](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/121)).
 
 - `TraceState.fromString` drops a list member if the key repeats. W3C Trace
-  Context allows one entry for each key, so a repeated key makes the header
-  invalid.
+  Context allows only one entry per key, because the entry represents that last
+  position in the trace, so vendors must overwrite their entry upon reentry to
+  their tracing system. A list member with an invalid key or value is now
+  reported to the error handler instead of being dropped silently.
   ([#116](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/116))
 
 ## [1.0.0-rc.3] - 2026-08-27
