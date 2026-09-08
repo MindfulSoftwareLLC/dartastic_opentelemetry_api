@@ -51,17 +51,26 @@ class IdGenerator {
     return true;
   }
 
-  /// Parse hex string to bytes.
+  /// Value of a lowercase hex digit, or -1 if [codeUnit] is not one.
+  static int _hexDigitValue(int codeUnit) {
+    // '0'..'9' are 0x30..0x39; 'a'..'f' are 0x61..0x66 and stand for 10..15.
+    if (codeUnit >= 0x30 && codeUnit <= 0x39) return codeUnit - 0x30;
+    if (codeUnit >= 0x61 && codeUnit <= 0x66) return codeUnit - 0x61 + 10;
+    return -1;
+  }
+
+  /// Parse a lowercase hex string to bytes.
+  /// Returns null for an odd length or any non-lowercase-hex character.
   static Uint8List? hexToBytes(String hex) {
     if (hex.length % 2 != 0) return null;
 
     final bytes = Uint8List(hex.length ~/ 2);
 
     for (var i = 0; i < bytes.length; i++) {
-      final hexByte = hex.substring(i * 2, (i * 2) + 2);
-      final byte = int.tryParse(hexByte, radix: 16);
-      if (byte == null) return null;
-      bytes[i] = byte;
+      final high = _hexDigitValue(hex.codeUnitAt(i * 2));
+      final low = _hexDigitValue(hex.codeUnitAt((i * 2) + 1));
+      if (high < 0 || low < 0) return null;
+      bytes[i] = (high << 4) | low;
     }
 
     return bytes;
