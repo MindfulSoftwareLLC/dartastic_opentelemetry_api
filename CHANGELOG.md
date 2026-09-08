@@ -24,6 +24,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `OTelAPI.spanEvent('')`, `addEvent`, `addEventNow` and `addEvents` no longer
   throw an `ArgumentError`, per error-handling.md
   ([#117](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/117)).
+- Empty string and empty array attribute values no longer throw `ArgumentError`
+  ([#103](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/103)).
 
 ## [1.0.0-rc.3] - 2026-08-27
 
@@ -56,14 +58,6 @@ fixes. See the `1.0.0-rc.3` entry for detail.
 - `getTracer`, `getLogger` and `getMeter` no longer invent a scope version or
   schema URL. Both are `null` when you omit them.
   ([#108](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/108))
-
-### Fixed (spec compliance)
-- **Empty string and empty array attribute values are now stored** (api#80).
-  The OTel specification requires that empty strings and empty arrays be
-  valid attribute values. Previously `attributeString('k', '')` and
-  `attributeStringList('k', [])` threw `ArgumentError`, and
-  `Attributes.fromJson` silently dropped empty lists. Now all three paths
-  store empty values correctly.
 
 ## [1.0.0-rc.2] - 2026-08-23
 

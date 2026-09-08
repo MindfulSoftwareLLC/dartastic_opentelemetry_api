@@ -502,17 +502,20 @@ void main() {
       expect(attrs.getString('emptyStr'), equals(''));
       expect(attrs.getStringList('emptyList'), equals(<String>[]));
 
-      final decoded = jsonDecode(jsonEncode(attrs.toJson())) as Map<String, dynamic>;
+      final decoded =
+          jsonDecode(jsonEncode(attrs.toJson())) as Map<String, dynamic>;
       final roundTripped = Attributes.fromJson(decoded);
       expect(roundTripped.getString('emptyStr'), equals(''));
       expect(roundTripped.getStringList('emptyList'), equals(<String>[]));
     });
 
-    test('empty typed list loses element type through real JSON round-trip', () {
+    test('empty typed list loses element type through real JSON round-trip',
+        () {
       final attrs = Attributes.of({'k': <int>[]});
       expect(attrs.getIntList('k'), equals(<int>[]));
 
-      final decoded = jsonDecode(jsonEncode(attrs.toJson())) as Map<String, dynamic>;
+      final decoded =
+          jsonDecode(jsonEncode(attrs.toJson())) as Map<String, dynamic>;
       final roundTripped = Attributes.fromJson(decoded);
 
       // JSON has no element-type information, so the empty list comes back

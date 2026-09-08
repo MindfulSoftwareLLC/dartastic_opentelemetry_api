@@ -75,7 +75,7 @@ class Attributes {
                   .toList()));
         } else {
           OTelErrorHandling.report(ArgumentError(
-              'Ignoring attribute $key because the list contains unsupported types. Only String, bool, int, double lists are allowed by the OTel specification.'));
+              'Ignoring attribute $key because the list contains unsupported types. Only lists of Strings, bools, ints and doubles are allowed by the OTel specification.'));
         }
       } else {
         OTelErrorHandling.report(ArgumentError(

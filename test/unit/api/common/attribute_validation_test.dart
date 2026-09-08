@@ -86,12 +86,10 @@ void main() {
     });
 
     test('Attributes.of preserves the element type of typed empty lists', () {
-      expect(
-          Attributes.of({'k': <String>[]}).getStringList('k'), equals(<String>[]));
-      expect(
-          Attributes.of({'k': <bool>[]}).getBoolList('k'), equals(<bool>[]));
-      expect(
-          Attributes.of({'k': <int>[]}).getIntList('k'), equals(<int>[]));
+      expect(Attributes.of({'k': <String>[]}).getStringList('k'),
+          equals(<String>[]));
+      expect(Attributes.of({'k': <bool>[]}).getBoolList('k'), equals(<bool>[]));
+      expect(Attributes.of({'k': <int>[]}).getIntList('k'), equals(<int>[]));
       expect(Attributes.of({'k': <double>[]}).getDoubleList('k'),
           equals(<double>[]));
     });
