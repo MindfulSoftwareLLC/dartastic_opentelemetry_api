@@ -610,7 +610,8 @@ class OTelAPI {
     try {
       final bytes = IdGenerator.hexToBytes(hexString);
       if (bytes == null || bytes.length != TraceId.traceIdLength) {
-        throw FormatException('TraceId must be {$TraceId.traceIdLength} bytes');
+        throw const FormatException(
+            'TraceId must be ${TraceId.traceIdLength} bytes');
       }
       return OTelFactory.otelFactory!.traceId(bytes);
     } catch (e) {
