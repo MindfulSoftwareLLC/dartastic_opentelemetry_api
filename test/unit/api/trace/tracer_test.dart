@@ -37,6 +37,29 @@ void main() {
       expect(tracer.isEnabled(), isFalse);
     });
 
+    test('creates scope with tracer attributes, ignoring span attributes', () {
+      final tracerAttrs = Attributes.of({'tracer-key': 'tracer-value'});
+      final tracer = OTelAPI.tracerProvider()
+          .getTracer('test-tracer', attributes: tracerAttrs);
+
+      final spanAttrs = Attributes.of({'span-key': 'span-value'});
+      final span = tracer.createSpan(name: 'test-span', attributes: spanAttrs);
+
+      expect(span.instrumentationScope.attributes, equals(tracerAttrs));
+    });
+
+    test(
+        'reusing a tracer shares the exact same InstrumentationScope instance across spans',
+        () {
+      final tracer = OTelAPI.tracer('test-tracer');
+
+      final span1 = tracer.createSpan(name: 'span1');
+      final span2 = tracer.createSpan(name: 'span2');
+
+      expect(identical(span1.instrumentationScope, span2.instrumentationScope),
+          isTrue);
+    });
+
     test('creates span with name only', () {
       final tracer = OTelAPI.tracer('test-tracer');
       final span = tracer.createSpan(name: 'test-span');
