@@ -147,8 +147,9 @@ void main() {
 
       expect(attributes.length, equals(2));
       expect(attributes.getString('string-key'), equals('string-value'));
-      // Test that trying to get an int value as a string throws an exception
-      expect(() => attributes.getString('int-key'), throwsA(isA<StateError>()));
+      // Getting an int value as a string returns null (never throws,
+      // per error-handling.md)
+      expect(attributes.getString('int-key'), isNull);
       // Test getting the value with correct type
       expect(attributes.getInt('int-key'), equals(42));
     });
@@ -171,8 +172,9 @@ void main() {
 
       expect(attributes.length, equals(9));
       expect(attributes.getString('string-key'), equals('string-value'));
-      // Test that trying to get an int value as a string throws an exception
-      expect(() => attributes.getString('int-key'), throwsA(isA<StateError>()));
+      // Getting an int value as a string returns null (never throws,
+      // per error-handling.md)
+      expect(attributes.getString('int-key'), isNull);
       // Test getting the value with correct type
       expect(attributes.getInt('int-key'), equals(42));
       expect(attributes.getDouble('double-key'), equals(3.14));
@@ -198,8 +200,9 @@ void main() {
 
       expect(attributes.length, equals(2));
       expect(attributes.getString('string-key'), equals('string-value'));
-      // Test that trying to get an int value as a string throws an exception
-      expect(() => attributes.getString('int-key'), throwsA(isA<StateError>()));
+      // Getting an int value as a string returns null (never throws,
+      // per error-handling.md)
+      expect(attributes.getString('int-key'), isNull);
       // Test getting the value with correct type
       expect(attributes.getInt('int-key'), equals(42));
     });

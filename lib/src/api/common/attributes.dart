@@ -141,17 +141,24 @@ class Attributes {
   /// Returns the number of attributes in this collection.
   int get length => _entries.length;
 
-  /// Returns the value associated with the given [key], or null if not present.
+  /// Returns the value associated with the given [key], or null if the key
+  /// is not present or the stored value is not of type [T].
+  ///
+  /// error-handling.md: API methods MUST NOT throw unhandled exceptions
+  /// when used incorrectly by end users. A type mismatch is reported
+  /// through [OTelErrorHandling] and null is returned.
   T? _getTyped<T>(String key) {
     final attribute = _entries[key];
     if (attribute == null) return null;
 
-    // Ensure the value matches the expected type `T`
-    if (attribute.value is T) {
-      return attribute.value as T;
-    } else {
-      throw StateError('Value for key "$key" is not of type $T');
+    final value = attribute.value;
+    if (value is T) {
+      return value as T;
     }
+    OTelErrorHandling.report(
+        StateError('Attribute value for key "$key" is a ${value.runtimeType}, '
+            'not a $T; returning null.'));
+    return null;
   }
 
   /// Creates a new Attributes instance with a String attribute added or updated.

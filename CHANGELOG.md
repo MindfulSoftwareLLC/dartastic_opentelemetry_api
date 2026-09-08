@@ -26,6 +26,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#117](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/117)).
 - Empty string and empty array attribute values no longer throw `ArgumentError`
   ([#103](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/103)).
+- Typed `Attributes` getters return null on a type mismatch instead of throwing
+  `StateError`, and report it through the error handler
+  ([#106](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/106)).
 
 ## [1.0.0-rc.3] - 2026-08-27
 

@@ -348,15 +348,24 @@ void main() {
       expect(attrs.isEmpty, isFalse);
     });
 
-    test('_getTyped throws StateError for wrong type', () {
+    test('typed getters return null for wrong type and report the mismatch',
+        () {
+      // error-handling.md: API methods MUST NOT throw unhandled
+      // exceptions when used incorrectly by end users.
+      final reported = <Object>[];
+      OTelErrorHandling.handler = (error, stackTrace) => reported.add(error);
+      addTearDown(OTelErrorHandling.resetToDefault);
+
       final attrs = OTelAPI.attributes([
         OTelAPI.attributeString('key', 'value'),
       ]);
 
-      expect(
-        () => attrs.getInt('key'),
-        throwsA(isA<StateError>()),
-      );
+      expect(attrs.getInt('key'), isNull);
+      expect(reported, hasLength(1));
+      expect(reported.single, isA<StateError>());
+      // The stored value is still readable with the right type.
+      expect(attrs.getString('key'), equals('value'));
+      expect(reported, hasLength(1));
     });
 
     test('get methods return null for missing key', () {
