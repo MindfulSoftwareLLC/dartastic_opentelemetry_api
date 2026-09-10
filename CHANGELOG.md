@@ -30,6 +30,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `StateError`, and report it through the error handler
   ([#106](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/106)).
 
+- `TraceState.fromString` keeps only the first entry when a key repeats, which
+  W3C Trace Context allows one of. A list member with an invalid key or value is
+  now reported to the error handler instead of being dropped silently. An empty
+  list member and a whitespace-only list member are dropped without a report,
+  because the W3C grammar allows them
+  ([#116](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/116)).
+
 ## [1.0.0-rc.3] - 2026-08-27
 
 ### Changed
