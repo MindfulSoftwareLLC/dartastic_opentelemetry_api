@@ -12,6 +12,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **BREAKING**: `IdGenerator.hexToBytes`, and so `OTelAPI.traceIdFrom` and
   `OTelAPI.spanIdFrom`, no longer accept anything outside lowercase hex
   ([#112](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/112)).
+- `APISpan.addLink` and `APISpan.addSpanLink` now document that links given at
+  span creation are preferred to a later call, which trace/api.md makes a MUST,
+  because head sampling can only consider what is present at span creation.
+  Comments only, no behaviour change
+  ([#133](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/133)).
 - The trace API now documents that `APITracerProvider`, `APITracer` and
   `APISpan` implementations need to be safe for concurrent use, which
   trace/api.md makes a MUST. Comments only, no behaviour change
