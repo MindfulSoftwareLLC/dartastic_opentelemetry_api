@@ -37,6 +37,9 @@ class TraceState {
   /// A member with an invalid key or value is reported to the error handler
   /// (see `OTelAPI.setErrorHandler`) and dropped.
   ///
+  /// An empty member and a whitespace-only member are dropped without a
+  /// report. The W3C grammar allows them: `list-member = (key "=" value) / OWS`.
+  ///
   /// The parser stops at the limit of 32 members.
   factory TraceState.fromString(String? headerValue) {
     final factory = OTelFactory.getOrCreateDefault();
@@ -48,7 +51,11 @@ class TraceState {
     final pairs = headerValue.split(',');
 
     for (var pair in pairs) {
-      final keyValue = pair.trim().split('=');
+      final member = pair.trim();
+      // W3C Trace Context allows an empty or a whitespace-only list member:
+      // `list-member = (key "=" value) / OWS`. Such a member is not an error.
+      if (member.isEmpty) continue;
+      final keyValue = member.split('=');
       if (keyValue.length != 2 ||
           !_isValidKey(keyValue[0]) ||
           !_isValidValue(keyValue[1])) {
