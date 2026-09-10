@@ -336,6 +336,11 @@ class APISpan {
   }
 
   /// Adds a link to this Span.
+  /// Adding links at span creation, with the `links` parameter of
+  /// [APITracer.startSpan] or [APITracer.createSpan], is preferred to calling
+  /// this method later, for contexts that are available during span creation,
+  /// because head sampling decisions can only consider information present
+  /// during span creation.
   /// Ignored if the span is ended.
   /// [spanContext] the span context for the span
   void addLink(SpanContext spanContext, [Attributes? attributes]) {
@@ -350,6 +355,11 @@ class APISpan {
   }
 
   /// Adds a link to this Span.
+  /// Adding links at span creation, with the `links` parameter of
+  /// [APITracer.startSpan] or [APITracer.createSpan], is preferred to calling
+  /// this method later, for contexts that are available during span creation,
+  /// because head sampling decisions can only consider information present
+  /// during span creation.
   /// Ignored if the span is ended.
   void addSpanLink(SpanLink spanLink) {
     if (_modifiable) {
