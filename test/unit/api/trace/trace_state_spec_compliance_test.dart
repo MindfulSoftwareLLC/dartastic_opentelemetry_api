@@ -68,6 +68,19 @@ void main() {
       expect(state.entries, equals({'vendora': 'v1', 'vendorb': 'v3'}));
     });
 
+    test('an empty or whitespace-only member is not an error', () {
+      // W3C: "Empty and whitespace-only list members are allowed."
+      // `list-member = (key "=" value) / OWS`
+      final errors = <Object>[];
+      OTelAPI.setErrorHandler((error, stackTrace) => errors.add(error));
+      addTearDown(() => OTelAPI.setErrorHandler(null));
+
+      final state = TraceState.fromString('vendor=v, ,,\t,other=w');
+
+      expect(state.entries, equals({'vendor': 'v', 'other': 'w'}));
+      expect(errors, isEmpty);
+    });
+
     test('parsing stops at 32 members', () {
       final header = List.generate(40, (i) => 'vendor$i=value$i').join(',');
       expect(TraceState.fromString(header).entries.length, equals(32));
