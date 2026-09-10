@@ -23,7 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.0.0-rc.4-wip]
 
-### Fixed (spec compliance)
+### Fixed
 
 - **BREAKING**: `IdGenerator.hexToBytes`, and so `OTelAPI.traceIdFrom` and
   `OTelAPI.spanIdFrom`, no longer accept anything outside lowercase hex
@@ -96,7 +96,7 @@ prerelease.
   an unsendable handler degrades to the child default and is
   reported).
 
-### Fixed (spec compliance)
+### Fixed
 - **`Span.end()` no longer promotes status from Unset to Ok** ([api#102](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/102)).
   `Unset` stays `Unset`; analysis tools can no longer be misled by
   fabricated Ok statuses. The deprecated `spanStatus` parameter still
