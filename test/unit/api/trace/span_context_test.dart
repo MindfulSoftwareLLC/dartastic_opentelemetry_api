@@ -270,11 +270,11 @@ void main() {
         isRemote: false,
       );
 
-      final newState = TraceState.fromMap({'newVendor': 'newValue'});
+      final newState = TraceState.fromMap({'newvendor': 'newValue'});
       final updatedContext = originalContext.withTraceState(newState);
 
       // Verify new context has updated state
-      expect(updatedContext.traceState!.get('newVendor'), equals('newValue'));
+      expect(updatedContext.traceState!.get('newvendor'), equals('newValue'));
       // Verify other fields are preserved
       expect(updatedContext.traceId, equals(traceId));
       expect(updatedContext.spanId, equals(spanId));

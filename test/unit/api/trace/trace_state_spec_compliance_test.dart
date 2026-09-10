@@ -47,6 +47,45 @@ void main() {
     });
   });
 
+  group('TraceState construction drops invalid entries', () {
+    test('fromMap drops an entry with an invalid key', () {
+      final result = TraceState.fromMap({'BadKey': 'a', 'goodkey': 'b'});
+      expect(result.entries, equals({'goodkey': 'b'}));
+    });
+
+    test('fromMap drops an entry with an invalid value', () {
+      final result = TraceState.fromMap({'vendor': 'a,b=c', 'goodkey': 'b'});
+      expect(result.entries, equals({'goodkey': 'b'}));
+    });
+
+    test('fromMap never produces a TraceState containing invalid data', () {
+      final result = TraceState.fromMap({'BadKey': 'a,b=c'});
+      expect(result.entries, isEmpty);
+      expect(result.toString(), isEmpty);
+    });
+
+    test('fromMap drops a key over 256 characters', () {
+      final result = TraceState.fromMap({'a' * 257: 'value', 'goodkey': 'b'});
+      expect(result.entries, equals({'goodkey': 'b'}));
+    });
+
+    test('fromMap drops a value over 256 characters', () {
+      final result = TraceState.fromMap({'vendor': 'a' * 257, 'goodkey': 'b'});
+      expect(result.entries, equals({'goodkey': 'b'}));
+    });
+
+    test('fromMap reports a dropped entry to the error handler', () {
+      final reported = <Object>[];
+      OTelAPI.setErrorHandler((error, stackTrace) => reported.add(error));
+      addTearDown(OTelErrorHandling.resetToDefault);
+
+      TraceState.fromMap({'BadKey': 'a,b=c'});
+
+      expect(reported, hasLength(1));
+      expect(reported.single, isArgumentError);
+    });
+  });
+
   group('TraceState works without an installed SDK', () {
     test('put works after reset', () {
       final traceState = TraceState.fromMap({'vendor': 'value'});
