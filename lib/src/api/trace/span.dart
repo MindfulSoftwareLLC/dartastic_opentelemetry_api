@@ -336,8 +336,16 @@ class APISpan {
   }
 
   /// Adds a link to this Span.
-  /// Ignored if the span is ended.
-  /// [spanContext] the span context for the span
+  ///
+  /// For a context that is available at span creation, the `links` parameter
+  /// of [APITracer.startSpan] and [APITracer.createSpan] is preferred to this
+  /// method. A head sampling decision can only use the information that is
+  /// present at span creation.
+  ///
+  /// If the span is ended, this method does nothing.
+  ///
+  /// [spanContext] The context of the span to link to.
+  /// [attributes] Optional attributes that describe the link.
   void addLink(SpanContext spanContext, [Attributes? attributes]) {
     if (OTelFactory.otelFactory == null) {
       throw StateError('Call initialize() first.');
@@ -350,7 +358,15 @@ class APISpan {
   }
 
   /// Adds a link to this Span.
-  /// Ignored if the span is ended.
+  ///
+  /// For a context that is available at span creation, the `links` parameter
+  /// of [APITracer.startSpan] and [APITracer.createSpan] is preferred to this
+  /// method. A head sampling decision can only use the information that is
+  /// present at span creation.
+  ///
+  /// If the span is ended, this method does nothing.
+  ///
+  /// [spanLink] The link to add to this span.
   void addSpanLink(SpanLink spanLink) {
     if (_modifiable) {
       _spanLinks ??= [];
