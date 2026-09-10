@@ -6,7 +6,10 @@ part of 'trace_state.dart';
 /// Internal constructor access for TraceState
 @internal
 class TraceStateCreate {
-  /// Drops invalid entries; keeps at most 32.
+  /// Creates a TraceState, only accessible within library.
+  /// Enforces the W3C 32 key-value pair limit. Entries with an invalid key
+  /// or value are dropped and reported via [OTelErrorHandling.report]
+  /// rather than throwing, per trace/api.md.
   static TraceState create(Map<String, String>? entries) {
     if (entries == null || entries.isEmpty) {
       return TraceState._({});

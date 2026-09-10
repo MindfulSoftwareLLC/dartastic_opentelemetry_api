@@ -63,6 +63,27 @@ void main() {
       expect(result.entries, isEmpty);
       expect(result.toString(), isEmpty);
     });
+
+    test('fromMap drops a key over 256 characters', () {
+      final result = TraceState.fromMap({'a' * 257: 'value', 'goodkey': 'b'});
+      expect(result.entries, equals({'goodkey': 'b'}));
+    });
+
+    test('fromMap drops a value over 256 characters', () {
+      final result = TraceState.fromMap({'vendor': 'a' * 257, 'goodkey': 'b'});
+      expect(result.entries, equals({'goodkey': 'b'}));
+    });
+
+    test('fromMap reports a dropped entry to the error handler', () {
+      final reported = <Object>[];
+      OTelAPI.setErrorHandler((error, stackTrace) => reported.add(error));
+      addTearDown(OTelErrorHandling.resetToDefault);
+
+      TraceState.fromMap({'BadKey': 'a,b=c'});
+
+      expect(reported, hasLength(1));
+      expect(reported.single, isArgumentError);
+    });
   });
 
   group('TraceState works without an installed SDK', () {
