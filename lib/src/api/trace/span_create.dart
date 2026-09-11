@@ -66,6 +66,7 @@ class APISpanCreate {
         spanLinks: links,
         startTime: startTime,
         spanEvents: spanEvents,
+        isRecording: isRecording,
         timeProvider: timeProvider);
   }
 }

@@ -249,8 +249,12 @@ class APITracer {
       links: links,
       spanEvents: spanEvents,
       startTime: startTime,
-      isRecording: (isRecording ?? true) &&
-          isEnabled(kind: kind, context: contextOfSpan),
+      // The isRecording decision made at creation is the API contract
+      // (trace/api.md): mutating operations are no-ops when it is false.
+      // isEnabled is an SDK-side hint to skip expensive work, not a second
+      // gate on the recording flag, so it must not override an explicit
+      // creation decision here.
+      isRecording: isRecording ?? true,
       timeProvider: timeProvider,
     );
     return apiSpan;

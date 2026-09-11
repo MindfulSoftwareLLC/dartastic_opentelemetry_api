@@ -236,5 +236,38 @@ void main() {
       expect(childSpan.spanContext.parentSpanId,
           equals(parentSpan.spanContext.spanId));
     });
+
+    test('span created with isRecording false ignores mutations (#96)', () {
+      final span = tracer!.createSpan(
+        name: 'non-recording-span',
+        isRecording: false,
+      );
+
+      expect(span.isRecording, isFalse);
+
+      span.setStringAttribute<String>('key', 'value');
+      span.addEventNow('event');
+      span.setStatus(SpanStatusCode.Error, 'boom');
+      span.updateName('renamed');
+
+      expect(span.attributes.toList(), isEmpty);
+      expect(span.spanEvents, isNull);
+      expect(span.status, equals(SpanStatusCode.Unset));
+      expect(span.name, equals('non-recording-span'));
+      expect(span.isEnded, isFalse,
+          reason: 'end is gated like every other mutating operation');
+    });
+
+    test('span created with isRecording true records mutations (#96)', () {
+      final span = tracer!.createSpan(name: 'recording-span');
+
+      expect(span.isRecording, isTrue);
+
+      span.setStringAttribute<String>('key', 'value');
+      span.updateName('renamed');
+
+      expect(span.attributes.getString('key'), equals('value'));
+      expect(span.name, equals('renamed'));
+    });
   });
 }

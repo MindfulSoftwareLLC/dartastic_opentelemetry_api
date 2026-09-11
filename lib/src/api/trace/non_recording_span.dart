@@ -43,7 +43,7 @@ class NonRecordingSpan extends APISpan {
     required super.spanContext,
     required super.instrumentationScope,
     required super.attributes,
-  }) : super._(name: '');
+  }) : super._(name: '', isRecording: false);
 
   /// Always `false`: this span never records, per the spec.
   @override
