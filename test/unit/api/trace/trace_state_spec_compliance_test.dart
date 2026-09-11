@@ -74,15 +74,49 @@ void main() {
       expect(traceState.toHeaderString(), equals(''));
     });
 
-    test('removes entries over 128 characters first', () {
+    test('keeps an over-128 entry when the total fits 512', () {
+      // Robert's case: 134 characters total, under budget. The 128 rule
+      // only applies once truncation is needed (W3C 3.3.1.5), so the
+      // entry stays.
       final longValue = List.filled(130, 'v').join();
+      final traceState = TraceState.fromMap({'big': longValue});
+      final header = traceState.toHeaderString();
+      expect(header, equals('big=$longValue'));
+    });
+
+    test('removes over-128 entries first once truncation is needed', () {
+      // 32 entries survive the grammar cap: the 134-character entry
+      // plus 31 twelve-character ones total 567 characters, over budget.
+      // The over-128 entry is removed first, and that alone brings the
+      // value to 433 characters, so the rest survive.
+      final bigValue = List.filled(130, 'v').join(); // big=... 134 chars
+      final entries = <String, String>{'big': bigValue};
+      for (var i = 0; i < 31; i++) {
+        entries['a$i'] = 'y' * 10; // a0=..., 13 chars each with separator
+      }
+      final traceState = TraceState.fromMap(entries);
+      expect(traceState.entries.length, 32);
+      final header = traceState.toHeaderString();
+      expect(header.contains('big'), isFalse,
+          reason: 'over-128 entries are removed first');
+      expect(header.length, lessThanOrEqualTo(512));
+    });
+
+    test('removing one large entry can make the rest fit', () {
+      // 404 + 61 + 61 + separators = 528 characters: over budget. The
+      // over-128 entry is removed, and that alone brings the value to
+      // 123 characters, so the two under-128 entries both survive.
+      final bigValue = List.filled(400, 'v').join(); // big=... 404 chars
+      final ok1Value = List.filled(58, 'w').join(); // ok1=... 62 chars
+      final ok2Value = List.filled(58, 'x').join(); // ok2=... 62 chars
       final traceState = TraceState.fromMap({
-        'big': longValue,
-        'ok': 'fine',
+        'ok1': ok1Value,
+        'ok2': ok2Value,
+        'big': bigValue,
       });
       final header = traceState.toHeaderString();
-      expect(header, equals('ok=fine'));
-      expect(header.contains('big'), isFalse);
+      expect(header, equals('ok1=$ok1Value,ok2=$ok2Value'));
+      expect(header.length, lessThanOrEqualTo(512));
     });
 
     test('keeps a long-but-under-128 entry when shorter entries go first', () {
@@ -134,7 +168,11 @@ void main() {
       };
       try {
         final longValue = List.filled(200, 'v').join();
-        final traceState = TraceState.fromMap({'big': longValue, 'ok': '1'});
+        final entries = <String, String>{'big': longValue};
+        for (var i = 0; i < 31; i++) {
+          entries['a$i'] = 'y' * 10;
+        }
+        final traceState = TraceState.fromMap(entries);
         traceState.toHeaderString();
         expect(received.length, 1,
             reason: 'the overlong entry must be reported once');

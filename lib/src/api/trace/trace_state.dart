@@ -131,16 +131,23 @@ class TraceState {
   /// Produces the W3C `tracestate` header value, applying the truncation
   /// procedure of W3C Trace Context §3.3.1.5.
   ///
-  /// Entries over 128 characters are removed first, then entries are removed
-  /// from the end until the joined value fits the 512-character budget.
-  /// Only whole entries are removed, and every dropped entry is reported
-  /// through [OTelErrorHandling]. Unlike [toString], this may return a value
-  /// that no longer contains all entries.
+  /// The procedure only runs when the value needs to be truncated: if the
+  /// joined value fits the 512-character budget it is returned as-is,
+  /// including entries over 128 characters. When it does not fit, whole
+  /// entries are removed, entries larger than 128 characters first, then
+  /// entries from the end until the value fits. Every dropped entry is
+  /// reported through [OTelErrorHandling]. Unlike [toString], this may
+  /// return a value that no longer contains all entries.
   String toHeaderString() {
-    final entries = List<MapEntry<String, String>>.from(_entries.entries);
+    var value = _entries.entries.map((e) => '${e.key}=${e.value}').join(',');
+    if (value.length <= 512) {
+      return value;
+    }
 
-    // W3C §3.3.1.5: entries larger than 128 characters should be removed
-    // first. The length of a list-member is its `key=value` size.
+    // W3C §3.3.1.5: "Entries larger than 128 characters long SHOULD be
+    // removed first", as part of truncating a value that does not fit.
+    // The length of a list-member is its `key=value` size.
+    final entries = List<MapEntry<String, String>>.from(_entries.entries);
     final overlong = entries
         .where((e) => '${e.key}=${e.value}'.length > 128)
         .toList(growable: false);
@@ -148,11 +155,11 @@ class TraceState {
       entries.remove(entry);
       OTelErrorHandling.report(StateError(
           'TraceState entry ${entry.key} exceeds 128 characters; dropped.'));
+      value = entries.map((e) => '${e.key}=${e.value}').join(',');
     }
 
     // Then entries should be removed starting from the end of the
     // tracestate until the value fits the 512-character budget.
-    var value = entries.map((e) => '${e.key}=${e.value}').join(',');
     while (value.length > 512 && entries.isNotEmpty) {
       final entry = entries.removeLast();
       OTelErrorHandling.report(StateError(
