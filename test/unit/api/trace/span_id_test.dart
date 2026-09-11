@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import 'package:dartastic_opentelemetry_api/src/api/otel_api.dart';
+import 'package:dartastic_opentelemetry_api/src/util/otel_error_handler.dart';
 import 'package:test/test.dart';
 
 void main() {
@@ -38,10 +39,24 @@ void main() {
     });
 
     test('handles invalid hex string', () {
-      expect(
-        () => OTelAPI.spanIdFrom('invalid'),
-        throwsA(isA<FormatException>()),
-      );
+      final received = <Object>[];
+      OTelErrorHandling.handler = (error, _) => received.add(error);
+
+      final id = OTelAPI.spanIdFrom('invalid');
+
+      expect(id.isValid, isFalse);
+      expect(id.toString(), equals('0000000000000000'));
+      expect(received.single, isA<FormatException>());
+    });
+
+    test('handles wrong-length hex string', () {
+      final received = <Object>[];
+      OTelErrorHandling.handler = (error, _) => received.add(error);
+
+      final id = OTelAPI.spanIdFrom('a1b2c3');
+
+      expect(id.isValid, isFalse);
+      expect(received.single, isA<FormatException>());
     });
 
     test('provides access to raw bytes', () {

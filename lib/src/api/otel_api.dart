@@ -604,18 +604,20 @@ class OTelAPI {
     return OTelFactory.otelFactory!.traceId(traceId);
   }
 
-  /// Creates a new [TraceId] from a hex string
+  /// Creates a new [TraceId] from a hex string.
+  ///
+  /// If the string is malformed or has the wrong length, the error is
+  /// reported to the error handler and an invalid [TraceId] is returned,
+  /// following the OpenTelemetry error-handling spec.
   static TraceId traceIdFrom(String hexString) {
     _getAndCacheOtelFactory();
-    try {
-      final bytes = IdGenerator.hexToBytes(hexString);
-      if (bytes == null || bytes.length != TraceId.traceIdLength) {
-        throw FormatException('TraceId must be {$TraceId.traceIdLength} bytes');
-      }
-      return OTelFactory.otelFactory!.traceId(bytes);
-    } catch (e) {
-      throw FormatException('Invalid TraceId hex string: $hexString, $e');
+    final bytes = IdGenerator.hexToBytes(hexString);
+    if (bytes == null || bytes.length != TraceId.traceIdLength) {
+      OTelErrorHandling.report(
+          FormatException('Invalid TraceId hex string: $hexString'));
+      return traceIdInvalid();
     }
+    return OTelFactory.otelFactory!.traceId(bytes);
   }
 
   /// Creates an invalid [Trace] (all zeros)
@@ -638,21 +640,20 @@ class OTelAPI {
     return OTelFactory.otelFactory!.spanId(spanId);
   }
 
-  /// SpanId from 8-byte String.
+  /// Creates a new [SpanId] from a hex string.
+  ///
+  /// If the string is malformed or has the wrong length, the error is
+  /// reported to the error handler and an invalid [SpanId] is returned,
+  /// following the OpenTelemetry error-handling spec.
   static SpanId spanIdFrom(String hexString) {
     _getAndCacheOtelFactory();
-
-    /// Generate a new random SpanId
-    try {
-      final bytes = IdGenerator.hexToBytes(hexString);
-      if (bytes == null || bytes.length != SpanId.spanIdLength) {
-        throw const FormatException(
-            'SpanId must be ${SpanId.spanIdLength} bytes');
-      }
-      return OTelFactory.otelFactory!.spanId(bytes);
-    } catch (e) {
-      throw FormatException('Invalid SpanId hex string: $hexString,  $e');
+    final bytes = IdGenerator.hexToBytes(hexString);
+    if (bytes == null || bytes.length != SpanId.spanIdLength) {
+      OTelErrorHandling.report(
+          FormatException('Invalid SpanId hex string: $hexString'));
+      return spanIdInvalid();
     }
+    return OTelFactory.otelFactory!.spanId(bytes);
   }
 
   /// Creates an invalid [SpanId] (all zeros)

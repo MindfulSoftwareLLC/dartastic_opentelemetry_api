@@ -4,6 +4,7 @@
 import 'dart:typed_data';
 
 import 'package:dartastic_opentelemetry_api/src/api/otel_api.dart';
+import 'package:dartastic_opentelemetry_api/src/util/otel_error_handler.dart';
 import 'package:test/test.dart';
 
 void main() {
@@ -40,10 +41,25 @@ void main() {
     });
 
     test('handles invalid hex string', () {
-      expect(
-        () => OTelAPI.traceIdFrom('invalid'),
-        throwsA(isA<FormatException>()),
-      );
+      final received = <Object>[];
+      OTelErrorHandling.handler = (error, _) => received.add(error);
+
+      final id = OTelAPI.traceIdFrom('invalid');
+
+      expect(id.isValid, isFalse);
+      expect(id.toString(),
+          equals('00000000000000000000000000000000'));
+      expect(received.single, isA<FormatException>());
+    });
+
+    test('handles wrong-length hex string', () {
+      final received = <Object>[];
+      OTelErrorHandling.handler = (error, _) => received.add(error);
+
+      final id = OTelAPI.traceIdFrom('a1b2c3');
+
+      expect(id.isValid, isFalse);
+      expect(received.single, isA<FormatException>());
     });
 
     test('provides access to raw bytes', () {
@@ -83,15 +99,25 @@ void main() {
     });
 
     test('traceIdFrom handles invalid hex strings', () {
-      expect(() {
-        OTelAPI.traceIdFrom('invalid-hex');
-      }, throwsFormatException);
+      final received = <Object>[];
+      OTelErrorHandling.handler = (error, _) => received.add(error);
+      addTearDown(OTelErrorHandling.resetToDefault);
+
+      final id = OTelAPI.traceIdFrom('invalid-hex');
+
+      expect(id.isValid, isFalse);
+      expect(received.single, isA<FormatException>());
     });
 
     test('spanIdFrom handles invalid hex strings', () {
-      expect(() {
-        OTelAPI.spanIdFrom('invalid-hex');
-      }, throwsFormatException);
+      final received = <Object>[];
+      OTelErrorHandling.handler = (error, _) => received.add(error);
+      addTearDown(OTelErrorHandling.resetToDefault);
+
+      final id = OTelAPI.spanIdFrom('invalid-hex');
+
+      expect(id.isValid, isFalse);
+      expect(received.single, isA<FormatException>());
     });
   });
 }
