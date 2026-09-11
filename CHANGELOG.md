@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.0.0-rc.4-wip]
 
+### Changed
+
+- **BREAKING**: `Baggage.getAllValues()` now returns
+  `Map<String, BaggageEntry>` instead of `List<String>`, the name/value pairs
+  the specification's "Get All Values" operation requires. To get the old
+  `List<String>` back, write
+  `getAllValues().values.map((e) => e.value).toList()`.
+  `Baggage.getAllEntries()` is now `@Deprecated` and delegates to
+  `getAllValues()`; it will be removed in a future release
+  ([#127](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/127)).
+
 ### Fixed (spec compliance)
 
 - **BREAKING**: `IdGenerator.hexToBytes`, and so `OTelAPI.traceIdFrom` and
