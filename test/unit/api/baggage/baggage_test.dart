@@ -22,7 +22,7 @@ void main() {
   group('Baggage', () {
     test('creates empty baggage', () {
       final baggage = OTelAPI.baggage();
-      expect(baggage.getAllEntries(), isEmpty);
+      expect(baggage.getAllValues(), isEmpty);
     });
 
     test('creates baggage with entries', () {
@@ -48,22 +48,7 @@ void main() {
       expect(baggage['nonexistent'], isNull);
     });
 
-    test('gets all entries (Get All Values spec operation)', () {
-      final entry1 = OTelAPI.baggageEntry('value1', 'metadata1');
-      final entry2 = OTelAPI.baggageEntry('value2', 'metadata2');
-
-      final baggage = OTelAPI.baggage({
-        'key1': entry1,
-        'key2': entry2,
-      });
-
-      final entries = baggage.getAllEntries();
-      expect(entries.length, equals(2));
-      expect(entries['key1'], equals(entry1));
-      expect(entries['key2'], equals(entry2));
-    });
-
-    test('gets all values', () {
+    test('gets all name/value pairs (Get All Values spec operation)', () {
       final entry1 = OTelAPI.baggageEntry('value1', 'metadata1');
       final entry2 = OTelAPI.baggageEntry('value2', 'metadata2');
 
@@ -76,6 +61,14 @@ void main() {
       expect(values.length, equals(2));
       expect(values['key1'], equals(entry1));
       expect(values['key2'], equals(entry2));
+    });
+
+    test('deprecated getAllEntries delegates to getAllValues', () {
+      final baggage = OTelAPI.baggage({
+        'key1': OTelAPI.baggageEntry('value1', 'metadata1'),
+      });
+
+      expect(baggage.getAllEntries(), equals(baggage.getAllValues()));
     });
 
     test('adds entry with copyWith', () {
@@ -115,7 +108,7 @@ void main() {
       final baggage2 = baggage1.copyWithout('nonexistent');
 
       // Should be equal (though not necessarily identical due to factory methods)
-      expect(baggage2.getAllEntries(), equals(baggage1.getAllEntries()));
+      expect(baggage2.getAllValues(), equals(baggage1.getAllValues()));
     });
 
     test('merges baggages with copyWithBaggage', () {

@@ -373,7 +373,7 @@ class Context {
 
     // Only serialize baggage if it has entries
     final currentBaggage = baggage;
-    if (currentBaggage != null && currentBaggage.getAllEntries().isNotEmpty) {
+    if (currentBaggage != null && currentBaggage.getAllValues().isNotEmpty) {
       values['baggage'] = currentBaggage.toJson();
     }
 

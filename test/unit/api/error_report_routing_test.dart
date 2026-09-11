@@ -96,7 +96,7 @@ void main() {
     test('an empty baggage name is reported and the entry dropped', () {
       final baggage = OTelAPI.baggage().copyWith('', 'value');
 
-      expect(baggage.getAllEntries(), isEmpty, reason: 'the entry is dropped');
+      expect(baggage.getAllValues(), isEmpty, reason: 'the entry is dropped');
       expect(reported, hasLength(1));
       expect(reported.single, isArgumentError);
       expect(logged, isEmpty);
