@@ -66,12 +66,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `Span` in the same `Context`, that `Span` is kept as the new span's
   `parentSpan`
   ([#118](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/118)).
-- **BREAKING**: `APITracer.startSpan` and `APITracer.createSpan` now accept a
-  `root: true` parameter to force the creation of a root span, even when a
-  parent span is active in the context.
-  ([#83](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/issues/83))
-- **BREAKING**: `APITracer.startSpan` now accepts an optional `startTime` parameter.
-  ([#83](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/issues/83))
 - **BREAKING**: `Baggage.getAllValues()` now returns
   `Map<String, BaggageEntry>` instead of `List<String>`, the name/value pairs
   the specification's "Get All Values" operation requires. To get the old
