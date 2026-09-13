@@ -84,7 +84,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `APISpan.addLink` and `APISpan.addSpanLink` now document that a link given at
   span creation is preferred to a later call. The trace/api.md spec makes this
   a MUST, because head sampling can only use the information present at span
-  creation. Comments only, no behaviour change
+  creation. Comments only, no behavior change
   ([#133](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/133)).
 - The trace API now documents that `APITracerProvider`, `APITracer` and
   `APISpan` implementations need to be safe for concurrent use, which
