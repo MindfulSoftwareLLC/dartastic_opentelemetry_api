@@ -84,7 +84,7 @@ void main() {
       }
 
       final traceState = TraceState.fromMap(entries);
-      expect(traceState.entries.length <= 32, isTrue);
+      expect(traceState.entries.length, equals(32));
     });
 
     test('gets value for key', () {
