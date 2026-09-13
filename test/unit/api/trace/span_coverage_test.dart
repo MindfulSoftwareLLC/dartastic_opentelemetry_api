@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import 'package:dartastic_opentelemetry_api/dartastic_opentelemetry_api.dart';
+import 'package:dartastic_opentelemetry_api/src/api/trace/span.dart';
 import 'package:test/test.dart';
 
 import '../../../test_util.dart';
@@ -56,11 +57,14 @@ void main() {
       final newAttributes = Attributes.of({'key2': 'value2'});
 
       // Copy with new attributes
-      span.attributes = span.attributes.copyWithAttributes(newAttributes);
+      span.attributes =
+          getReadableSpan(span).attributes.copyWithAttributes(newAttributes);
 
       // Should have both original and new attributes
-      expect(span.attributes.getString('key1'), equals('value1'));
-      expect(span.attributes.getString('key2'), equals('value2'));
+      expect(
+          getReadableSpan(span).attributes.getString('key1'), equals('value1'));
+      expect(
+          getReadableSpan(span).attributes.getString('key2'), equals('value2'));
     });
 
     test('span addEvent with attributes and timestamp', () {
@@ -70,7 +74,7 @@ void main() {
 
       span.addEvent(OTelAPI.spanEvent('test-event', attributes, timestamp));
 
-      final events = span.spanEvents;
+      final events = getReadableSpan(span).spanEvents;
       expect(events, hasLength(1));
       expect(events![0].name, equals('test-event'));
       expect(events[0].attributes!.getString('event.key'), equals('value'));
@@ -128,15 +132,18 @@ void main() {
       );
 
       // Initially has both attributes
-      expect(span.attributes.getString('key1'), equals('value1'));
-      expect(span.attributes.getString('key2'), equals('value2'));
+      expect(
+          getReadableSpan(span).attributes.getString('key1'), equals('value1'));
+      expect(
+          getReadableSpan(span).attributes.getString('key2'), equals('value2'));
 
       // Remove one attribute
-      span.attributes = span.attributes.copyWithout('key1');
+      span.attributes = getReadableSpan(span).attributes.copyWithout('key1');
 
       // Now should only have key2
-      expect(span.attributes.getString('key1'), isNull);
-      expect(span.attributes.getString('key2'), equals('value2'));
+      expect(getReadableSpan(span).attributes.getString('key1'), isNull);
+      expect(
+          getReadableSpan(span).attributes.getString('key2'), equals('value2'));
     });
 
     test('span recordException with all options', () {
@@ -151,7 +158,7 @@ void main() {
         stackTrace: StackTrace.current,
       );
 
-      final events = span.spanEvents;
+      final events = getReadableSpan(span).spanEvents;
       expect(events, hasLength(1));
 
       final eventAttrs = events![0].attributes!.toMap();

@@ -16,6 +16,7 @@ import 'span_kind.dart';
 import 'span_link.dart';
 
 part 'non_recording_span.dart';
+part 'readable_span.dart';
 part 'span_create.dart';
 
 /// The set of canonical status codes.
@@ -125,12 +126,6 @@ class APISpan {
   /// every mutation a no-op, per the spec.
   bool get _modifiable => _isRecordingAtCreation && !isEnded;
 
-  /// The status of this [APISpan].
-  SpanStatusCode get status => _spanStatusCode ?? SpanStatusCode.Unset;
-
-  /// The status of this [APISpan].
-  String? get statusDescription => _statusDescription;
-
   /// Returns the SpanContext associated with this Span, if any.
   /// Root spans have no SpanContext.
   SpanContext get spanContext => _spanContext;
@@ -150,22 +145,13 @@ class APISpan {
   /// Returns the SpanKind of this Span.
   SpanKind get kind => _spankind;
 
-  /// Returns an unmodifiable List of SpanEvents associated with this Span.
-  List<SpanEvent>? get spanEvents =>
-      _spanEvents == null ? null : List.unmodifiable(_spanEvents!);
-
-  /// Returns the SpanLinks associated with this Span.
-  List<SpanLink>? get spanLinks =>
-      _spanLinks == null ? null : List.unmodifiable(_spanLinks!);
+  /// Read access to what this span recorded is deliberately not here.
+  /// trace/api.md says implementations SHOULD NOT provide access to a Span's
+  /// attributes besides its SpanContext. An SDK reads them through
+  /// [getReadableSpan], which is not exported from the package barrel.
 
   /// Returns true if this Span is recording information like events, attributes, status, etc.
   bool get isRecording => _isRecordingAtCreation && !isEnded;
-
-  /// Only exposed for testing.  Spans are not meant to be used to propagate
-  /// information within a process. To prevent misuse, implementations
-  /// SHOULD NOT provide access to a Span's attributes besides its SpanContext
-  @visibleForTesting
-  Attributes get attributes => _attributes;
 
   /// Sets the attributes, replacing all existing attributes since
   /// implementations SHOULD NOT provide access to a Span's attributes
