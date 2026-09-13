@@ -67,23 +67,30 @@ sealed class AnyValue {
 
   /// A readable rendering of this value, for debuggers and error messages.
   ///
-  /// Unlike [unwrap] this never throws. A structure nested deeper than 32
-  /// levels renders the excess as `...` rather than raising, because
-  /// `toString` runs in exactly the places — a debugger, an error message —
-  /// where an exception is least welcome. Attribute values cannot nest that
-  /// deeply, but a log body can.
+  /// Bounded in both directions, because `toString` runs in exactly the places
+  /// — a debugger, an error message — where an exception or a megabyte of
+  /// output is least welcome. Unlike [unwrap] it never throws: nesting past 32
+  /// levels renders as `...`. Bytes render as `<N bytes>` rather than their
+  /// contents, since the length is what you want when debugging and the
+  /// individual values almost never are.
+  ///
+  /// A String nested inside an array or a map is quoted, so `["a", "b"]` and
+  /// `["a, b"]` are distinguishable. A top-level String renders bare.
   @override
   String toString() => _describe(0);
 
+  // Depth doubles as the nested flag: toString enters at 0, and every
+  // recursive call is at 1 or more, so `depth > 0` is exactly "inside a
+  // collection". That avoids threading a second parameter through.
   String _describe(int depth) {
     if (depth >= _maxDepth) return '...';
     return switch (this) {
       AnyValueNull() => 'null',
-      AnyValueString(value: final v) => v,
+      AnyValueString(value: final v) => depth == 0 ? v : '"$v"',
       AnyValueBool(value: final v) => '$v',
       AnyValueInt(value: final v) => '$v',
       AnyValueDouble(value: final v) => '$v',
-      AnyValueBytes(value: final v) => '$v',
+      AnyValueBytes(value: final v) => '<${v.length} bytes>',
       AnyValueArray(value: final v) =>
         '[${v.map((e) => e._describe(depth + 1)).join(', ')}]',
       AnyValueMap(value: final v) =>

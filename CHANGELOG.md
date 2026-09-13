@@ -114,6 +114,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the data model cannot carry is reported through `OTelErrorHandling` and
   dropped rather than thrown into the caller's logging path
   ([#123](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/123)).
+- `Attributes.getDouble` and `getDoubleList` promote a stored integer instead
+  of returning null and reporting a type mismatch. `getDouble` on `2` returns
+  `2.0`, and an all-integer array reads back as a `List<double>`. Promotion is
+  one way: `getInt` on a stored double still returns null. This also settles a
+  platform difference — on the web every number is a double, so a whole-valued
+  double is stored as an integer, and promotion makes `getDouble` agree across
+  platforms. Not marked breaking: it returns a value where it previously
+  returned null, so code that worked still works, unless a caller was using
+  null from `getDouble` to tell an integer attribute from a double one
+  ([#123](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/123)).
 - **BREAKING**: a `Uint8List` attribute value is dropped and reported instead
   of stored. `attrsFromMap` previously matched it on its `List<int>` branch, so
   it was flattened into an int list and read back through `getIntList`. Bytes
@@ -156,10 +166,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Attributes with an empty key are dropped and reported to `OTelErrorHandler`
-  instead of being stored. The attribute factories do not throw, per
-  error-handling.md; common/README.md makes a non-empty key a MUST
-  ([#123](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/123)).
 - `TraceState` construction (`fromMap`, `OTelAPI`/`OTelFactory` `traceState(...)`)
   now validates keys and values against the W3C tracestate grammar, dropping
   invalid entries instead of silently accepting them

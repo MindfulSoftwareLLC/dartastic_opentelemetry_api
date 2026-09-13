@@ -64,6 +64,13 @@ class APILogger {
   /// [body] takes a plain Dart object and is boxed internally by
   /// [bodyToAnyValue]; [LogRecord.body] holds the resulting [AnyValue].
   ///
+  /// This no-op implementation still converts [body], so a body the data model
+  /// cannot represent is reported even with no SDK installed — silently
+  /// discarding it would hide exactly the mistake worth surfacing. That
+  /// conversion allocates, so call [isEnabled] first, as the spec asks
+  /// instrumentation to do before every record: it is `false` here, which
+  /// skips the call and its cost entirely.
+  ///
   /// More info https://opentelemetry.io/docs/specs/otel/logs/api/#emit-a-logrecord
   void emit({
     DateTime? timeStamp,

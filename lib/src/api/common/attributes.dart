@@ -69,6 +69,10 @@ class Attributes {
   /// error-handling.md: report it, never throw.
   Attributes._(List<Attribute> entries) {
     for (var attr in entries) {
+      // common/README.md: an attribute key MUST be a non-empty string. Every
+      // Attributes is built here, so this is the one place to drop such an
+      // attribute. error-handling.md: report it, never throw.
+      //
       // The key check comes first because it identifies the attribute, and
       // the value message names the key, which reads as `attribute ""` for an
       // empty one. Each failure continues, so an attribute that is wrong both
@@ -116,7 +120,10 @@ class Attributes {
   int? getInt(String name) => _getTyped<int>(name);
 
   /// Gets a Double attribute value by key.
-  /// Returns null if the key doesn't exist or if the value is not a Double.
+  /// Returns null if the key doesn't exist or if the value is neither a Double
+  /// nor an Integer. A stored Integer is promoted, so `getDouble` on `2`
+  /// returns `2.0`. Promotion is one way: [getInt] on a stored Double returns
+  /// null.
   double? getDouble(String name) => _getTyped<double>(name);
 
   /// Gets a String List attribute value by key.
@@ -132,7 +139,10 @@ class Attributes {
   List<int>? getIntList(String name) => _getTyped<List<int>>(name);
 
   /// Gets a Double List attribute value by key.
-  /// Returns null if the key doesn't exist or if the value is not a Double List.
+  /// Returns null if the key doesn't exist or if the value is not an array of
+  /// numbers. Integer elements are promoted, so an all-Integer or mixed
+  /// Integer/Double array reads back as a `List<double>`. Promotion is one
+  /// way: [getIntList] on an array holding any Double returns null.
   List<double>? getDoubleList(String name) => _getTyped<List<double>>(name);
 
   /// Returns the number of attributes in this collection.

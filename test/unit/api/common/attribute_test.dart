@@ -312,7 +312,44 @@ void main() {
           const AnyValueString('a'),
           AnyValueMap({'k': const AnyValueInt(1)}),
         ]);
-        expect(value.toString(), equals('[a, {k: 1}]'));
+        expect(value.toString(), equals('["a", {k: 1}]'));
+      });
+
+      test('toString leaves a top-level String bare', () {
+        expect(const AnyValueString('x').toString(), equals('x'));
+      });
+
+      test('toString quotes nested Strings so commas are unambiguous', () {
+        final oneElement = AnyValueArray([const AnyValueString('a, b')]);
+        final twoElements = AnyValueArray([
+          const AnyValueString('a'),
+          const AnyValueString('b'),
+        ]);
+
+        expect(oneElement.toString(), equals('["a, b"]'));
+        expect(twoElements.toString(), equals('["a", "b"]'));
+        expect(oneElement.toString(), isNot(equals(twoElements.toString())));
+      });
+
+      test('toString quotes Strings nested in a map value', () {
+        final value = AnyValueMap({'k': const AnyValueString('v')});
+        expect(value.toString(), equals('{k: "v"}'));
+      });
+
+      test('toString renders bytes as a length, not their contents', () {
+        final big = AnyValueBytes(List<int>.filled(1000000, 7));
+        final rendered = big.toString();
+
+        expect(rendered, equals('<1000000 bytes>'));
+        expect(rendered.length, lessThan(40));
+        expect(rendered, contains('1000000'));
+      });
+
+      test('nested bytes also render as a length', () {
+        final value = AnyValueMap({
+          'payload': AnyValueBytes([1, 2, 3]),
+        });
+        expect(value.toString(), equals('{payload: <3 bytes>}'));
       });
 
       test('attrsFromMap reports rather than throws on excessive nesting', () {
