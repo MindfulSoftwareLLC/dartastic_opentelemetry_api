@@ -42,12 +42,23 @@ void main() {
     OTelAPI.contextKey<String>('via-otel-api');
     expect(sdkFactory.contextKeyCalls, 1,
         reason: 'OTelAPI must delegate to the newly installed factory');
-    // Context must do the same: deserialize creates its context through the
-    // factory, which must now be the SDK-installed one, not the cached no-op.
-    Context.deserialize({});
+    // Context must do the same. deserialize creates its context through the
+    // factory, and one transferable entry makes it create a key through the
+    // factory too, so both paths are checked against the newly installed
+    // factory rather than a no-op cached before the SDK initialized.
+    Context.deserialize({
+      'via-context': {
+        'value': 'value',
+        'uniqueId': [1, 2, 3],
+        'originalKeyName': 'via-context',
+      },
+    });
     expect(sdkFactory.contextCalls, 1,
-        reason: 'Context.deserialize must delegate to the newly installed '
-            'factory, not a no-op factory cached before the SDK initialized');
+        reason: 'Context.deserialize must create its Context through the '
+            'newly installed factory');
+    expect(sdkFactory.contextKeyCalls, 2,
+        reason: 'Context.deserialize must create its ContextKey through the '
+            'newly installed factory');
   });
 }
 

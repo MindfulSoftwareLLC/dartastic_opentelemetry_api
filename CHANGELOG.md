@@ -65,6 +65,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The `callback` parameter on the three `createObservable*` methods. Use the
   `callbacks` list; a `callback` is prepended to it ([#113](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/113)).
 
+### Removed
+
+- **BREAKING**: `Context.copyWithValue`. It generated a key the caller could never
+  get back, so a value stored through it was unreachable. Create the key with
+  `OTelAPI.contextKey<T>(name)` and use `Context.copyWith(key, value)`
+  ([#130](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/130)).
+
 ### Fixed
 
 - `TraceState` construction (`fromMap`, `OTelAPI`/`OTelFactory` `traceState(...)`)
@@ -110,11 +117,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   list member and a whitespace-only list member are dropped without a report,
   because the W3C grammar allows them
   ([#116](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/116)).
-
-### Changed
-
-- **BREAKING**: Removed `copyWithValue` from `Context` because it generated a key the caller could never retrieve. Use `OTelAPI.contextKey` and `Context.copyWith` instead
-  ([#79](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/issues/79)).
 
 ## [1.0.0-rc.3] - 2026-08-27
 
