@@ -10,6 +10,8 @@ import 'dart:typed_data';
 import 'package:collection/collection.dart' show DeepCollectionEquality;
 import 'package:meta/meta.dart';
 
+import 'timestamp.dart';
+
 /// Represents a value of any type supported by the OpenTelemetry specification.
 @immutable
 sealed class AnyValue {
@@ -153,7 +155,11 @@ sealed class AnyValue {
       });
       return AnyValueMap(map);
     } else if (obj is DateTime) {
-      return AnyValueString(obj.toUtc().toIso8601String());
+      // Timestamp.dateTimeToString, not toIso8601String: it is what
+      // attrsFromMap and Span.setDateTimeAttribute already emit, and it pins
+      // the fractional part to milliseconds instead of widening to
+      // microseconds whenever the DateTime happens to carry them.
+      return AnyValueString(Timestamp.dateTimeToString(obj));
     } else {
       throw ArgumentError(
           'Unsupported type in AnyValue conversion: ${obj.runtimeType}');

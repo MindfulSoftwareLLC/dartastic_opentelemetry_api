@@ -102,7 +102,12 @@ class Attributes {
   /// Returns the number of attributes in this collection.
   int get length => _entries.length;
 
-  /// Returns the value associated with the given [key], or null if not present.
+  /// Returns the value associated with the given [key], or null if the key
+  /// is not present or the stored value is not of type [T].
+  ///
+  /// error-handling.md: API methods MUST NOT throw unhandled exceptions
+  /// when used incorrectly by end users. A type mismatch is reported
+  /// through [OTelErrorHandling] and null is returned.
   T? _getTyped<T>(String key) {
     final attribute = _entries[key];
     if (attribute == null) return null;
@@ -123,25 +128,51 @@ class Attributes {
     }
 
     if (anyValue is AnyValueArray) {
-      if (anyValue.value.every((e) => e is AnyValueString)) {
-        final result = anyValue.value.map((e) => e.value as String).toList();
+      final elements = anyValue.value;
+
+      // An empty array carries no element type, so it satisfies whichever
+      // list getter was asked for. Without this an empty list would survive
+      // storage but read back as null from every typed getter.
+      if (elements.isEmpty) {
+        if (<String>[] is T) return <String>[] as T;
+        if (<bool>[] is T) return <bool>[] as T;
+        if (<int>[] is T) return <int>[] as T;
+        if (<double>[] is T) return <double>[] as T;
+      }
+
+      if (elements.every((e) => e is AnyValueString)) {
+        final result = elements.map((e) => e.value as String).toList();
         if (result is T) return result as T;
       }
-      if (anyValue.value.every((e) => e is AnyValueBool)) {
-        final result = anyValue.value.map((e) => e.value as bool).toList();
+      if (elements.every((e) => e is AnyValueBool)) {
+        final result = elements.map((e) => e.value as bool).toList();
         if (result is T) return result as T;
       }
-      if (anyValue.value.every((e) => e is AnyValueInt)) {
-        final result = anyValue.value.map((e) => e.value as int).toList();
+      if (elements.every((e) => e is AnyValueInt)) {
+        final result = elements.map((e) => e.value as int).toList();
         if (result is T) return result as T;
       }
-      if (anyValue.value.every((e) => e is AnyValueDouble)) {
-        final result = anyValue.value.map((e) => e.value as double).toList();
+      // Arrays holding any double promote ints to double, which is what
+      // attrsFromMap and fromJson did before AnyValue: JSON has a single
+      // number type, so [1, 2.5] is routine. An all-int array is matched by
+      // the int case above, so it is not promoted here.
+      if (elements.any((e) => e is AnyValueDouble) &&
+          elements.every((e) => e is AnyValueDouble || e is AnyValueInt)) {
+        final result = elements
+            .map((e) => e is AnyValueInt
+                ? e.value.toDouble()
+                : (e as AnyValueDouble).value)
+            .toList();
         if (result is T) return result as T;
       }
     }
 
-    throw StateError('Value for key "$key" is not of type $T');
+    // Per #106 a type mismatch is reported and yields null rather than
+    // throwing, which is what the getter doc comments promise.
+    OTelErrorHandling.report(StateError(
+        'Attribute value for key "$key" is a ${anyValue.runtimeType}, '
+        'not a $T; returning null.'));
+    return null;
   }
 
   /// Creates a new Attributes instance with a String attribute added or updated.
@@ -315,6 +346,7 @@ class Attributes {
 /// Extension to create Attributes from a simple Map
 extension AttributesExtension on Map<String, Object> {
   /// Convert this map to Attributes
+  /// Empty strings and empty lists are stored per the OTel spec
   Attributes toAttributes() {
     return OTelFactory.getOrCreateDefault().attributesFromMap(this);
   }

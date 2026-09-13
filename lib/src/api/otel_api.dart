@@ -46,7 +46,7 @@ import 'trace/tracer_provider.dart';
 /// The [OTelAPI] is the no-op API implementation of OTel, as required by the
 /// specification
 /// This class should only be used in the rare case of running without and SDK
-/// It is provided to comply with the specifiction requirement that the API
+/// It is provided to comply with the specification requirement that the API
 /// can be used without an SDK installed.
 /// The [initialize] method must be called first. Internally it sets the
 /// [OTelFactory] to [OTelAPIFactory].
@@ -626,7 +626,8 @@ class OTelAPI {
     try {
       final bytes = IdGenerator.hexToBytes(hexString);
       if (bytes == null || bytes.length != TraceId.traceIdLength) {
-        throw FormatException('TraceId must be {$TraceId.traceIdLength} bytes');
+        throw const FormatException(
+            'TraceId must be ${TraceId.traceIdLength} bytes');
       }
       return OTelFactory.otelFactory!.traceId(bytes);
     } catch (e) {

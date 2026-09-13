@@ -9,19 +9,5 @@ class MeterProviderCreate {
   /// Creates a new [APIMeterProvider] instance.
   /// This is an implementation detail and should not be used directly.
   /// Use [OTelAPI.meterProvider()] or [OTel.meterProvider()] instead.
-  static APIMeterProvider create({
-    required String endpoint,
-    required String serviceName,
-    String? serviceVersion,
-    bool enabled = true,
-    bool isShutdown = false,
-  }) {
-    return APIMeterProvider._(
-      endpoint: endpoint,
-      serviceName: serviceName,
-      serviceVersion: serviceVersion,
-      enabled: enabled,
-      isShutdown: isShutdown,
-    );
-  }
+  static APIMeterProvider create() => APIMeterProvider._();
 }

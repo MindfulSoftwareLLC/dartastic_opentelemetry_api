@@ -27,6 +27,11 @@ part 'tracer_provider_create.dart';
 /// ```
 /// See [OTel] for creating tracers in addition to the default.
 /// Use [OTelAPI] to run in no-op mode, as required by the specification.
+///
+/// All methods of this class are safe for concurrent use by default:
+/// implementations must remain correct when methods are invoked from
+/// interleaved asynchronous tasks within an isolate. See
+/// [Trace API, concurrency requirements](https://github.com/open-telemetry/opentelemetry-specification/blob/v1.60.0/specification/trace/api.md#concurrency-requirements).
 class APITracerProvider {
   String _endpoint;
   String _serviceName;

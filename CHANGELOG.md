@@ -5,30 +5,205 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+<!-- Conventions.
+
+     Headings are the six Keep a Changelog sections only: Added, Changed,
+     Deprecated, Removed, Fixed, Security. There is no "Breaking" heading and
+     no "Fixed (spec compliance)" heading.
+
+     A breaking change goes under Changed or Removed, with the bullet prefixed
+     "**BREAKING**: ".
+
+     A fix that came out of the OpenTelemetry specification compliance audit
+     goes under Fixed and names the spec document and requirement level in the
+     entry itself, for example "which logs/api.md makes a MUST". That citation
+     is what records the provenance now that the heading is gone, so do not
+     drop it. The audit findings are tracked under the spec-compliance label.
+-->
+
 ## [1.0.0-rc.4-wip]
 
 ### Added
 
-- `AnyValue`, a sealed hierarchy covering every attribute and log body type in the OpenTelemetry specification: `AnyValueString`, `AnyValueBool`, `AnyValueInt`, `AnyValueDouble`, `AnyValueArray`, `AnyValueMap`, `AnyValueBytes` and `AnyValueNull`. Maps, nested arrays, bytes and null were previously unsupported. `AnyValue.fromObject` converts plain Dart objects recursively, mapping `Uint8List` to `AnyValueBytes` and `DateTime` to a UTC ISO-8601 string; other typed lists such as `Int32List` convert as arrays. `AnyValue.toJson` encodes bytes as base64 at any nesting depth per OTLP/JSON, while `AnyValue.unwrap` returns the raw `List<int>`. `AnyValueBytes` rejects elements outside 0-255 rather than masking them, and conversion is depth limited to 32 levels.
-  ([#123](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/123))
+- `APIMeter.registerBatchCallback(callback, instruments)` registers one callback
+  that observes several instruments at once and returns an
+  `APIBatchCallbackRegistration` with `unregister()`. Instruments must belong
+  to the same meter, per metrics/api.md ([#113](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/113)).
+- `InstrumentAdvisory` on all seven `APIMeter.create*` methods, carrying
+  `explicitBucketBoundaries` and `attributeKeys` hints to the SDK
+  ([#113](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/113)).
+- `APIObservableInstrument`, implemented by the three observable instruments,
+  so batch callbacks and `registerBatchCallback` take a real type
+  ([#113](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/113)).
+- `createObservableCounter`, `createObservableUpDownCounter` and
+  `createObservableGauge` accept a `callbacks` list, and the instruments gain
+  `addCallback`, which returns a registration handle, and `removeCallback`
+  ([#113](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/113)).
+- `APITracer.startSpan` and `APITracer.createSpan` now accept a `root: true`
+  parameter to force the creation of a root span, even when a parent span is
+  active in the context
+  ([#118](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/118)).
+- `APITracer.startSpan` now accepts an optional `startTime` parameter
+  ([#118](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/118)).
+- `AnyValue`, a sealed hierarchy covering every attribute and log body type in
+  the OpenTelemetry specification: `AnyValueString`, `AnyValueBool`,
+  `AnyValueInt`, `AnyValueDouble`, `AnyValueArray`, `AnyValueMap`,
+  `AnyValueBytes` and `AnyValueNull`. Maps, nested arrays, bytes and null were
+  previously unsupported. `AnyValue.fromObject` converts plain Dart objects
+  recursively, mapping `Uint8List` to `AnyValueBytes` and `DateTime` to a UTC
+  ISO-8601 string; other typed lists such as `Int32List` convert as arrays.
+  `AnyValue.toJson` encodes bytes as base64 at any nesting depth per OTLP/JSON,
+  while `AnyValue.unwrap` returns the raw `List<int>`. `AnyValueBytes` rejects
+  elements outside 0-255 rather than masking them, and conversion is depth
+  limited to 32 levels
+  ([#123](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/123)).
 
 ### Changed
 
-- **BREAKING**: Replaced generic `Attribute<T>` with a concrete `Attribute` class containing an `AnyValue` payload. If you were instantiating `Attribute` directly (bypassing the factory), you must now wrap your value in the appropriate `AnyValue` subclass.
-  ([#123](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/123))
-- **BREAKING**: Strict OpenTelemetry spec compliance for attributes (`attrsFromMap` / `AnyValue.fromObject`). The previous permissive behavior of silently converting unsupported objects via `.toString()` is removed. Attributes built via `attrsFromMap` for values that previously silently stringified (e.g. custom objects) will now be dropped from the resulting `Attributes` and reported via `OTelErrorHandling`. `DateTime` values are natively supported and converted to UTC ISO-8601 strings. Conversion is also depth limited to 32 levels; deeper structures throw an `ArgumentError` that `attrsFromMap` routes to `OTelErrorHandling` like any other unsupported value.
-  ([#123](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/123))
-- **BREAKING**: `LogRecord.body` and `APILogger.emit(body: ...)` now use `AnyValue?` instead of `Object?` for strong spec compliance. Replace direct object passing with `AnyValue.fromObject(...)` or a specific subclass like `AnyValueString(...)`.
-  ([#123](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/123))
-- **BREAKING**: `Attribute` now throws an `ArgumentError` when the key is empty. `Attributes.of` drops such an attribute and reports it via `OTelErrorHandling` rather than throwing.
-  ([#123](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/123))
-- **BREAKING**: `AnyValueArray`, `AnyValueMap` and `AnyValueBytes` copy their contents into unmodifiable collections and are therefore no longer `const` constructible; replace `const AnyValueArray(...)` with `AnyValueArray(...)`. The scalar subtypes (`AnyValueNull`, `AnyValueString`, `AnyValueBool`, `AnyValueInt`, `AnyValueDouble`) remain `const`.
-  ([#123](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/123))
+- **BREAKING**: `parentSpan` and `spanContext` parameters have been removed from
+  `APITracer.startSpan` and `APITracer.createSpan`. Span creation now always
+  uses the parent span or remote context stored in the provided `Context` (or
+  `Context.current` if omitted). `parentSpan: parent` becomes
+  `context: Context.current.withSpan(parent)`. `spanContext: sc` has no direct
+  replacement: it assigned `sc` to the new span verbatim, span ID included,
+  which the specification's Span Creation section does not provide for. Putting
+  `sc` on the `Context` instead makes the new span a *child* of it — a new span
+  ID, with `parentSpanId` set to `sc.spanId`. Callers who actually wanted a span
+  carrying `sc` unchanged should use `OTelAPI.nonRecordingSpan(sc)`.
+  The full parent precedence is `root` > remote `SpanContext` > local `Span` >
+  valid non-remote `SpanContext` > new root, applied identically with and
+  without an SDK installed. A candidate whose `SpanContext` is invalid is
+  skipped, so a `Context` carrying only an invalid span or span context yields
+  a root span rather than an error. When a remote `SpanContext` identifies a
+  `Span` in the same `Context`, that `Span` is kept as the new span's
+  `parentSpan`
+  ([#118](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/118)).
+- **BREAKING**: `Baggage.getAllValues()` now returns
+  `Map<String, BaggageEntry>` instead of `List<String>`, the name/value pairs
+  the specification's "Get All Values" operation requires. To get the old
+  `List<String>` back, write
+  `getAllValues().values.map((e) => e.value).toList()`.
+  `Baggage.getAllEntries()` is now `@Deprecated` and delegates to
+  `getAllValues()`; it will be removed in a future release
+  ([#127](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/127)).
+- **BREAKING**: `APIMeterProvider` holds no configuration or operational
+  state, per metrics/noop.md. The `endpoint`, `serviceName`, `serviceVersion`,
+  `enabled` and `isShutdown` getters and setters are removed, `getMeter`
+  returns a fresh no-op meter each call, and `shutdown` and `forceFlush`
+  always return `true` ([#113](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/113)).
+- **BREAKING**: `Attribute` is no longer generic. `Attribute<T>` becomes a
+  concrete `Attribute` carrying an `AnyValue` payload. If you construct
+  `Attribute` directly, bypassing the factory, wrap the value in the
+  appropriate `AnyValue` subclass
+  ([#123](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/123)).
+- **BREAKING**: attribute conversion (`attrsFromMap` / `AnyValue.fromObject`)
+  is strict. The permissive `.toString()` fallback for unsupported objects is
+  gone: such values are dropped from the resulting `Attributes` and reported
+  through `OTelErrorHandling` instead of being silently stringified. `DateTime`
+  is natively supported, converted with `Timestamp.dateTimeToString` as
+  elsewhere in the API. Conversion is depth limited to 32 levels; a deeper
+  structure throws an `ArgumentError` that `attrsFromMap` routes to
+  `OTelErrorHandling` like any other unsupported value
+  ([#123](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/123)).
+- **BREAKING**: `LogRecord.body` and `APILogger.emit(body: ...)` take an
+  `AnyValue?` instead of an `Object?`. Replace a directly passed object with
+  `AnyValue.fromObject(...)` or a specific subclass such as
+  `AnyValueString(...)`
+  ([#123](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/123)).
+- **BREAKING**: `Attribute` throws an `ArgumentError` when the key is empty.
+  `Attributes.of` drops such an attribute and reports it through
+  `OTelErrorHandling` rather than throwing. The specification constrains
+  attribute keys, not values, so empty String and empty list *values* remain
+  stored, per [#103](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/103)
+  ([#123](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/123)).
+- **BREAKING**: `AnyValueArray`, `AnyValueMap` and `AnyValueBytes` copy their
+  contents into unmodifiable collections and so are no longer `const`
+  constructible; replace `const AnyValueArray(...)` with `AnyValueArray(...)`.
+  The scalar subtypes (`AnyValueNull`, `AnyValueString`, `AnyValueBool`,
+  `AnyValueInt`, `AnyValueDouble`) remain `const`
+  ([#123](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/123)).
+
+### Deprecated
+
+- The `boundaries` parameter on `createHistogram`. Use
+  `advisory: InstrumentAdvisory(explicitBucketBoundaries: ...)`. When both are
+  given, `boundaries` wins so existing callers keep their buckets, and the rest
+  of the advisory is kept ([#113](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/113)).
+- The `callback` parameter on the three `createObservable*` methods. Use the
+  `callbacks` list; a `callback` is prepended to it ([#113](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/113)).
+
+### Removed
+
+- **BREAKING**: the `parentSpan` and `spanContext` parameters of
+  `APITracer.startSpan` and `APITracer.createSpan`. The parent now comes from
+  the `Context`, so `parentSpan: parent` becomes
+  `context: Context.current.withSpan(parent)`. `spanContext: sc` has no
+  equivalent, because it gave the new span `sc` verbatim, span ID included.
+  Put `sc` on the `Context` to parent a new span to it, or use
+  `OTelAPI.nonRecordingSpan(sc)` to wrap it unchanged. The `startSpan` dartdoc
+  documents the full parent precedence
+  ([#118](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/118)).
+- **BREAKING**: `Context.copyWithValue`. It generated a key the caller could never
+  get back, so a value stored through it was unreachable. Create the key with
+  `OTelAPI.contextKey<T>(name)` and use `Context.copyWith(key, value)`
+  ([#130](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/130)).
 
 ### Fixed
 
-- `Attribute` no longer rejects empty String values or empty list values. The OpenTelemetry specification constrains attribute keys, not attribute values, so both are now accepted.
-  ([#123](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/123))
+- `TraceState` construction (`fromMap`, `OTelAPI`/`OTelFactory` `traceState(...)`)
+  now validates keys and values against the W3C tracestate grammar, dropping
+  invalid entries instead of silently accepting them
+  ([#119](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/119)).
+- **BREAKING**: `IdGenerator.hexToBytes`, and so `OTelAPI.traceIdFrom` and
+  `OTelAPI.spanIdFrom`, no longer accept anything outside lowercase hex
+  ([#112](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/112)).
+- `APISpan.addLink` and `APISpan.addSpanLink` now document that a link given at
+  span creation is preferred to a later call. The trace/api.md spec makes this
+  a MUST, because head sampling can only use the information present at span
+  creation. Comments only, no behavior change
+  ([#133](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/133)).
+- The trace API now documents that `APITracerProvider`, `APITracer` and
+  `APISpan` implementations need to be safe for concurrent use, which
+  trace/api.md makes a MUST. Comments only, no behavior change
+  ([#120](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/120)).
+- The logs API now documents that `APILoggerProvider` and `APILogger`
+  implementations need to be safe for concurrent use, which logs/api.md makes
+  a MUST. Comments only, no behavior change
+  ([#121](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/121)).
+- Span events with an empty name are dropped and reported to `OTelErrorHandler`.
+  `OTelAPI.spanEvent('')`, `addEvent`, `addEventNow` and `addEvents` no longer
+  throw an `ArgumentError`, per error-handling.md
+  ([#117](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/117)).
+- Empty string and empty array attribute values no longer throw `ArgumentError`
+  ([#103](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/103)).
+- Typed `Attributes` getters return null on a type mismatch instead of throwing
+  `StateError`, and report it through the error handler
+  ([#106](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/106)).
+- `APISpan` honors the `isRecording` value given at creation, so mutating
+  operations on a non-recording span are no-ops
+  ([#124](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/124)).
+- `APITracer.isEnabled()` no longer always returns `false`. It reports whether
+  a real SDK factory is installed, so honoring `isRecording` no longer makes
+  every span non-recording
+  ([#124](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/124)).
+- `TraceState.put` now moves a new or updated key to the front of the
+  entries, per the W3C Trace Context rules for mutating `tracestate`. This
+  also fixes overflow trimming, which evicted the newest entry instead of
+  the oldest.
+  ([#115](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/115))
+
+- `TraceState.fromString` keeps only the first entry when a key repeats, which
+  W3C Trace Context allows one of. A list member with an invalid key or value is
+  now reported to the error handler instead of being dropped silently. An empty
+  list member and a whitespace-only list member are dropped without a report,
+  because the W3C grammar allows them
+  ([#116](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/116)).
+- Without an SDK, `createSpan` returns the parent span directly when it is already
+  non-recording instead of wrapping it again, per trace/api.md
+  ([#129](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/129)).
+- `APITracer` builds its `InstrumentationScope` once, from the tracer's own name,
+  version, schema URL and attributes. Span attributes no longer leak into the
+  scope, and no version is invented ([#129](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/129)).
 
 ## [1.0.0-rc.3] - 2026-08-27
 
@@ -50,16 +225,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Stable-channel republication of `1.0.0-rc.3`. The code is the rc's code with a
 stable version stamp, so users who have not opted into prereleases get the
-fixes. See the `1.0.0-rc.3` entry for detail.
+fixes. See the `1.0.0-rc.3` entry for detail. The changes listed below are the
+delta against `0.10.0`, the previous stable release, not against the previous
+prerelease.
 
-### Breaking (relative to 0.10.0)
+### Changed
 
-- `enabled` is now `isEnabled()` on tracers, loggers and instruments, and the
-  `enabled` constructor parameter is removed. Replace `x.enabled` with
-  `x.isEnabled()`.
+- **BREAKING**: `enabled` is now `isEnabled()` on tracers, loggers and
+  instruments, and the `enabled` constructor parameter is removed. Replace
+  `x.enabled` with `x.isEnabled()`.
   ([#105](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/105))
-- `getTracer`, `getLogger` and `getMeter` no longer invent a scope version or
-  schema URL. Both are `null` when you omit them.
+- **BREAKING**: `getTracer`, `getLogger` and `getMeter` no longer invent a
+  scope version or schema URL. Both are `null` when you omit them.
   ([#108](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/108))
 
 ## [1.0.0-rc.2] - 2026-08-23
@@ -78,7 +255,7 @@ fixes. See the `1.0.0-rc.3` entry for detail.
   an unsendable handler degrades to the child default and is
   reported).
 
-### Fixed (spec compliance)
+### Fixed
 - **`Span.end()` no longer promotes status from Unset to Ok** ([api#102](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/102)).
   `Unset` stays `Unset`; analysis tools can no longer be misled by
   fabricated Ok statuses. The deprecated `spanStatus` parameter still
@@ -142,17 +319,10 @@ Stable-channel republication of `1.0.0-rc.2`. The first stable-channel
 release since `0.9.1`. The code is the rc's code with a stable version
 stamp, so users who have not opted into prereleases get the fixes. See
 the `1.0.0-beta.*` through `1.0.0-rc.2` entries for the complete history
-since `0.9.1`.
+since `0.9.1`. The changes listed below are the delta against `0.9.1`,
+the previous stable release, not against the previous prerelease.
 
-### Breaking (relative to 0.9.1)
-
-- Everything the rc line changed applies here, most notably
-  `1.0.0-rc.1`'s removal of 116 vendor/RUM identifiers that were not
-  OpenTelemetry semantic conventions. `doc/SEMCONV_CANDIDATES.md` maps
-  every removal to its registry replacement, a staged candidate, or a
-  recorded reason for dropping it.
-
-### Highlights
+The highlights, for anyone coming from `0.9.1`:
 
 - **`OTelAPI.setErrorHandler`**. Configure where the library's internal
   error reports go. The default logs and never throws; a strict handler
@@ -164,6 +334,14 @@ since `0.9.1`.
 - **Semantic conventions at registry v1.44.0**, including the complete
   `browser.web_vital.*` set, plus an `@experimental` `candidates/`
   staging area for keys proposed upstream.
+
+### Changed
+
+- **BREAKING**: Everything the rc line changed applies here, most notably
+  `1.0.0-rc.1`'s removal of 116 vendor/RUM identifiers that were not
+  OpenTelemetry semantic conventions. `doc/SEMCONV_CANDIDATES.md` maps
+  every removal to its registry replacement, a staged candidate, or a
+  recorded reason for dropping it.
 
 ## [1.0.0-rc.1] - 2026-07-18
 
@@ -1038,6 +1216,4 @@ Fixed default logging behavior to log INFO
 - No-op implementations of all interfaces
 - Comprehensive test suite
 - Basic examples
-
-### Compliance
 - Implements OpenTelemetry API specification v1.42

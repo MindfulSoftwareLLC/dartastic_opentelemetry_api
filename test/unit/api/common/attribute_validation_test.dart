@@ -38,14 +38,17 @@ void main() {
     });
 
     // The OpenTelemetry specification constrains attribute keys, not attribute
-    // values, so the previous empty-value rejection was incorrect.
-    test('an empty String value is allowed', () {
+    // values. Empty values are stored per #103; these pin that the AnyValue
+    // representation did not reintroduce a rejection.
+    test('an empty String value is stored', () {
       final attr = OTelAPI.attributeString('k', '');
       expect((attr.value as AnyValueString).value, isEmpty);
+      expect(attr.key, equals('k'));
       expect(Attributes.of({'k': ''}).getString('k'), isEmpty);
     });
 
-    test('empty list values are allowed', () {
+    test('empty list values are stored', () {
+      expect(OTelAPI.attributeStringList('k', []).key, equals('k'));
       expect(
           (OTelAPI.attributeStringList('k', []).value as AnyValueArray).value,
           isEmpty);
@@ -79,12 +82,15 @@ void main() {
       expect(attrs.getIntList('counts'), equals([1, 2, 3]));
     });
 
-    test('Attributes.of ignores mixed numeric lists without coercion', () {
+    test('Attributes.of promotes mixed numeric lists to double', () {
       final attrs = Attributes.of({
         'nums': <Object>[1, 2.5]
       });
-      // The array has mixed types (int and double). getDoubleList will throw StateError.
-      expect(() => attrs.getDoubleList('nums'), throwsA(isA<StateError>()));
+      // Mixed int/double lists read back as List<double>, as they did before
+      // AnyValue (#103). The stored array keeps each element's own type, so
+      // the promotion happens in the getter rather than at storage.
+      expect(attrs.getDoubleList('nums'), equals([1.0, 2.5]));
+      expect(attrs.getIntList('nums'), isNull);
     });
 
     test('Attributes.of ignores lists of unsupported types', () {
@@ -107,6 +113,39 @@ void main() {
       expect(attrs.getStringList('names'), equals(['a', 'b']));
       expect(attrs.getBoolList('flags'), equals([true, false]));
       expect(attrs.getIntList('counts'), equals([1, 2]));
+    });
+
+    test('Attributes.of preserves empty string', () {
+      final attrs = Attributes.of({'key': ''});
+      expect(attrs.getString('key'), equals(''));
+    });
+
+    test('Attributes.of preserves the element type of typed empty lists', () {
+      expect(Attributes.of({'k': <String>[]}).getStringList('k'),
+          equals(<String>[]));
+      expect(Attributes.of({'k': <bool>[]}).getBoolList('k'), equals(<bool>[]));
+      expect(Attributes.of({'k': <int>[]}).getIntList('k'), equals(<int>[]));
+      expect(Attributes.of({'k': <double>[]}).getDoubleList('k'),
+          equals(<double>[]));
+    });
+
+    test('Attributes.of preserves untyped empty list as List<String>', () {
+      final attrs = Attributes.of({'key': <Object>[]});
+      expect(attrs.getStringList('key'), equals(<String>[]));
+    });
+
+    test('empty list attribute equality', () {
+      final a = OTelAPI.attributeStringList('k', []);
+      final b = OTelAPI.attributeStringList('k', []);
+      expect(a, equals(b));
+      expect(a.hashCode, equals(b.hashCode));
+    });
+
+    test('empty string attribute equality', () {
+      final a = OTelAPI.attributeString('k', '');
+      final b = OTelAPI.attributeString('k', '');
+      expect(a, equals(b));
+      expect(a.hashCode, equals(b.hashCode));
     });
   });
 }

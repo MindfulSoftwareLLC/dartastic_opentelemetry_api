@@ -15,12 +15,14 @@ class UpDownCounterCreate {
     String? unit,
     String? description,
     required APIMeter meter,
+    InstrumentAdvisory? advisory,
   }) {
     return APIUpDownCounter<T>(
       name,
       description,
       unit,
       meter,
+      advisory,
     );
   }
 }
