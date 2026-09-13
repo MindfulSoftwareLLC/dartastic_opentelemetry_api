@@ -47,6 +47,163 @@ void main() {
     });
   });
 
+  group('TraceState construction drops invalid entries', () {
+    test('fromMap drops an entry with an invalid key', () {
+      final result = TraceState.fromMap({'BadKey': 'a', 'goodkey': 'b'});
+      expect(result.entries, equals({'goodkey': 'b'}));
+    });
+
+    test('fromMap drops an entry with an invalid value', () {
+      final result = TraceState.fromMap({'vendor': 'a,b=c', 'goodkey': 'b'});
+      expect(result.entries, equals({'goodkey': 'b'}));
+    });
+
+    test('fromMap never produces a TraceState containing invalid data', () {
+      final result = TraceState.fromMap({'BadKey': 'a,b=c'});
+      expect(result.entries, isEmpty);
+      expect(result.toString(), isEmpty);
+    });
+
+    test('fromMap drops a key over 256 characters', () {
+      final result = TraceState.fromMap({'a' * 257: 'value', 'goodkey': 'b'});
+      expect(result.entries, equals({'goodkey': 'b'}));
+    });
+
+    test('fromMap drops a value over 256 characters', () {
+      final result = TraceState.fromMap({'vendor': 'a' * 257, 'goodkey': 'b'});
+      expect(result.entries, equals({'goodkey': 'b'}));
+    });
+
+    test('fromMap reports a dropped entry to the error handler', () {
+      final reported = <Object>[];
+      OTelAPI.setErrorHandler((error, stackTrace) => reported.add(error));
+      addTearDown(OTelErrorHandling.resetToDefault);
+
+      TraceState.fromMap({'BadKey': 'a,b=c'});
+
+      expect(reported, hasLength(1));
+      expect(reported.single, isArgumentError);
+    });
+  });
+
+  group('TraceState put moves the mutated entry to the front (W3C order)', () {
+    test('adding a new key puts it first', () {
+      final traceState = TraceState.fromMap({'a': '1', 'b': '2'});
+      final result = traceState.put('c', '3');
+      expect(result.entries.keys.toList(), equals(['c', 'a', 'b']));
+      expect(result.toString(), equals('c=3,a=1,b=2'));
+    });
+
+    test('updating an existing key moves it to the front', () {
+      final traceState = TraceState.fromMap({'a': '1', 'b': '2', 'c': '3'});
+      final result = traceState.put('b', 'new');
+      expect(result.entries.keys.toList(), equals(['b', 'a', 'c']));
+      expect(result.get('b'), equals('new'));
+    });
+
+    test('overflow drops the oldest (rightmost) entry, not the newest', () {
+      final entries = <String, String>{};
+      for (var i = 0; i < 32; i++) {
+        entries['vendor$i'] = 'value$i';
+      }
+      // Map/header order is left-to-right = newest-to-oldest, so vendor0
+      // (first/leftmost) is newest and vendor31 (last/rightmost) is oldest.
+      final traceState = TraceState.fromMap(entries);
+      final result = traceState.put('vendornew', 'v');
+
+      expect(result.entries.length, equals(32));
+      expect(result.get('vendornew'), equals('v'));
+      expect(result.get('vendor31'), isNull); // oldest entry evicted
+      expect(result.get('vendor0'), equals('value0')); // newest retained
+      expect(result.entries.keys.first, equals('vendornew'));
+    });
+
+    test('updating a key at the 32-entry limit does not drop any entry', () {
+      final entries = <String, String>{};
+      for (var i = 0; i < 32; i++) {
+        entries['vendor$i'] = 'value$i';
+      }
+      final traceState = TraceState.fromMap(entries);
+      final result = traceState.put('vendor31', 'updated');
+
+      expect(result.entries.length, equals(32));
+      expect(result.get('vendor31'), equals('updated'));
+      expect(result.entries.keys.first, equals('vendor31'));
+      for (var i = 0; i < 31; i++) {
+        expect(result.get('vendor$i'), equals('value$i'));
+      }
+    });
+
+    test('updating the already-frontmost key leaves it in front', () {
+      final traceState = TraceState.fromMap({'a': '1', 'b': '2', 'c': '3'});
+      final first = traceState.put('a', '1');
+      final result = first.put('a', 'updated');
+      expect(result.entries.keys.toList(), equals(['a', 'b', 'c']));
+      expect(result.get('a'), equals('updated'));
+    });
+
+    test('W3C example header: update then add', () {
+      final traceState =
+          TraceState.fromString('congo=t61rcWkgMzE,rojo=00f067aa0ba902b7');
+      final updated = traceState.put('rojo', 'newIntValue');
+      expect(updated.entries.keys.toList(), equals(['rojo', 'congo']));
+      expect(updated.toString(), equals('rojo=newIntValue,congo=t61rcWkgMzE'));
+
+      final result = updated.put('lumber', '3');
+      expect(result.entries.keys.toList(), equals(['lumber', 'rojo', 'congo']));
+      expect(result.toString(),
+          equals('lumber=3,rojo=newIntValue,congo=t61rcWkgMzE'));
+    });
+  });
+
+  group('TraceState.fromString parses per W3C Trace Context', () {
+    test('a repeated key is invalid; the first entry is kept', () {
+      final state = TraceState.fromString('vendor=first,vendor=second');
+      expect(state.entries, equals({'vendor': 'first'}));
+    });
+
+    test('an invalid member is dropped and the valid members survive', () {
+      final state = TraceState.fromString('INVALID=v1,vendora=v2,vendorb=');
+      expect(state.entries, equals({'vendora': 'v2'}));
+    });
+
+    test('a leading space inside a value is preserved', () {
+      final state = TraceState.fromString('vendora=v1, vendorb= v2');
+      expect(state.get('vendorb'), equals(' v2'));
+    });
+
+    test('an empty list member is ignored', () {
+      final state = TraceState.fromString('vendora=v1,,=v2,vendorb=v3');
+      expect(state.entries, equals({'vendora': 'v1', 'vendorb': 'v3'}));
+    });
+
+    test('an empty or whitespace-only member is not an error', () {
+      // W3C: "Empty and whitespace-only list members are allowed."
+      // `list-member = (key "=" value) / OWS`
+      final errors = <Object>[];
+      OTelAPI.setErrorHandler((error, stackTrace) => errors.add(error));
+      addTearDown(() => OTelAPI.setErrorHandler(null));
+
+      final state = TraceState.fromString('vendor=v, ,,\t,other=w');
+
+      expect(state.entries, equals({'vendor': 'v', 'other': 'w'}));
+      expect(errors, isEmpty);
+    });
+
+    test('parsing stops at 32 members', () {
+      final header = List.generate(40, (i) => 'vendor$i=value$i').join(',');
+      expect(TraceState.fromString(header).entries.length, equals(32));
+    });
+
+    test('a parsed state round-trips to a header this package accepts', () {
+      const header = 'congo=t61rcWkgMzE,rojo=00f067aa0ba902b7';
+      final state = TraceState.fromString(header);
+      expect(state.toString(), equals(header));
+      expect(TraceState.fromString(state.toString()).entries,
+          equals(state.entries));
+    });
+  });
+
   group('TraceState works without an installed SDK', () {
     test('put works after reset', () {
       final traceState = TraceState.fromMap({'vendor': 'value'});

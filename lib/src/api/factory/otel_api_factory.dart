@@ -18,6 +18,7 @@ import '../logs/logger_provider.dart';
 import '../metrics/counter.dart';
 import '../metrics/gauge.dart';
 import '../metrics/histogram.dart';
+import '../metrics/instrument_advisory.dart';
 import '../metrics/meter.dart';
 import '../metrics/meter_provider.dart';
 import '../metrics/observable_callback.dart';
@@ -119,10 +120,7 @@ class OTelAPIFactory extends OTelFactory {
       {required String endpoint,
       String serviceName = OTelAPI.defaultServiceName,
       String? serviceVersion = OTelAPI.defaultServiceVersion}) {
-    return MeterProviderCreate.create(
-        endpoint: endpoint,
-        serviceName: serviceName,
-        serviceVersion: serviceVersion);
+    return MeterProviderCreate.create();
   }
 
   /// Creates a new instance of [APILoggerProvider] with the specified parameters.
@@ -161,7 +159,7 @@ class OTelAPIFactory extends OTelFactory {
   /// Creates Attributes from a map of string keys to arbitrary values.
   ///
   /// This method handles converting various value types to appropriate attribute values:
-  /// - String values become string attributes (empty strings are ignored)
+  /// - String values become string attributes (empty strings are stored per the OTel spec)
   /// - int, double, and bool values become their respective attribute types
   /// - DateTime values are converted to ISO8601 string attributes
   /// - Attribute values are passed through directly
@@ -171,9 +169,7 @@ class OTelAPIFactory extends OTelFactory {
     final attributes = <Attribute>[];
     namedMap.forEach((key, value) {
       if (value is String) {
-        if (value.isNotEmpty) {
-          attributes.add(AttributeCreate.create<String>(key, value));
-        }
+        attributes.add(AttributeCreate.create<String>(key, value));
       } else if (value is int) {
         attributes.add(AttributeCreate.create<int>(key, value));
       } else if (value is double) {
@@ -185,31 +181,37 @@ class OTelAPIFactory extends OTelFactory {
         attributes.add(AttributeCreate.create<String>(key, isoTimestamp));
       } else if (value is Attribute) {
         attributes.add(value);
+      } else if (value is List<String>) {
+        attributes.add(AttributeCreate.create<List<String>>(key, value));
+      } else if (value is List<bool>) {
+        attributes.add(AttributeCreate.create<List<bool>>(key, value));
+      } else if (value is List<int>) {
+        attributes.add(AttributeCreate.create<List<int>>(key, value));
+      } else if (value is List<double>) {
+        attributes.add(AttributeCreate.create<List<double>>(key, value));
       } else if (value is List) {
-        // Element-check rather than hard-cast: the static list type is
-        // often List<Object> or List<dynamic> (e.g. from map literals),
-        // which `as List<String>` would reject at runtime.
-        if (value.isNotEmpty) {
-          if (value.every((e) => e is String)) {
-            attributes.add(AttributeCreate.create<List<String>>(
-                key, value.cast<String>()));
-          } else if (value.every((e) => e is bool)) {
-            attributes.add(
-                AttributeCreate.create<List<bool>>(key, value.cast<bool>()));
-          } else if (value.every((e) => e is int)) {
-            attributes
-                .add(AttributeCreate.create<List<int>>(key, value.cast<int>()));
-          } else if (value.every((e) => e is double || e is int)) {
-            // Mixed numeric lists are promoted to double.
-            attributes.add(AttributeCreate.create<List<double>>(
-                key,
-                value
-                    .map((e) => e is int ? e.toDouble() : e as double)
-                    .toList()));
-          } else {
-            OTelErrorHandling.report(ArgumentError(
-                'Ignoring attribute $key because the list contains unsupported types. Only String, bool, int, double lists are allowed by the OTel specification.'));
-          }
+        // Untyped lists (List<Object> / List<dynamic>): element-check
+        // rather than hard-cast.  Empty untyped lists take the
+        // List<String> fallback because .every() is vacuously true.
+        if (value.every((e) => e is String)) {
+          attributes.add(
+              AttributeCreate.create<List<String>>(key, value.cast<String>()));
+        } else if (value.every((e) => e is bool)) {
+          attributes
+              .add(AttributeCreate.create<List<bool>>(key, value.cast<bool>()));
+        } else if (value.every((e) => e is int)) {
+          attributes
+              .add(AttributeCreate.create<List<int>>(key, value.cast<int>()));
+        } else if (value.every((e) => e is double || e is int)) {
+          // Mixed numeric lists are promoted to double.
+          attributes.add(AttributeCreate.create<List<double>>(
+              key,
+              value
+                  .map((e) => e is int ? e.toDouble() : e as double)
+                  .toList()));
+        } else {
+          OTelErrorHandling.report(ArgumentError(
+              'Ignoring attribute $key because the list contains unsupported types. Only String, bool, int, double lists are allowed by the OTel specification.'));
         }
       } else {
         attributes.add(AttributeCreate.create<String>(key, '$value'));
@@ -377,82 +379,114 @@ class OTelAPIFactory extends OTelFactory {
   }
 
   @override
-  APICounter createCounter(String name, {String? description, String? unit}) {
+  APICounter createCounter(String name,
+      {String? description, String? unit, InstrumentAdvisory? advisory}) {
     return CounterCreate.create(
       name: name,
       description: description,
       unit: unit,
       meter: APIMeterCreate.create(name: '@api/default'),
+      advisory: advisory,
     );
   }
 
   @override
   APIUpDownCounter createUpDownCounter(String name,
-      {String? description, String? unit}) {
+      {String? description, String? unit, InstrumentAdvisory? advisory}) {
     return UpDownCounterCreate.create(
       name: name,
       description: description,
       unit: unit,
       meter: APIMeterCreate.create(name: '@api/default'),
+      advisory: advisory,
     );
   }
 
   @override
-  APIGauge createGauge(String name, {String? description, String? unit}) {
+  APIGauge createGauge(String name,
+      {String? description, String? unit, InstrumentAdvisory? advisory}) {
     return GaugeCreate.create(
       name: name,
       description: description,
       unit: unit,
       meter: APIMeterCreate.create(name: '@api/default'),
+      advisory: advisory,
     );
   }
 
   @override
   APIHistogram createHistogram(String name,
-      {String? description, String? unit, List<double>? boundaries}) {
+      {String? description,
+      String? unit,
+      List<double>? boundaries,
+      InstrumentAdvisory? advisory}) {
     return HistogramCreate.create(
       name: name,
       description: description,
       unit: unit,
       meter: APIMeterCreate.create(name: '@api/default'),
-      boundaries: boundaries,
+      advisory: advisory ??
+          (boundaries != null
+              ? InstrumentAdvisory(explicitBucketBoundaries: boundaries)
+              : null),
     );
   }
 
   @override
   APIObservableCounter createObservableCounter(String name,
-      {String? description, String? unit, ObservableCallback? callback}) {
+      {String? description,
+      String? unit,
+      ObservableCallback? callback,
+      List<ObservableCallback> callbacks = const [],
+      InstrumentAdvisory? advisory}) {
     return ObservableCounterCreate.create(
       name: name,
       description: description,
       unit: unit,
       meter: APIMeterCreate.create(name: '@api/default'),
-      callback: callback,
+      callbacks: _mergeCallbacks(callback, callbacks),
+      advisory: advisory,
     );
   }
 
   @override
   APIObservableGauge createObservableGauge(String name,
-      {String? description, String? unit, ObservableCallback? callback}) {
+      {String? description,
+      String? unit,
+      ObservableCallback? callback,
+      List<ObservableCallback> callbacks = const [],
+      InstrumentAdvisory? advisory}) {
     return ObservableGaugeCreate.create(
       name: name,
       description: description,
       unit: unit,
       meter: APIMeterCreate.create(name: '@api/default'),
-      callback: callback,
+      callbacks: _mergeCallbacks(callback, callbacks),
+      advisory: advisory,
     );
   }
 
   @override
   APIObservableUpDownCounter createObservableUpDownCounter(String name,
-      {String? description, String? unit, ObservableCallback? callback}) {
+      {String? description,
+      String? unit,
+      ObservableCallback? callback,
+      List<ObservableCallback> callbacks = const [],
+      InstrumentAdvisory? advisory}) {
     return ObservableUpDownCounterCreate.create(
       name: name,
       description: description,
       unit: unit,
       meter: APIMeterCreate.create(name: '@api/default'),
-      callback: callback,
+      callbacks: _mergeCallbacks(callback, callbacks),
+      advisory: advisory,
     );
+  }
+
+  List<ObservableCallback<T>> _mergeCallbacks<T extends num>(
+      ObservableCallback<T>? callback, List<ObservableCallback<T>> callbacks) {
+    if (callback == null) return callbacks;
+    return [callback, ...callbacks];
   }
 
   @override

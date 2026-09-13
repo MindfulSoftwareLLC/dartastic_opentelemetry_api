@@ -129,8 +129,6 @@ void main() {
       );
 
       expect(provider, isA<APIMeterProvider>());
-      expect(provider.serviceName, equals('test-service'));
-      expect(provider.serviceVersion, equals('1.0.0'));
     });
 
     test('creates empty attributes', () {
@@ -147,8 +145,9 @@ void main() {
 
       expect(attributes.length, equals(2));
       expect(attributes.getString('string-key'), equals('string-value'));
-      // Test that trying to get an int value as a string throws an exception
-      expect(() => attributes.getString('int-key'), throwsA(isA<StateError>()));
+      // Getting an int value as a string returns null (never throws,
+      // per error-handling.md)
+      expect(attributes.getString('int-key'), isNull);
       // Test getting the value with correct type
       expect(attributes.getInt('int-key'), equals(42));
     });
@@ -171,8 +170,9 @@ void main() {
 
       expect(attributes.length, equals(9));
       expect(attributes.getString('string-key'), equals('string-value'));
-      // Test that trying to get an int value as a string throws an exception
-      expect(() => attributes.getString('int-key'), throwsA(isA<StateError>()));
+      // Getting an int value as a string returns null (never throws,
+      // per error-handling.md)
+      expect(attributes.getString('int-key'), isNull);
       // Test getting the value with correct type
       expect(attributes.getInt('int-key'), equals(42));
       expect(attributes.getDouble('double-key'), equals(3.14));
@@ -198,8 +198,9 @@ void main() {
 
       expect(attributes.length, equals(2));
       expect(attributes.getString('string-key'), equals('string-value'));
-      // Test that trying to get an int value as a string throws an exception
-      expect(() => attributes.getString('int-key'), throwsA(isA<StateError>()));
+      // Getting an int value as a string returns null (never throws,
+      // per error-handling.md)
+      expect(attributes.getString('int-key'), isNull);
       // Test getting the value with correct type
       expect(attributes.getInt('int-key'), equals(42));
     });
@@ -377,6 +378,25 @@ void main() {
       expect(spanEvent.name, equals('test-event'));
       expect(spanEvent.attributes, equals(attributes));
       expect(spanEvent.timestamp, equals(timestamp));
+    });
+
+    test('an empty event name reports to the error handler (api#69)', () {
+      // error-handling.md: the factory must not throw on incorrect user
+      // input. Both entry points go through SpanEventCreate.create, which
+      // reports the bad name; the span that receives the event drops it.
+      final reported = <Object>[];
+      OTelAPI.setErrorHandler((error, stackTrace) => reported.add(error));
+
+      expect(factory.spanEvent('', null, DateTime.now()), isA<SpanEvent>());
+      expect(reported, hasLength(1));
+      expect(reported.single, isA<ArgumentError>());
+
+      reported.clear();
+      expect(factory.spanEventNow(''), isA<SpanEvent>());
+      expect(reported, hasLength(1));
+      expect(reported.single, isA<ArgumentError>());
+
+      OTelAPI.setErrorHandler(null);
     });
 
     test('creates span event with current timestamp', () {

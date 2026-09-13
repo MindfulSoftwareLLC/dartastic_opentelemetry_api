@@ -15,12 +15,14 @@ class GaugeCreate {
     String? unit,
     String? description,
     required APIMeter meter,
+    InstrumentAdvisory? advisory,
   }) {
     return APIGauge<T>(
       name,
       description,
       unit,
       meter,
+      advisory,
     );
   }
 }

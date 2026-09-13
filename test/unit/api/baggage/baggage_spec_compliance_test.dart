@@ -55,7 +55,7 @@ void main() {
     test('copyWith with an empty name returns the baggage unchanged', () {
       final baggage = OTelAPI.baggage().copyWith('valid', 'v');
       final result = baggage.copyWith('', 'ignored');
-      expect(result.getAllEntries().keys, equals(['valid']));
+      expect(result.getAllValues().keys, equals(['valid']));
     });
   });
 

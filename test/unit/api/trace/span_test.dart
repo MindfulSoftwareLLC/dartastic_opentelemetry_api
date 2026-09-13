@@ -50,7 +50,6 @@ void main() {
       final span = tracer.startSpan(
         'test-span',
         kind: SpanKind.internal,
-        parentSpan: null,
       );
 
       expect(span.isRecording, isTrue);
@@ -62,11 +61,31 @@ void main() {
       expect(span.attributes.length, equals(0));
     });
 
+    test('creates non-recording span when isRecording is false', () {
+      final span = tracer.startSpan(
+        'test-span',
+        isRecording: false,
+      );
+
+      expect(span.isRecording, isFalse);
+
+      // Mutating operations should be no-ops
+      span.setStringAttribute<String>('key', 'value');
+      span.setStatus(SpanStatusCode.Error, 'Error');
+      span.updateName('new-name');
+      span.addEventNow('test-event');
+
+      expect(span.attributes.length, equals(0));
+      expect(span.status, equals(SpanStatusCode.Unset));
+      expect(span.statusDescription, isNull);
+      expect(span.name, equals('test-span'));
+      expect(span.spanEvents, isNull);
+    });
+
     test('handles attribute updates correctly', () {
       final span = tracer.startSpan(
         'test-span',
         kind: SpanKind.internal,
-        parentSpan: null,
       );
 
       final attrs = <String, Object>{
@@ -241,7 +260,8 @@ void main() {
       final childSpan = tracer.startSpan(
         'test-span',
         kind: SpanKind.internal,
-        parentSpan: rootSpan, // This sets up the parent-child relationship
+        context: Context.current
+            .withSpan(rootSpan), // This sets up the parent-child relationship
       );
 
       // Verify inheritance of trace ID
@@ -345,13 +365,54 @@ void main() {
       expect(span.spanEvents, isNotNull);
     });
 
-    test('addEvent throws if name is empty', () {
-      // NOTE: becomes non-throwing under api#69 (#119), a separate issue.
+    test('an event with an empty name is dropped, not thrown (api#69)', () {
+      // error-handling.md: an API method must not throw when the user
+      // calls it incorrectly. Every event path drops the event instead.
+      // https://opentelemetry.io/docs/specs/otel/error-handling/#basic-error-handling-principles
       final span = tracer.startSpan('test');
-      expect(
-        () => span.addEvent(OTelAPI.spanEvent('')),
-        throwsArgumentError,
-      );
+
+      span.addEvent(OTelAPI.spanEvent(''));
+      span.addEventNow('');
+      span.addEvents({'': null});
+
+      expect(span.spanEvents ?? const <SpanEvent>[], isEmpty);
+    });
+
+    test('an empty event name reaches the error handler (api#69)', () {
+      final reported = <Object>[];
+      OTelAPI.setErrorHandler((error, stackTrace) => reported.add(error));
+      final span = tracer.startSpan('test');
+
+      span.addEventNow('');
+      expect(reported, hasLength(1));
+      expect(reported.single, isA<ArgumentError>());
+
+      reported.clear();
+      span.addEvents({'': null});
+      expect(reported, hasLength(1));
+      expect(reported.single, isA<ArgumentError>());
+
+      reported.clear();
+      OTelAPI.spanEvent('');
+      expect(reported, hasLength(1),
+          reason: 'making the event reports, even without a span');
+
+      reported.clear();
+      span.addEvent(OTelAPI.spanEvent(''));
+      expect(reported, hasLength(2),
+          reason: 'once when the event is made, once when the span drops it');
+
+      expect(span.spanEvents ?? const <SpanEvent>[], isEmpty);
+      OTelAPI.setErrorHandler(null);
+    });
+
+    test('an empty name drops only that entry of addEvents (api#69)', () {
+      final span = tracer.startSpan('test');
+
+      span.addEvents({'': null, 'kept': null});
+
+      expect(span.spanEvents, hasLength(1));
+      expect(span.spanEvents!.single.name, equals('kept'));
     });
 
     test('end() is idempotent', () {
@@ -474,24 +535,6 @@ void main() {
       expect(span, isNotNull);
     });
 
-    test('span factory methods throw with invalid context', () {
-      final timestamp = DateTime.now();
-
-      // This should throw because we're using an invalid span context
-      expect(
-          () => tracer.createSpan(
-                name: 'test-span',
-                spanContext:
-                    OTelAPI.spanContextInvalid(), // Invalid span context
-                parentSpan: null,
-                kind: SpanKind.server,
-                startTime: timestamp,
-                attributes: Attributes.of({'key': 'value'}),
-                links: [],
-              ),
-          throwsArgumentError);
-    });
-
     test('span factory methods with valid context', () {
       final timestamp = DateTime.now();
 
@@ -500,12 +543,13 @@ void main() {
         traceId: OTelAPI.traceId(),
         spanId: OTelAPI.spanId(),
         traceFlags: OTelAPI.traceFlags(),
+        isRemote: true,
       );
 
       final span = tracer.createSpan(
         name: 'test-span',
-        spanContext: validSpanContext, // Valid span context
-        parentSpan: null,
+        context: Context.current
+            .copyWithSpanContext(validSpanContext), // Valid span context
         kind: SpanKind.server,
         startTime: timestamp,
         attributes: Attributes.of({'key': 'value'}),

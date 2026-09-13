@@ -24,7 +24,23 @@ class TraceState {
     _entries = entries ?? {};
   }
 
-  /// Create TraceState from a W3C trace context header string
+  /// Creates a TraceState from a W3C trace context header string.
+  ///
+  /// The parser drops a list member that breaks the W3C grammar. The result
+  /// holds only the entries that this package can send on again.
+  ///
+  /// Only one entry per key is allowed, because the entry represents that
+  /// last position in the trace; vendors must overwrite their entry upon
+  /// reentry to their tracing system. If a key repeats, the parser keeps the
+  /// first entry and drops the later ones.
+  ///
+  /// A member with an invalid key or value is reported to the error handler
+  /// (see `OTelAPI.setErrorHandler`) and dropped.
+  ///
+  /// An empty member and a whitespace-only member are dropped without a
+  /// report. The W3C grammar allows them: `list-member = (key "=" value) / OWS`.
+  ///
+  /// The parser stops at the limit of 32 members.
   factory TraceState.fromString(String? headerValue) {
     final factory = OTelFactory.getOrCreateDefault();
     if (headerValue == null || headerValue.isEmpty) {
@@ -35,13 +51,25 @@ class TraceState {
     final pairs = headerValue.split(',');
 
     for (var pair in pairs) {
-      final keyValue = pair.trim().split('=');
-      if (keyValue.length == 2 &&
-          _isValidKey(keyValue[0]) &&
-          _isValidValue(keyValue[1])) {
-        entries[keyValue[0]] = keyValue[1];
-        if (entries.length >= _maxKeyValuePairs) break;
+      final member = pair.trim();
+      // W3C Trace Context allows an empty or a whitespace-only list member:
+      // `list-member = (key "=" value) / OWS`. Such a member is not an error.
+      if (member.isEmpty) continue;
+      final keyValue = member.split('=');
+      if (keyValue.length != 2 ||
+          !_isValidKey(keyValue[0]) ||
+          !_isValidValue(keyValue[1])) {
+        OTelErrorHandling.report(ArgumentError(
+            'Invalid TraceState list member "$pair"; entry ignored.'));
+        continue;
       }
+      // Only one entry per key is allowed, because the entry represents that
+      // last position in the trace; vendors must overwrite their entry upon
+      // reentry to their tracing system. The first entry stays and the later
+      // ones are dropped.
+      if (entries.containsKey(keyValue[0])) continue;
+      entries[keyValue[0]] = keyValue[1];
+      if (entries.length >= _maxKeyValuePairs) break;
     }
 
     return factory.traceState(entries);
@@ -72,9 +100,11 @@ class TraceState {
   /// Returns an immutable map of the key-value pairs in this trace state.
   Map<String, String> asMap() => Map.unmodifiable(_entries);
 
-  ///  Creates a new [TraceState] with the given key-value pair added.
-  ///  If adding this pair would exceed the 32 key-value pair limit,
-  ///  the oldest entries are removed to make room.
+  ///  Creates a new [TraceState] with the given key-value pair added or
+  ///  updated. Per W3C Trace Context, the new or updated entry moves to
+  ///  the beginning of the list; entries further to the right are older.
+  ///  If adding this pair would exceed the 32 key-value pair limit, the
+  ///  oldest (rightmost) entries are removed to make room.
   TraceState put(String key, String value) {
     if (!_isValidKey(key) || !_isValidValue(value)) {
       OTelErrorHandling.report(
@@ -83,24 +113,18 @@ class TraceState {
     }
     final factory = OTelFactory.getOrCreateDefault();
 
-    final newEntries = Map<String, String>.from(_entries);
-
-    // If we already have this key, just update its value
-    if (newEntries.containsKey(key)) {
-      newEntries[key] = value;
-      return factory.traceState(newEntries);
-    }
-
-    // If adding a new key would exceed the limit, remove the oldest entry
-    if (newEntries.length >= _maxKeyValuePairs) {
-      // Remove the first key to make room
-      if (newEntries.isNotEmpty) {
-        final oldestKey = newEntries.keys.first;
-        newEntries.remove(oldestKey);
+    // Per W3C Trace Context, an updated or new entry moves to the front
+    // (left) of the list, so build the new map starting with it.
+    final newEntries = <String, String>{key: value};
+    for (final entry in _entries.entries) {
+      if (entry.key == key) continue;
+      if (newEntries.length >= _maxKeyValuePairs) {
+        // Cap reached; remaining entries are older (further right) and
+        // are evicted.
+        break;
       }
+      newEntries[entry.key] = entry.value;
     }
-
-    newEntries[key] = value;
     return factory.traceState(newEntries);
   }
 
