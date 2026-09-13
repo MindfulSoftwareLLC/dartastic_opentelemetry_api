@@ -72,9 +72,5 @@ void main() {
       expect(tracer1, isNot(equals(tracer3)));
       expect(tracer1.hashCode, isNot(equals(tracer3.hashCode)));
     });
-
-    // The trace ID mismatch test was removed because we no longer throw on
-    // mismatched trace IDs; instead we use precedence to resolve the parent
-    // from the context.
   });
 }
