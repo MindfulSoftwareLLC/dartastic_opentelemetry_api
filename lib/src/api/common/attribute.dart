@@ -16,9 +16,18 @@ class Attribute {
   /// The value of this attribute.
   final AnyValue _value;
 
+  /// Creates an attribute.
+  ///
+  /// The OpenTelemetry specification constrains attribute keys, not attribute
+  /// values, so empty Strings and empty lists are valid values but an empty
+  /// key is not.
   Attribute._(String key, AnyValue value)
       : _key = key,
-        _value = value;
+        _value = value {
+    if (key.isEmpty) {
+      throw ArgumentError.value(key, 'key', 'Attribute key must not be empty');
+    }
+  }
 
   /// Gets the key (name) of this attribute.
   String get key => _key;

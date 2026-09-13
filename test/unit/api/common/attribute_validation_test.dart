@@ -23,6 +23,48 @@ void main() {
           equals('AttributeValue(v)'));
     });
 
+    test('an empty key is rejected', () {
+      expect(() => OTelAPI.attributeString('', 'v'),
+          throwsA(isA<ArgumentError>()));
+      expect(() => OTelAPI.attributeInt('', 1), throwsA(isA<ArgumentError>()));
+      expect(() => OTelAPI.attributeStringList('', ['v']),
+          throwsA(isA<ArgumentError>()));
+    });
+
+    test('Attributes.of drops an empty key rather than throwing', () {
+      final attrs = Attributes.of({'': 'dropped', 'good': 'kept'});
+      expect(attrs.getString('good'), equals('kept'));
+      expect(attrs.toMap().containsKey(''), isFalse);
+    });
+
+    // The OpenTelemetry specification constrains attribute keys, not attribute
+    // values, so the previous empty-value rejection was incorrect.
+    test('an empty String value is allowed', () {
+      final attr = OTelAPI.attributeString('k', '');
+      expect((attr.value as AnyValueString).value, isEmpty);
+      expect(Attributes.of({'k': ''}).getString('k'), isEmpty);
+    });
+
+    test('empty list values are allowed', () {
+      expect(
+          (OTelAPI.attributeStringList('k', []).value as AnyValueArray).value,
+          isEmpty);
+      expect((OTelAPI.attributeIntList('k', []).value as AnyValueArray).value,
+          isEmpty);
+      expect((OTelAPI.attributeBoolList('k', []).value as AnyValueArray).value,
+          isEmpty);
+      expect(
+          (OTelAPI.attributeDoubleList('k', []).value as AnyValueArray).value,
+          isEmpty);
+    });
+
+    test('a list containing empty Strings is allowed', () {
+      final attrs = Attributes.of({
+        'names': <String>['', 'b'],
+      });
+      expect(attrs.getStringList('names'), equals(['', 'b']));
+    });
+
     test('Attributes.of converts untyped bool lists', () {
       final attrs = Attributes.of({
         'flags': <Object>[true, false]

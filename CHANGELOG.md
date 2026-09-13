@@ -7,14 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.0.0-rc.4-wip]
 
+### Added
+
+- `AnyValue`, a sealed hierarchy covering every attribute and log body type in the OpenTelemetry specification: `AnyValueString`, `AnyValueBool`, `AnyValueInt`, `AnyValueDouble`, `AnyValueArray`, `AnyValueMap`, `AnyValueBytes` and `AnyValueNull`. Maps, nested arrays, bytes and null were previously unsupported. `AnyValue.fromObject` converts plain Dart objects recursively, mapping `Uint8List` to `AnyValueBytes` and `DateTime` to a UTC ISO-8601 string; other typed lists such as `Int32List` convert as arrays. `AnyValue.toJson` encodes bytes as base64 at any nesting depth per OTLP/JSON, while `AnyValue.unwrap` returns the raw `List<int>`. `AnyValueBytes` rejects elements outside 0-255 rather than masking them, and conversion is depth limited to 32 levels.
+  ([#123](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/123))
+
 ### Changed
 
 - **BREAKING**: Replaced generic `Attribute<T>` with a concrete `Attribute` class containing an `AnyValue` payload. If you were instantiating `Attribute` directly (bypassing the factory), you must now wrap your value in the appropriate `AnyValue` subclass.
-  ([#95](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/95))
-- **BREAKING**: Strict OpenTelemetry spec compliance for attributes (`attrsFromMap` / `AnyValue.fromObject`). The previous permissive behavior of silently converting unsupported objects via `.toString()` is removed. Attributes built via `attrsFromMap` for values that previously silently stringified (e.g. custom objects) will now be silently dropped from the resulting `Attributes` and reported via `OTelErrorHandling`. `DateTime` values are natively supported and converted to UTC ISO-8601 strings.
-  ([#95](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/95))
+  ([#123](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/123))
+- **BREAKING**: Strict OpenTelemetry spec compliance for attributes (`attrsFromMap` / `AnyValue.fromObject`). The previous permissive behavior of silently converting unsupported objects via `.toString()` is removed. Attributes built via `attrsFromMap` for values that previously silently stringified (e.g. custom objects) will now be dropped from the resulting `Attributes` and reported via `OTelErrorHandling`. `DateTime` values are natively supported and converted to UTC ISO-8601 strings. Conversion is also depth limited to 32 levels; deeper structures throw an `ArgumentError` that `attrsFromMap` routes to `OTelErrorHandling` like any other unsupported value.
+  ([#123](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/123))
 - **BREAKING**: `LogRecord.body` and `APILogger.emit(body: ...)` now use `AnyValue?` instead of `Object?` for strong spec compliance. Replace direct object passing with `AnyValue.fromObject(...)` or a specific subclass like `AnyValueString(...)`.
-  ([#95](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/95))
+  ([#123](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/123))
+- **BREAKING**: `Attribute` now throws an `ArgumentError` when the key is empty. `Attributes.of` drops such an attribute and reports it via `OTelErrorHandling` rather than throwing.
+  ([#123](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/123))
+- **BREAKING**: `AnyValueArray`, `AnyValueMap` and `AnyValueBytes` copy their contents into unmodifiable collections and are therefore no longer `const` constructible; replace `const AnyValueArray(...)` with `AnyValueArray(...)`. The scalar subtypes (`AnyValueNull`, `AnyValueString`, `AnyValueBool`, `AnyValueInt`, `AnyValueDouble`) remain `const`.
+  ([#123](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/123))
+
+### Fixed
+
+- `Attribute` no longer rejects empty String values or empty list values. The OpenTelemetry specification constrains attribute keys, not attribute values, so both are now accepted.
+  ([#123](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/123))
+
 ## [1.0.0-rc.3] - 2026-08-27
 
 ### Changed
