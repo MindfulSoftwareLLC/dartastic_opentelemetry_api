@@ -117,6 +117,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   list member and a whitespace-only list member are dropped without a report,
   because the W3C grammar allows them
   ([#116](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/116)).
+- Without an SDK, `createSpan` returns the parent span directly when it is already
+  non-recording instead of wrapping it again, per trace/api.md
+  ([#129](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/129)).
+- `APITracer` builds its `InstrumentationScope` once, from the tracer's own name,
+  version, schema URL and attributes. Span attributes no longer leak into the
+  scope, and no version is invented ([#129](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/129)).
 
 ## [1.0.0-rc.3] - 2026-08-27
 
