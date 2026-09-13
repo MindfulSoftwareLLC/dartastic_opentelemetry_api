@@ -17,6 +17,11 @@ part 'observable_gauge_create.dart';
 /// An ObservableGauge is intended for capturing values that are not meant to be combined
 /// across multiple entities, such as the current temperature, CPU usage percentage, or
 /// room occupancy.
+///
+/// All methods of this class are safe for concurrent use by default:
+/// implementations must remain correct when methods are invoked from
+/// interleaved asynchronous tasks within an isolate. See
+/// [Metrics API, concurrency requirements](https://github.com/open-telemetry/opentelemetry-specification/blob/v1.60.0/specification/metrics/api.md#concurrency-requirements).
 class APIObservableGauge<T extends num> implements APIObservableInstrument {
   final String _name;
   final String? _description;

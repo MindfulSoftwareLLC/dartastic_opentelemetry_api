@@ -27,6 +27,11 @@ part 'meter_create.dart';
 /// an empty instrument name, and never logs or reports: metrics/noop.md says
 /// the Meter MUST NOT return a non-empty error or log any message. Name
 /// validation belongs to the SDK meter.
+///
+/// All methods of this class are safe for concurrent use by default:
+/// implementations must remain correct when methods are invoked from
+/// interleaved asynchronous tasks within an isolate. See
+/// [Metrics API, concurrency requirements](https://github.com/open-telemetry/opentelemetry-specification/blob/v1.60.0/specification/metrics/api.md#concurrency-requirements).
 class APIMeter {
   /// Gets the name of the meter, usually of a library, package or module
   final String name;
@@ -64,7 +69,12 @@ class APIMeter {
   ///
   /// A Counter is a synchronous Instrument which supports non-negative increments.
   ///
-  /// [name] The name of the instrument
+  /// [name] The name of the instrument. It must conform to the instrument
+  /// name syntax: not empty, first character an ASCII letter, the rest
+  /// letters, digits, `_`, `.`, `-` or `/`, at most 255 characters, and
+  /// compared case-insensitively. This API does not validate it; the SDK
+  /// meter does. See
+  /// [Instrument name syntax](https://github.com/open-telemetry/opentelemetry-specification/blob/v1.60.0/specification/metrics/api.md#instrument-name-syntax).
   /// [unit] Optional unit of the instrument (e.g., "ms" for milliseconds)
   /// [description] Optional description of the instrument
   APICounter<T> createCounter<T extends num>({
@@ -86,7 +96,12 @@ class APIMeter {
   ///
   /// An UpDownCounter is a synchronous Instrument which supports increments and decrements.
   ///
-  /// [name] The name of the instrument
+  /// [name] The name of the instrument. It must conform to the instrument
+  /// name syntax: not empty, first character an ASCII letter, the rest
+  /// letters, digits, `_`, `.`, `-` or `/`, at most 255 characters, and
+  /// compared case-insensitively. This API does not validate it; the SDK
+  /// meter does. See
+  /// [Instrument name syntax](https://github.com/open-telemetry/opentelemetry-specification/blob/v1.60.0/specification/metrics/api.md#instrument-name-syntax).
   /// [unit] Optional unit of the instrument (e.g., "ms" for milliseconds)
   /// [description] Optional description of the instrument
   APIUpDownCounter<T> createUpDownCounter<T extends num>({
@@ -109,7 +124,12 @@ class APIMeter {
   /// A Histogram is a synchronous Instrument which can be used to report arbitrary values
   /// that are likely to be statistically meaningful.
   ///
-  /// [name] The name of the instrument
+  /// [name] The name of the instrument. It must conform to the instrument
+  /// name syntax: not empty, first character an ASCII letter, the rest
+  /// letters, digits, `_`, `.`, `-` or `/`, at most 255 characters, and
+  /// compared case-insensitively. This API does not validate it; the SDK
+  /// meter does. See
+  /// [Instrument name syntax](https://github.com/open-telemetry/opentelemetry-specification/blob/v1.60.0/specification/metrics/api.md#instrument-name-syntax).
   /// [unit] Optional unit of the instrument (e.g., "ms" for milliseconds)
   /// [description] Optional description of the instrument
   /// [boundaries] Optional explicit bucket boundaries for the histogram
@@ -146,7 +166,12 @@ class APIMeter {
   /// A Gauge is a synchronous Instrument which can be used to record non-additive value(s)
   /// when changes occur.
   ///
-  /// [name] The name of the instrument
+  /// [name] The name of the instrument. It must conform to the instrument
+  /// name syntax: not empty, first character an ASCII letter, the rest
+  /// letters, digits, `_`, `.`, `-` or `/`, at most 255 characters, and
+  /// compared case-insensitively. This API does not validate it; the SDK
+  /// meter does. See
+  /// [Instrument name syntax](https://github.com/open-telemetry/opentelemetry-specification/blob/v1.60.0/specification/metrics/api.md#instrument-name-syntax).
   /// [unit] Optional unit of the instrument (e.g., "ms" for milliseconds)
   /// [description] Optional description of the instrument
   APIGauge<T> createGauge<T extends num>({
@@ -169,7 +194,12 @@ class APIMeter {
   /// An ObservableCounter is an asynchronous Instrument which reports monotonically increasing
   /// value(s) when the instrument is being observed.
   ///
-  /// [name] The name of the instrument
+  /// [name] The name of the instrument. It must conform to the instrument
+  /// name syntax: not empty, first character an ASCII letter, the rest
+  /// letters, digits, `_`, `.`, `-` or `/`, at most 255 characters, and
+  /// compared case-insensitively. This API does not validate it; the SDK
+  /// meter does. See
+  /// [Instrument name syntax](https://github.com/open-telemetry/opentelemetry-specification/blob/v1.60.0/specification/metrics/api.md#instrument-name-syntax).
   /// [unit] Optional unit of the instrument (e.g., "ms" for milliseconds)
   /// [description] Optional description of the instrument
   /// [callback] Optional callback to provide measurements when the instrument is observed
@@ -198,7 +228,12 @@ class APIMeter {
   /// An ObservableUpDownCounter is an asynchronous Instrument which reports values that increase
   /// or decrease when the instrument is being observed.
   ///
-  /// [name] The name of the instrument
+  /// [name] The name of the instrument. It must conform to the instrument
+  /// name syntax: not empty, first character an ASCII letter, the rest
+  /// letters, digits, `_`, `.`, `-` or `/`, at most 255 characters, and
+  /// compared case-insensitively. This API does not validate it; the SDK
+  /// meter does. See
+  /// [Instrument name syntax](https://github.com/open-telemetry/opentelemetry-specification/blob/v1.60.0/specification/metrics/api.md#instrument-name-syntax).
   /// [unit] Optional unit of the instrument (e.g., "ms" for milliseconds)
   /// [description] Optional description of the instrument
   /// [callback] Optional callback to provide measurements when the instrument is observed
@@ -227,7 +262,12 @@ class APIMeter {
   /// An ObservableGauge is an asynchronous Instrument which reports non-additive value(s)
   /// when the instrument is being observed.
   ///
-  /// [name] The name of the instrument
+  /// [name] The name of the instrument. It must conform to the instrument
+  /// name syntax: not empty, first character an ASCII letter, the rest
+  /// letters, digits, `_`, `.`, `-` or `/`, at most 255 characters, and
+  /// compared case-insensitively. This API does not validate it; the SDK
+  /// meter does. See
+  /// [Instrument name syntax](https://github.com/open-telemetry/opentelemetry-specification/blob/v1.60.0/specification/metrics/api.md#instrument-name-syntax).
   /// [unit] Optional unit of the instrument (e.g., "ms" for milliseconds)
   /// [description] Optional description of the instrument
   /// [callback] Optional callback to provide measurements when the instrument is observed
