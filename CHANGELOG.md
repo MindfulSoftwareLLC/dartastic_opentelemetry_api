@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+<!-- Conventions.
+
+     Headings are the six Keep a Changelog sections only: Added, Changed,
+     Deprecated, Removed, Fixed, Security. There is no "Breaking" heading and
+     no "Fixed (spec compliance)" heading.
+
+     A breaking change goes under Changed or Removed, with the bullet prefixed
+     "**BREAKING**: ".
+
+     A fix that came out of the OpenTelemetry specification compliance audit
+     goes under Fixed and names the spec document and requirement level in the
+     entry itself, for example "which logs/api.md makes a MUST". That citation
+     is what records the provenance now that the heading is gone, so do not
+     drop it. The audit findings are tracked under the spec-compliance label.
+-->
+
 ## [1.0.0-rc.4-wip]
 
 ### Added
@@ -49,7 +65,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The `callback` parameter on the three `createObservable*` methods. Use the
   `callbacks` list; a `callback` is prepended to it ([#113](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/113)).
 
-### Fixed (spec compliance)
+### Fixed
 
 - `TraceState` construction (`fromMap`, `OTelAPI`/`OTelFactory` `traceState(...)`)
   now validates keys and values against the W3C tracestate grammar, dropping
@@ -115,16 +131,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Stable-channel republication of `1.0.0-rc.3`. The code is the rc's code with a
 stable version stamp, so users who have not opted into prereleases get the
-fixes. See the `1.0.0-rc.3` entry for detail.
+fixes. See the `1.0.0-rc.3` entry for detail. The changes listed below are the
+delta against `0.10.0`, the previous stable release, not against the previous
+prerelease.
 
-### Breaking (relative to 0.10.0)
+### Changed
 
-- `enabled` is now `isEnabled()` on tracers, loggers and instruments, and the
-  `enabled` constructor parameter is removed. Replace `x.enabled` with
-  `x.isEnabled()`.
+- **BREAKING**: `enabled` is now `isEnabled()` on tracers, loggers and
+  instruments, and the `enabled` constructor parameter is removed. Replace
+  `x.enabled` with `x.isEnabled()`.
   ([#105](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/105))
-- `getTracer`, `getLogger` and `getMeter` no longer invent a scope version or
-  schema URL. Both are `null` when you omit them.
+- **BREAKING**: `getTracer`, `getLogger` and `getMeter` no longer invent a
+  scope version or schema URL. Both are `null` when you omit them.
   ([#108](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/108))
 
 ## [1.0.0-rc.2] - 2026-08-23
@@ -143,7 +161,7 @@ fixes. See the `1.0.0-rc.3` entry for detail.
   an unsendable handler degrades to the child default and is
   reported).
 
-### Fixed (spec compliance)
+### Fixed
 - **`Span.end()` no longer promotes status from Unset to Ok** ([api#102](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/102)).
   `Unset` stays `Unset`; analysis tools can no longer be misled by
   fabricated Ok statuses. The deprecated `spanStatus` parameter still
@@ -207,17 +225,10 @@ Stable-channel republication of `1.0.0-rc.2`. The first stable-channel
 release since `0.9.1`. The code is the rc's code with a stable version
 stamp, so users who have not opted into prereleases get the fixes. See
 the `1.0.0-beta.*` through `1.0.0-rc.2` entries for the complete history
-since `0.9.1`.
+since `0.9.1`. The changes listed below are the delta against `0.9.1`,
+the previous stable release, not against the previous prerelease.
 
-### Breaking (relative to 0.9.1)
-
-- Everything the rc line changed applies here, most notably
-  `1.0.0-rc.1`'s removal of 116 vendor/RUM identifiers that were not
-  OpenTelemetry semantic conventions. `doc/SEMCONV_CANDIDATES.md` maps
-  every removal to its registry replacement, a staged candidate, or a
-  recorded reason for dropping it.
-
-### Highlights
+The highlights, for anyone coming from `0.9.1`:
 
 - **`OTelAPI.setErrorHandler`**. Configure where the library's internal
   error reports go. The default logs and never throws; a strict handler
@@ -229,6 +240,14 @@ since `0.9.1`.
 - **Semantic conventions at registry v1.44.0**, including the complete
   `browser.web_vital.*` set, plus an `@experimental` `candidates/`
   staging area for keys proposed upstream.
+
+### Changed
+
+- **BREAKING**: Everything the rc line changed applies here, most notably
+  `1.0.0-rc.1`'s removal of 116 vendor/RUM identifiers that were not
+  OpenTelemetry semantic conventions. `doc/SEMCONV_CANDIDATES.md` maps
+  every removal to its registry replacement, a staged candidate, or a
+  recorded reason for dropping it.
 
 ## [1.0.0-rc.1] - 2026-07-18
 
@@ -1103,6 +1122,4 @@ Fixed default logging behavior to log INFO
 - No-op implementations of all interfaces
 - Comprehensive test suite
 - Basic examples
-
-### Compliance
 - Implements OpenTelemetry API specification v1.42
