@@ -36,14 +36,16 @@ class Baggage {
   BaggageEntry? getEntry(String key) => _entries[key];
 
   /// Returns all entries in this Baggage as an immutable map.
-  Map<String, BaggageEntry> getAllEntries() => _entries;
+  @Deprecated('Use getAllValues(), the name the specification gives this '
+      'operation. Will be removed in a future release.')
+  Map<String, BaggageEntry> getAllEntries() => getAllValues();
 
   /// Retrieves a Baggage value for the given key, or `null` if not present.
   String? getValue(String key) => _entries[key]?.value;
 
-  /// Retrieves all Baggage values for the given key, or `null` if not present.
-  List<String> getAllValues() =>
-      _entries.values.map((entry) => entry.value).toList();
+  /// Returns all name/value pairs in this Baggage as an immutable map.
+  /// This is the specification's "Get All Values" operation.
+  Map<String, BaggageEntry> getAllValues() => _entries;
 
   /// Operator overload for getting a value
   String? operator [](String key) => getValue(key);
