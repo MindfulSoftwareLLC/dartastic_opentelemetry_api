@@ -179,9 +179,8 @@ void main() {
         expect(value.value, equals([0, 128, 255]));
       });
 
-      test('the attributeBytes factory rejects out-of-range elements', () {
-        expect(() => OTelAPI.attributeBytes('k', [999]),
-            throwsA(isA<ArgumentError>()));
+      test('the fromBytes factory rejects out-of-range elements', () {
+        expect(() => AnyValue.fromBytes([999]), throwsA(isA<ArgumentError>()));
       });
 
       // An out-of-range list cannot reach AnyValueBytes through Attributes.of:

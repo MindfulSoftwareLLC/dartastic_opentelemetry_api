@@ -9,7 +9,6 @@ import '../util/otel_error_handler.dart';
 import '../util/otel_log.dart';
 import 'baggage/baggage.dart';
 import 'baggage/baggage_entry.dart';
-import 'common/any_value.dart';
 import 'common/attribute.dart';
 import 'common/attributes.dart';
 import 'common/instrumentation_scope.dart';
@@ -486,24 +485,6 @@ class OTelAPI {
   static Attribute attributeDoubleList(String name, List<double> value) {
     _getAndCacheOtelFactory();
     return OTelFactory.otelFactory!.attributeDoubleList(name, value);
-  }
-
-  /// Create a map attribute key
-  static Attribute attributeMap(String name, Map<String, AnyValue> value) {
-    _getAndCacheOtelFactory();
-    return OTelFactory.otelFactory!.attributeMap(name, value);
-  }
-
-  /// Create an array attribute key
-  static Attribute attributeArray(String name, List<AnyValue> value) {
-    _getAndCacheOtelFactory();
-    return OTelFactory.otelFactory!.attributeArray(name, value);
-  }
-
-  /// Create a bytes attribute key
-  static Attribute attributeBytes(String name, List<int> value) {
-    _getAndCacheOtelFactory();
-    return OTelFactory.otelFactory!.attributeBytes(name, value);
   }
 
   /// Creates an `Attributes` collection from a list of [Attribute]s.

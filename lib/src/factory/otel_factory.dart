@@ -5,7 +5,6 @@ import 'dart:typed_data';
 
 import '../api/baggage/baggage.dart';
 import '../api/baggage/baggage_entry.dart';
-import '../api/common/any_value.dart';
 import '../api/common/attribute.dart';
 import '../api/common/attributes.dart';
 import '../api/common/instrumentation_scope.dart';
@@ -383,15 +382,6 @@ abstract class OTelFactory {
 
   /// Creates an `Attribute` for the given double.
   Attribute attributeDoubleList(String key, List<double> value);
-
-  /// Creates an `Attribute` for the given map of string to AnyValue.
-  Attribute attributeMap(String key, Map<String, AnyValue> value);
-
-  /// Creates an `Attribute` for the given list of AnyValue.
-  Attribute attributeArray(String key, List<AnyValue> value);
-
-  /// Creates an `Attribute` for the given byte array.
-  Attribute attributeBytes(String key, List<int> value);
 
   /// Creates an `Attributes` collection.
   Attributes attributes([List<Attribute>? entries]);

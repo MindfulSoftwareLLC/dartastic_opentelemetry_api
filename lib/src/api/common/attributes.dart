@@ -31,31 +31,59 @@ class Attributes {
 
   /// Creates an Attributes instance from a JSON map.
   /// This is a utility method for deserialization from logs or exports.
+  ///
+  /// A value that cannot be converted, or that converts to something the
+  /// attribute data model does not allow — a map, bytes, null, or a nested or
+  /// heterogeneous array — is dropped and reported via [OTelErrorHandling].
   static Attributes fromJson(Map<String, dynamic> json) {
     final attributes = <Attribute>[];
 
     for (final entry in json.entries) {
+      // Only the conversion failure is handled here; whether a converted
+      // AnyValue is a legal *attribute* value is Attributes._'s single rule.
+      // Reporting outside the catch: a user handler may rethrow (strict mode),
+      // and catching that here would report the same value twice.
+      final AnyValue anyValue;
       try {
-        final anyValue = AnyValue.fromObject(entry.value);
-        attributes.add(AttributeCreate.create(entry.key, anyValue));
+        anyValue = AnyValue.fromObject(entry.value);
       } catch (e) {
         OTelErrorHandling.report(ArgumentError(
             'Ignoring attribute ${entry.key} because it contains unsupported types: $e'));
+        continue;
       }
+
+      attributes.add(AttributeCreate.create(entry.key, anyValue));
     }
 
     return AttributesCreate.create(attributes);
   }
 
   /// Private constructor to enforce immutability.
+  ///
+  /// Every Attributes is built here, so this is the one place that enforces
+  /// the attribute data model: a non-empty key, and a value that is a
+  /// primitive or a homogeneous array of primitives. Enforcing it here rather
+  /// than in the conversion helpers covers every route in, including
+  /// [attributesFromList], an `Attribute` passed straight through
+  /// `attrsFromMap`, and the `copyWith*` methods.
+  /// error-handling.md: report it, never throw.
   Attributes._(List<Attribute> entries) {
     for (var attr in entries) {
-      // common/README.md: an attribute key MUST be a non-empty string. Every
-      // Attributes is built here, so this is the one place to drop such an
-      // attribute. error-handling.md: report it, never throw.
+      // The key check comes first because it identifies the attribute, and
+      // the value message names the key, which reads as `attribute ""` for an
+      // empty one. Each failure continues, so an attribute that is wrong both
+      // ways is dropped once and reported once.
       if (attr.key.isEmpty) {
         OTelErrorHandling.report(ArgumentError(
             'Attribute with an empty key dropped; keys must be non-empty.'));
+        continue;
+      }
+      if (!AttributeCreate.isValidAttributeValue(attr.value)) {
+        OTelErrorHandling.report(ArgumentError(
+            'Ignoring attribute "${attr.key}" because '
+            '${AttributeCreate.describeIllegalValue(attr.value)} is not a '
+            'legal attribute value. The OTel specification allows a primitive '
+            'or a homogeneous array of primitives.'));
         continue;
       }
       _entries[attr.key] = attr;

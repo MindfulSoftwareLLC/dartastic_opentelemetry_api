@@ -160,25 +160,36 @@ class OTelAPIFactory extends OTelFactory {
   /// Creates Attributes from a map of string keys to arbitrary values.
   ///
   /// `Attribute` values pass through directly. Every other value is converted
-  /// by [AnyValue.fromObject]: Strings, bools, ints, doubles, lists, maps,
-  /// `Uint8List` and `DateTime` (as a UTC ISO-8601 String). Empty Strings and
-  /// empty lists are stored per the OTel spec. A value that cannot be
-  /// converted is dropped and reported via `OTelErrorHandling` rather than
-  /// being stringified.
+  /// by [AnyValue.fromObject]: Strings, bools, ints, doubles, lists and
+  /// `DateTime` (as a UTC ISO-8601 String). Empty Strings and empty lists are
+  /// stored per the OTel spec.
+  ///
+  /// A value that cannot be converted, or that converts to something the
+  /// attribute data model does not allow — a map, bytes, null, or a nested or
+  /// heterogeneous array — is dropped and reported via `OTelErrorHandling`
+  /// rather than being stringified or stored unreadably.
   static Attributes attrsFromMap(Map<String, Object> namedMap) {
     final attributes = <Attribute>[];
     namedMap.forEach((key, value) {
       if (value is Attribute) {
         attributes.add(value);
-      } else {
-        try {
-          attributes
-              .add(AttributeCreate.create(key, AnyValue.fromObject(value)));
-        } catch (e) {
-          OTelErrorHandling.report(ArgumentError(
-              'Ignoring attribute "$key" because it contains unsupported types: $e'));
-        }
+        return;
       }
+
+      // Only the conversion failure is handled here; whether a converted
+      // AnyValue is a legal *attribute* value is Attributes._'s single rule.
+      // Reporting outside the catch: a user handler may rethrow (strict mode),
+      // and catching that here would report the same value twice.
+      final AnyValue anyValue;
+      try {
+        anyValue = AnyValue.fromObject(value);
+      } catch (e) {
+        OTelErrorHandling.report(ArgumentError(
+            'Ignoring attribute "$key" because it contains unsupported types: $e'));
+        return;
+      }
+
+      attributes.add(AttributeCreate.create(key, anyValue));
     });
     return AttributesCreate.create(attributes);
   }
@@ -233,21 +244,6 @@ class OTelAPIFactory extends OTelFactory {
   Attribute attributeDoubleList(String key, List<double> value) {
     return AttributeCreate.create(
         key, AnyValueArray(value.map(AnyValueDouble.new).toList()));
-  }
-
-  @override
-  Attribute attributeMap(String key, Map<String, AnyValue> value) {
-    return AttributeCreate.create(key, AnyValueMap(value));
-  }
-
-  @override
-  Attribute attributeArray(String key, List<AnyValue> value) {
-    return AttributeCreate.create(key, AnyValueArray(value));
-  }
-
-  @override
-  Attribute attributeBytes(String key, List<int> value) {
-    return AttributeCreate.create(key, AnyValueBytes(value));
   }
 
   @override

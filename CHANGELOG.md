@@ -110,6 +110,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `AnyValue.fromObject(...)` or a specific subclass such as
   `AnyValueString(...)`
   ([#123](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/123)).
+- **BREAKING**: a `Uint8List` attribute value is dropped and reported instead
+  of stored. `attrsFromMap` previously matched it on its `List<int>` branch, so
+  it was flattened into an int list and read back through `getIntList`. Bytes
+  are not an attribute value in the OpenTelemetry data model — common/README.md
+  allows a primitive or a homogeneous array of primitives — so the old reading
+  misrepresented the value. Pass bytes as a log body, where `AnyValueBytes`
+  carries them faithfully, or encode them yourself for an attribute
+  ([#123](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/123)).
 - **BREAKING**: `AnyValueArray`, `AnyValueMap` and `AnyValueBytes` copy their
   contents into unmodifiable collections and so are no longer `const`
   constructible; replace `const AnyValueArray(...)` with `AnyValueArray(...)`.

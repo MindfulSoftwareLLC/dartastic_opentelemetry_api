@@ -249,26 +249,6 @@ void main() {
       expect(attribute.value.unwrap(), equals([1, 2, 3]));
     });
 
-    test('creates attribute with map value', () {
-      final attribute =
-          factory.attributeMap('map-key', {'k': AnyValue.fromObject('v')});
-      expect(attribute.key, equals('map-key'));
-      expect((attribute.value.unwrap() as Map)['k'], equals('v'));
-    });
-
-    test('creates attribute with array value', () {
-      final attribute =
-          factory.attributeArray('arr-key', [AnyValue.fromObject('v')]);
-      expect(attribute.key, equals('arr-key'));
-      expect((attribute.value.unwrap() as List)[0], equals('v'));
-    });
-
-    test('creates attribute with bytes value', () {
-      final attribute = factory.attributeBytes('bytes-key', [0, 255]);
-      expect(attribute.key, equals('bytes-key'));
-      expect(attribute.value.unwrap(), equals([0, 255]));
-    });
-
     test('creates attribute with double list value', () {
       final attribute =
           factory.attributeDoubleList('double-list-key', [1.1, 2.2, 3.3]);

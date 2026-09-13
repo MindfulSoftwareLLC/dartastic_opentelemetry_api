@@ -529,13 +529,16 @@ void main() {
       expect(attrs.getIntList('key'), equals([1, 2, 3]));
     });
 
-    test('fromJson ignores mixed int/double list', () {
+    test('fromJson promotes a mixed int/double list to double', () {
       final json = <String, dynamic>{
         'key': [1, 2.5, 3]
       };
       final attrs = Attributes.fromJson(json);
 
+      // Numbers are the one mixed array that stays a legal attribute value:
+      // JSON has a single number type, so this is routine, and it reads back.
       expect(attrs.getDoubleList('key'), equals([1.0, 2.5, 3.0]));
+      expect(attrs.keys, contains('key'));
     });
 
     test('fromJson stores empty list per OTel spec', () {
@@ -579,7 +582,7 @@ void main() {
       expect(roundTripped.getStringList('k'), equals(<String>[]));
     });
 
-    test('fromJson parses list of Map values', () {
+    test('fromJson drops a list of Map values', () {
       final json = <String, dynamic>{
         'key': [
           {'nested': 'object'}
@@ -587,27 +590,21 @@ void main() {
       };
       final attrs = Attributes.fromJson(json);
 
-      // List of Maps are valid per OTel spec (AnyValueArray of AnyValueMap)
-      expect(attrs.isEmpty, isFalse);
-      expect(
-          ((attrs.toMap()['key']!.value as AnyValueArray).value.first
-                  as AnyValueMap)
-              .value
-              .keys
-              .first,
-          equals('nested'));
+      // An array of maps converts to a perfectly good AnyValue, which a log
+      // body may carry, but common/README.md allows an attribute value to be
+      // only a primitive or a homogeneous array of primitives. Storing it
+      // would produce an attribute no typed getter could read back.
+      expect(attrs.isEmpty, isTrue);
     });
 
-    test('fromJson parses Map values', () {
+    test('fromJson drops Map values', () {
       final json = <String, dynamic>{
         'key': {'nested': 'object'}
       };
       final attrs = Attributes.fromJson(json);
 
-      // Maps are valid per OTel spec (AnyValueMap)
-      expect(attrs.isEmpty, isFalse);
-      expect((attrs.toMap()['key']!.value as AnyValueMap).value.keys.first,
-          equals('nested'));
+      // A map is a legal log body, not a legal attribute value.
+      expect(attrs.isEmpty, isTrue);
     });
   });
 
