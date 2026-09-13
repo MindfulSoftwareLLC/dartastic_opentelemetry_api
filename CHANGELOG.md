@@ -39,9 +39,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `createObservableGauge` accept a `callbacks` list, and the instruments gain
   `addCallback`, which returns a registration handle, and `removeCallback`
   ([#113](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/113)).
+- `APITracer.startSpan` and `APITracer.createSpan` now accept a `root: true`
+  parameter to force the creation of a root span, even when a parent span is
+  active in the context
+  ([#118](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/118)).
+- `APITracer.startSpan` now accepts an optional `startTime` parameter
+  ([#118](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/118)).
 
 ### Changed
 
+- **BREAKING**: `parentSpan` and `spanContext` parameters have been removed from
+  `APITracer.startSpan` and `APITracer.createSpan`. Span creation now always
+  uses the parent span or remote context stored in the provided `Context` (or
+  `Context.current` if omitted). `parentSpan: parent` becomes
+  `context: Context.current.withSpan(parent)`. `spanContext: sc` has no direct
+  replacement: it assigned `sc` to the new span verbatim, span ID included,
+  which the specification's Span Creation section does not provide for. Putting
+  `sc` on the `Context` instead makes the new span a *child* of it — a new span
+  ID, with `parentSpanId` set to `sc.spanId`. Callers who actually wanted a span
+  carrying `sc` unchanged should use `OTelAPI.nonRecordingSpan(sc)`.
+  The full parent precedence is `root` > remote `SpanContext` > local `Span` >
+  valid non-remote `SpanContext` > new root, applied identically with and
+  without an SDK installed. A candidate whose `SpanContext` is invalid is
+  skipped, so a `Context` carrying only an invalid span or span context yields
+  a root span rather than an error. When a remote `SpanContext` identifies a
+  `Span` in the same `Context`, that `Span` is kept as the new span's
+  `parentSpan`
+  ([#118](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/118)).
 - **BREAKING**: `Baggage.getAllValues()` now returns
   `Map<String, BaggageEntry>` instead of `List<String>`, the name/value pairs
   the specification's "Get All Values" operation requires. To get the old
@@ -65,6 +89,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The `callback` parameter on the three `createObservable*` methods. Use the
   `callbacks` list; a `callback` is prepended to it ([#113](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/113)).
 
+### Removed
+
+- **BREAKING**: the `parentSpan` and `spanContext` parameters of
+  `APITracer.startSpan` and `APITracer.createSpan`. The parent now comes from
+  the `Context`, so `parentSpan: parent` becomes
+  `context: Context.current.withSpan(parent)`. `spanContext: sc` has no
+  equivalent, because it gave the new span `sc` verbatim, span ID included.
+  Put `sc` on the `Context` to parent a new span to it, or use
+  `OTelAPI.nonRecordingSpan(sc)` to wrap it unchanged. The `startSpan` dartdoc
+  documents the full parent precedence
+  ([#118](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/118)).
+- **BREAKING**: `Context.copyWithValue`. It generated a key the caller could never
+  get back, so a value stored through it was unreachable. Create the key with
+  `OTelAPI.contextKey<T>(name)` and use `Context.copyWith(key, value)`
+  ([#130](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/130)).
+
 ### Fixed
 
 - `TraceState` construction (`fromMap`, `OTelAPI`/`OTelFactory` `traceState(...)`)
@@ -74,9 +114,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **BREAKING**: `IdGenerator.hexToBytes`, and so `OTelAPI.traceIdFrom` and
   `OTelAPI.spanIdFrom`, no longer accept anything outside lowercase hex
   ([#112](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/112)).
+- `APISpan.addLink` and `APISpan.addSpanLink` now document that a link given at
+  span creation is preferred to a later call. The trace/api.md spec makes this
+  a MUST, because head sampling can only use the information present at span
+  creation. Comments only, no behavior change
+  ([#133](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/133)).
 - The trace API now documents that `APITracerProvider`, `APITracer` and
   `APISpan` implementations need to be safe for concurrent use, which
-  trace/api.md makes a MUST. Comments only, no behaviour change
+  trace/api.md makes a MUST. Comments only, no behavior change
   ([#120](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/120)).
 - The logs API now documents that `APILoggerProvider` and `APILogger`
   implementations need to be safe for concurrent use, which logs/api.md makes
@@ -110,6 +155,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   list member and a whitespace-only list member are dropped without a report,
   because the W3C grammar allows them
   ([#116](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/116)).
+- Without an SDK, `createSpan` returns the parent span directly when it is already
+  non-recording instead of wrapping it again, per trace/api.md
+  ([#129](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/129)).
+- `APITracer` builds its `InstrumentationScope` once, from the tracer's own name,
+  version, schema URL and attributes. Span attributes no longer leak into the
+  scope, and no version is invented ([#129](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/129)).
 
 ## [1.0.0-rc.3] - 2026-08-27
 

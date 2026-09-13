@@ -65,6 +65,33 @@ void main() {
       expect(span.isEnded, isFalse);
       expect(span.isRecording, isFalse);
     });
+
+    test(
+        'startSpan returns parent non-recording span directly without wrapping if one exists',
+        () {
+      final tracer = OTelAPI.tracerProvider().getTracer('test');
+
+      // Case 1: Result of an earlier no-op startSpan call
+      final firstSpan = tracer.startSpan('first');
+      expect(firstSpan.isRecording, isFalse);
+
+      final context1 = OTelAPI.context().withSpan(firstSpan);
+      final secondSpan = tracer.startSpan('second', context: context1);
+
+      expect(identical(secondSpan, firstSpan), isTrue);
+
+      // Case 2: A NonRecordingSpan wrapping a propagated SpanContext
+      final propagatedContext = OTelAPI.spanContext(
+        traceId: OTelAPI.traceIdFrom('0123456789abcdef0123456789abcdef'),
+        spanId: OTelAPI.spanIdFrom('0123456789abcdef'),
+        isRemote: true,
+      );
+      final wrappedSpan = OTelAPI.nonRecordingSpan(propagatedContext);
+      final context2 = OTelAPI.context().withSpan(wrappedSpan);
+
+      final thirdSpan = tracer.startSpan('third', context: context2);
+      expect(identical(thirdSpan, wrappedSpan), isTrue);
+    });
   });
 
   // trace/api.md, "Wrapping a SpanContext in a Span": "The API MUST provide
