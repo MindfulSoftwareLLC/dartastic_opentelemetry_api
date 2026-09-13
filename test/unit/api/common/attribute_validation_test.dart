@@ -23,12 +23,13 @@ void main() {
           equals('AttributeValue(v)'));
     });
 
-    test('an empty key is rejected', () {
-      expect(() => OTelAPI.attributeString('', 'v'),
-          throwsA(isA<ArgumentError>()));
-      expect(() => OTelAPI.attributeInt('', 1), throwsA(isA<ArgumentError>()));
-      expect(() => OTelAPI.attributeStringList('', ['v']),
-          throwsA(isA<ArgumentError>()));
+    // error-handling.md makes it a MUST NOT for an API method to throw on
+    // end-user misuse, so the factories accept an empty key and Attributes
+    // drops it; see the "empty attribute keys" group in attributes_test.dart.
+    test('an empty key does not throw at the factory', () {
+      expect(() => OTelAPI.attributeString('', 'v'), returnsNormally);
+      expect(() => OTelAPI.attributeInt('', 1), returnsNormally);
+      expect(() => OTelAPI.attributeStringList('', ['v']), returnsNormally);
     });
 
     test('Attributes.of drops an empty key rather than throwing', () {

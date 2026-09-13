@@ -20,14 +20,12 @@ class Attribute {
   ///
   /// The OpenTelemetry specification constrains attribute keys, not attribute
   /// values, so empty Strings and empty lists are valid values but an empty
-  /// key is not.
+  /// key is not. An empty key is not rejected here: error-handling.md makes it
+  /// a MUST NOT for an API method to throw on end-user misuse, so [Attributes]
+  /// drops such an attribute and reports it instead.
   Attribute._(String key, AnyValue value)
       : _key = key,
-        _value = value {
-    if (key.isEmpty) {
-      throw ArgumentError.value(key, 'key', 'Attribute key must not be empty');
-    }
-  }
+        _value = value;
 
   /// Gets the key (name) of this attribute.
   String get key => _key;

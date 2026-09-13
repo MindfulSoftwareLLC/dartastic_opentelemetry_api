@@ -110,12 +110,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `AnyValue.fromObject(...)` or a specific subclass such as
   `AnyValueString(...)`
   ([#123](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/123)).
-- **BREAKING**: `Attribute` throws an `ArgumentError` when the key is empty.
-  `Attributes.of` drops such an attribute and reports it through
-  `OTelErrorHandling` rather than throwing. The specification constrains
-  attribute keys, not values, so empty String and empty list *values* remain
-  stored, per [#103](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/103)
-  ([#123](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/123)).
 - **BREAKING**: `AnyValueArray`, `AnyValueMap` and `AnyValueBytes` copy their
   contents into unmodifiable collections and so are no longer `const`
   constructible; replace `const AnyValueArray(...)` with `AnyValueArray(...)`.
@@ -150,6 +144,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Attributes with an empty key are dropped and reported to `OTelErrorHandler`
+  instead of being stored. The attribute factories do not throw, per
+  error-handling.md; common/README.md makes a non-empty key a MUST
+  ([#123](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/123)).
 - `TraceState` construction (`fromMap`, `OTelAPI`/`OTelFactory` `traceState(...)`)
   now validates keys and values against the W3C tracestate grammar, dropping
   invalid entries instead of silently accepting them
