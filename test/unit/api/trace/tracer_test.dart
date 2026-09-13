@@ -174,6 +174,11 @@ void main() {
       // The child's parent span ID must be the remote span's ID
       expect(
           childSpan.spanContext.parentSpanId, equals(remoteSpanContext.spanId));
+
+      // The wrapping span is the span the remote SpanContext identifies, so
+      // it is preserved as the parent span object.
+      expect(childSpan.parentSpan, same(remoteSpan));
+      expect(childSpan.parentSpanContext, equals(remoteSpanContext));
     });
 
     test(
@@ -195,6 +200,9 @@ void main() {
       expect(childSpan.spanContext.traceId, equals(remoteSpanContext.traceId));
       expect(
           childSpan.spanContext.parentSpanId, equals(remoteSpanContext.spanId));
+
+      // There is no span object behind the SpanContext, so no parent span.
+      expect(childSpan.parentSpan, isNull);
     });
 
     test(
@@ -223,6 +231,179 @@ void main() {
       final child = tracer.createSpan(name: 'handler', context: ctx);
       expect(child.spanContext.traceId, equals(remoteCtx.traceId));
       expect(child.spanContext.parentSpanId, equals(remoteCtx.spanId));
+
+      // The local span belongs to a different trace, so it is not kept as
+      // the parent span object.
+      expect(child.parentSpan, isNull);
+      expect(child.parentSpanContext, isNull);
+    });
+
+    test(
+        'valid non-remote SpanContext on Context with no span is honored as parent',
+        () {
+      final tracer = OTelAPI.tracer('test-tracer');
+
+      // A valid, local (non-remote) SpanContext placed on the Context with
+      // no span object behind it — e.g. a parent recorded by an in-process
+      // framework that does not keep the Span around.
+      final parentSpanContext = OTelAPI.spanContext(
+        traceId: OTelAPI.traceId(),
+        spanId: OTelAPI.spanId(),
+      );
+      expect(parentSpanContext.isRemote, isFalse);
+
+      final ctx = Context.current.copyWithSpanContext(parentSpanContext);
+      expect(ctx.span, isNull);
+
+      final childSpan = tracer.createSpan(name: 'child', context: ctx);
+
+      // Not a fresh root: the child joins the parent's trace and points at it.
+      expect(childSpan.spanContext.traceId, equals(parentSpanContext.traceId));
+      expect(
+          childSpan.spanContext.parentSpanId, equals(parentSpanContext.spanId));
+      expect(childSpan.spanContext.parentSpanId?.isValid, isTrue);
+      expect(childSpan.spanContext.spanId,
+          isNot(equals(parentSpanContext.spanId)));
+
+      // No span object behind the SpanContext, so no parent span.
+      expect(childSpan.parentSpan, isNull);
+    });
+
+    test('root: true wins over a remote SpanContext in the context', () {
+      final tracer = OTelAPI.tracer('test-tracer');
+
+      final remoteSpanContext = OTelAPI.spanContext(
+        traceId: OTelAPI.traceId(),
+        spanId: OTelAPI.spanId(),
+        isRemote: true,
+      );
+      final ctx =
+          Context.current.withSpan(OTelAPI.nonRecordingSpan(remoteSpanContext));
+
+      final child = tracer.createSpan(name: 'child', context: ctx, root: true);
+
+      expect(
+          child.spanContext.traceId, isNot(equals(remoteSpanContext.traceId)));
+      expect(child.spanContext.parentSpanId?.isValid, isFalse);
+      expect(child.parentSpan, isNull);
+    });
+
+    test(
+        'root: true with only the API factory installed returns a non-recording '
+        'span with an invalid span context', () {
+      // No SDK: restore the plain API factory installed by OTelAPI.initialize.
+      OTelAPI.reset();
+      OTelAPI.initialize(
+        endpoint: 'http://localhost:4317',
+        serviceName: 'test-service',
+        serviceVersion: '1.0.0',
+      );
+      expect(OTelFactory.otelFactory!.isAPIFactory, isTrue);
+
+      final tracer = OTelAPI.tracer('test-tracer');
+      final parentSpanContext = OTelAPI.spanContext(
+        traceId: OTelAPI.traceId(),
+        spanId: OTelAPI.spanId(),
+      );
+      final ctx = Context.current.copyWithSpanContext(parentSpanContext);
+
+      final span = tracer.createSpan(name: 'child', context: ctx, root: true);
+
+      expect(span, isA<NonRecordingSpan>());
+      expect(span.isRecording, isFalse);
+      expect(span.spanContext.isValid, isFalse);
+      expect(span.spanContext.traceId.isValid, isFalse);
+      expect(span.spanContext.spanId.isValid, isFalse);
+    });
+
+    test(
+        'a span with an invalid SpanContext in the Context produces a root span, '
+        'not an error', () {
+      final tracer = OTelAPI.tracer('test-tracer');
+
+      // Context does not validate what is put into it, so an invalid span
+      // can sit in one — this is exactly what the no-SDK path returns for
+      // root: true.
+      final invalidSpanContext = OTelAPI.spanContextInvalid();
+      final ctx = Context.current
+          .withSpan(OTelAPI.nonRecordingSpan(invalidSpanContext));
+
+      final child = tracer.createSpan(name: 'child', context: ctx);
+
+      // An invalid parent means a root span, per trace/api.md — not an
+      // ArgumentError out of APISpanCreate.create.
+      expect(child.spanContext.isValid, isTrue);
+      expect(child.spanContext.traceId.isValid, isTrue);
+      expect(
+          child.spanContext.traceId, isNot(equals(invalidSpanContext.traceId)));
+      expect(child.spanContext.parentSpanId?.isValid, isFalse);
+      expect(child.parentSpan, isNull);
+    });
+
+    test(
+        'a span with an invalid SpanContext in the Context returns a '
+        'non-recording invalid span with only the API factory installed', () {
+      // No SDK: restore the plain API factory installed by OTelAPI.initialize.
+      OTelAPI.reset();
+      OTelAPI.initialize(
+        endpoint: 'http://localhost:4317',
+        serviceName: 'test-service',
+        serviceVersion: '1.0.0',
+      );
+      expect(OTelFactory.otelFactory!.isAPIFactory, isTrue);
+
+      final tracer = OTelAPI.tracer('test-tracer');
+      final invalidSpanContext = OTelAPI.spanContextInvalid();
+      final ctx = Context.current
+          .withSpan(OTelAPI.nonRecordingSpan(invalidSpanContext));
+
+      final span = tracer.createSpan(name: 'child', context: ctx);
+
+      // Same Context, same resolution: no parent either way. With an SDK it
+      // becomes a root span; without one, the spec-mandated non-recording
+      // span with an invalid span context.
+      expect(span, isA<NonRecordingSpan>());
+      expect(span.isRecording, isFalse);
+      expect(span.spanContext.isValid, isFalse);
+      expect(span.spanContext.traceId.isValid, isFalse);
+      expect(span.spanContext.spanId.isValid, isFalse);
+    });
+
+    test('createSpan applies an explicit startTime', () {
+      final tracer = OTelAPI.tracer('test-tracer');
+      final startTime = DateTime.now().subtract(const Duration(minutes: 42));
+
+      final span = tracer.createSpan(name: 'test-span', startTime: startTime);
+
+      expect(span.startTime, equals(startTime));
+    });
+
+    test('startSpan forwards root and startTime through to createSpan', () {
+      final tracer = OTelAPI.tracer('test-tracer');
+      final parent = tracer.startSpan('parent');
+      final startTime = DateTime.now().subtract(const Duration(hours: 2));
+
+      tracer.withSpan(parent, () {
+        final viaStartSpan =
+            tracer.startSpan('child', root: true, startTime: startTime);
+        final viaCreateSpan =
+            tracer.createSpan(name: 'child', root: true, startTime: startTime);
+
+        // startSpan is a thin forwarder: both parameters must reach
+        // createSpan, so the two spans agree on start time and on both being
+        // roots of their own new traces despite the active parent.
+        expect(viaStartSpan.startTime, equals(startTime));
+        expect(viaStartSpan.startTime, equals(viaCreateSpan.startTime));
+
+        expect(viaStartSpan.spanContext.parentSpanId?.isValid, isFalse);
+        expect(viaCreateSpan.spanContext.parentSpanId?.isValid, isFalse);
+        expect(viaStartSpan.parentSpan, isNull);
+
+        expect(viaStartSpan.spanContext.traceId,
+            isNot(equals(parent.spanContext.traceId)));
+        expect(viaStartSpan.spanContext.traceId,
+            isNot(equals(viaCreateSpan.spanContext.traceId)));
+      });
     });
 
     test('creates span with parent context from current context', () {

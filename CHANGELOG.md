@@ -39,16 +39,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `createObservableGauge` accept a `callbacks` list, and the instruments gain
   `addCallback`, which returns a registration handle, and `removeCallback`
   ([#113](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/113)).
+- `APITracer.startSpan` and `APITracer.createSpan` now accept a `root: true`
+  parameter to force the creation of a root span, even when a parent span is
+  active in the context
+  ([#118](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/118)).
+- `APITracer.startSpan` now accepts an optional `startTime` parameter
+  ([#118](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/118)).
 
 ### Changed
+
 - **BREAKING**: `parentSpan` and `spanContext` parameters have been removed from
-  `APITracer.startSpan`, `APITracer.createSpan`, and `OTelAPI.nonRecordingSpan`.
-  Span creation now always uses the parent span or remote context stored in the
-  provided `Context` (or `Context.current` if omitted). To parent a new span to
-  a specific `Span` or remote `SpanContext`, use `Context.withSpan` or
-  `Context.withSpanContext`:
-  `tracer.startSpan('name', context: Context.current.withSpan(parent))`.
-  ([#83](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/issues/83))
+  `APITracer.startSpan` and `APITracer.createSpan`. Span creation now always
+  uses the parent span or remote context stored in the provided `Context` (or
+  `Context.current` if omitted). `parentSpan: parent` becomes
+  `context: Context.current.withSpan(parent)`. `spanContext: sc` has no direct
+  replacement: it assigned `sc` to the new span verbatim, span ID included,
+  which the specification's Span Creation section does not provide for. Putting
+  `sc` on the `Context` instead makes the new span a *child* of it — a new span
+  ID, with `parentSpanId` set to `sc.spanId`. Callers who actually wanted a span
+  carrying `sc` unchanged should use `OTelAPI.nonRecordingSpan(sc)`.
+  The full parent precedence is `root` > remote `SpanContext` > local `Span` >
+  valid non-remote `SpanContext` > new root, applied identically with and
+  without an SDK installed. A candidate whose `SpanContext` is invalid is
+  skipped, so a `Context` carrying only an invalid span or span context yields
+  a root span rather than an error. When a remote `SpanContext` identifies a
+  `Span` in the same `Context`, that `Span` is kept as the new span's
+  `parentSpan`
+  ([#118](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/118)).
 - **BREAKING**: `APITracer.startSpan` and `APITracer.createSpan` now accept a
   `root: true` parameter to force the creation of a root span, even when a
   parent span is active in the context.

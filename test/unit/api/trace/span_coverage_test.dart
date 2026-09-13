@@ -2,8 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import 'package:dartastic_opentelemetry_api/dartastic_opentelemetry_api.dart';
-import 'package:dartastic_opentelemetry_api/src/api/common/instrumentation_scope.dart';
-import 'package:dartastic_opentelemetry_api/src/api/trace/span.dart';
 import 'package:test/test.dart';
 
 import '../../../test_util.dart';
@@ -88,19 +86,9 @@ void main() {
         spanId: spanId,
       );
 
-      final span1 = APISpanCreate.create(
-        name: 'test-span',
-        spanContext: context,
-        parentSpan: null,
-        instrumentationScope: InstrumentationScopeCreate.create(name: 'test'),
-      );
+      final span1 = createRawApiSpan(name: 'test-span', spanContext: context);
 
-      final span2 = APISpanCreate.create(
-        name: 'test-span',
-        spanContext: context,
-        parentSpan: null,
-        instrumentationScope: InstrumentationScopeCreate.create(name: 'test'),
-      );
+      final span2 = createRawApiSpan(name: 'test-span', spanContext: context);
 
       // Different span with different context
       final span3 = tracer!.createSpan(name: 'other-span');

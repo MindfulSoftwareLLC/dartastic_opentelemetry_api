@@ -109,17 +109,28 @@ class APITracer {
   /// Starts a new [APISpan].
   ///
   /// Per the OpenTelemetry specification (trace/api.md, Span Creation),
-  /// the parent is determined exclusively from [context]:
+  /// the parent is determined exclusively from [context]; when [context]
+  /// is omitted, [Context.current] is used. The precedence is:
   ///
   /// 1. If [root] is `true`, a new root span is created regardless of
   ///    context (new trace ID, no parent).
-  /// 2. If [context] is provided and contains a remote [SpanContext]
-  ///    (e.g. extracted from an incoming `traceparent` header), the new
-  ///    span becomes a child of that remote context.
-  /// 3. If [context] is provided and contains a local [APISpan], the new
-  ///    span becomes a child of that span.
-  /// 4. If [context] is omitted, [Context.current] is used.
+  /// 2. If the context contains a valid remote [SpanContext] (e.g.
+  ///    extracted from an incoming `traceparent` header), the new span
+  ///    becomes a child of that remote context. The context's span is
+  ///    kept as the parent span object only when it is the very span
+  ///    that remote [SpanContext] identifies.
+  /// 3. If the context contains a local [APISpan] carrying a valid
+  ///    [SpanContext], the new span becomes a child of that span.
+  /// 4. If the context contains a valid non-remote [SpanContext] but no
+  ///    span with a valid [SpanContext] (e.g. set via
+  ///    [Context.withSpanContext] or [Context.copyWithSpanContext]), the
+  ///    new span becomes a child of that [SpanContext]; it has no parent
+  ///    span object.
   /// 5. If none of the above yields a parent, a new root span is created.
+  ///
+  /// A parent candidate whose [SpanContext] is invalid (all-zero IDs) is
+  /// skipped at every level, so a context holding only an invalid span or
+  /// span context produces a root span rather than an error.
   ///
   /// [startTime] overrides the span's start timestamp; defaults to now.
   ///
@@ -173,8 +184,10 @@ class APITracer {
   /// [startSpan], it also accepts [spanEvents].
   ///
   /// Per the OpenTelemetry specification (trace/api.md, Span Creation),
-  /// the parent is determined exclusively from [context]. See [startSpan]
-  /// for the full precedence rules and migration guidance.
+  /// the parent is determined exclusively from [context], in the order
+  /// [root] > remote [SpanContext] > local [APISpan] > valid non-remote
+  /// [SpanContext] > new root. See [startSpan] for the full precedence
+  /// rules and migration guidance.
   ///
   /// @param name The name of the span
   /// @param kind The kind of span (client, server, etc.)
@@ -205,7 +218,7 @@ class APITracer {
     // SDK": with only the API installed, return a non-recording span
     // carrying the SpanContext from the parent context (explicit or
     // implicit) unchanged — no new IDs are minted — or an empty one
-    // (all-zero IDs, unsampled) when the context has no span. The SDK
+    // (all-zero IDs, unsampled) when the context yields no parent. The SDK
     // delegates span creation here with its own factory installed, so
     // this branch only applies when no SDK is present.
     if (OTelFactory.otelFactory!.isAPIFactory) {
@@ -227,12 +240,16 @@ class APITracer {
     }
 
     // --- Parent resolution (precedence: root > remote spanContext >
-    //     local span > new root) ---
+    //     local span > valid non-remote spanContext > new root) ---
     SpanContext effectiveSpanContext;
     APISpan? effectiveParentSpan;
 
-    if (root) {
-      // Explicit root span — ignore everything in context.
+    final parent = root ? null : _resolveParent(contextOfSpan);
+    final parentSpanContext = parent?.parentSpanContext;
+
+    if (parentSpanContext == null) {
+      // Explicit root span (context ignored entirely), or no parent found
+      // in the context — either way, a new root.
       effectiveSpanContext = OTelFactory.otelFactory!.spanContext(
         traceId: OTelFactory.otelFactory!.traceId(),
         spanId: OTelFactory.otelFactory!.spanId(),
@@ -240,44 +257,16 @@ class APITracer {
       );
       effectiveParentSpan = null;
     } else {
-      final contextSpanContext = contextOfSpan.spanContext;
-      final contextSpan = contextOfSpan.span;
-
-      if (contextSpanContext != null &&
-          contextSpanContext.isValid &&
-          contextSpanContext.isRemote) {
-        // Remote context (propagator extract path) — create child using
-        // the remote context's trace ID. The remote SpanContext takes
-        // precedence over any local span in the same context; this is
-        // the normal flow when a propagator has extracted a traceparent
-        // header onto a Context that already carried a local span.
-        effectiveSpanContext = OTelFactory.otelFactory!.spanContext(
-          traceId: contextSpanContext.traceId,
-          spanId: OTelFactory.otelFactory!.spanId(),
-          parentSpanId: contextSpanContext.spanId,
-          traceFlags: contextSpanContext.traceFlags,
-          traceState: contextSpanContext.traceState,
-        );
-        effectiveParentSpan = null;
-      } else if (contextSpan != null) {
-        // Local in-process parent span.
-        effectiveSpanContext = OTelFactory.otelFactory!.spanContext(
-          traceId: contextSpan.spanContext.traceId,
-          spanId: OTelFactory.otelFactory!.spanId(),
-          parentSpanId: contextSpan.spanContext.spanId,
-          traceFlags: contextSpan.spanContext.traceFlags,
-          traceState: contextSpan.spanContext.traceState,
-        );
-        effectiveParentSpan = contextSpan;
-      } else {
-        // No parent in context — create a new root.
-        effectiveSpanContext = OTelFactory.otelFactory!.spanContext(
-          traceId: OTelFactory.otelFactory!.traceId(),
-          spanId: OTelFactory.otelFactory!.spanId(),
-          parentSpanId: OTelFactory.otelFactory!.spanIdInvalid(),
-        );
-        effectiveParentSpan = null;
-      }
+      // Child span — inherit the parent's trace ID, trace flags and trace
+      // state, mint a new span ID and point parentSpanId at the parent.
+      effectiveSpanContext = OTelFactory.otelFactory!.spanContext(
+        traceId: parentSpanContext.traceId,
+        spanId: OTelFactory.otelFactory!.spanId(),
+        parentSpanId: parentSpanContext.spanId,
+        traceFlags: parentSpanContext.traceFlags,
+        traceState: parentSpanContext.traceState,
+      );
+      effectiveParentSpan = parent!.parentSpan;
     }
 
     final apiSpan = APISpanCreate.create(
@@ -295,6 +284,75 @@ class APITracer {
       timeProvider: timeProvider,
     );
     return apiSpan;
+  }
+
+  /// Resolves the parent a new span created in [context] should get.
+  ///
+  /// Implements the precedence documented on [startSpan], minus the `root`
+  /// case, which callers handle before consulting this. Both the
+  /// no-SDK (API-factory) path and the normal path go through here so that
+  /// the same Context always resolves to the same parent.
+  ///
+  /// Returns the parent's [SpanContext] — `null` when the context yields no
+  /// parent and the new span is therefore a root — together with the parent
+  /// [APISpan] object when the context carries one.
+  ///
+  /// Every candidate parent must carry a valid [SpanContext]. [Context] does
+  /// not validate what is put into it, so a span with an invalid (all-zero)
+  /// SpanContext can sit in one; per trace/api.md an invalid parent means the
+  /// new span is a root, not an error.
+  ///
+  /// Static because it reads no per-tracer state: the parent depends only
+  /// on [context].
+  static ({SpanContext? parentSpanContext, APISpan? parentSpan}) _resolveParent(
+      Context context) {
+    final contextSpanContext = context.spanContext;
+    final contextSpan = context.span;
+
+    if (contextSpanContext != null &&
+        contextSpanContext.isValid &&
+        contextSpanContext.isRemote) {
+      // Remote context (propagator extract path). The remote SpanContext
+      // takes precedence over any local span in the same context; this is
+      // the normal flow when a propagator has extracted a traceparent
+      // header onto a Context that already carried a local span.
+      //
+      // Context.withSpan writes both the span and the span context keys, so
+      // a remote SpanContext wrapped in a NonRecordingSpan lands here with
+      // the wrapping span also present. Keep that span as the parent object
+      // when it is the very span the remote SpanContext identifies. A span
+      // from a different trace stays ignored — the remote context wins, and
+      // APISpanCreate.create would reject the mismatched trace ID anyway.
+      final contextSpanSc = contextSpan?.spanContext;
+      final parentSpan = (contextSpanSc != null &&
+              contextSpanSc.traceId == contextSpanContext.traceId &&
+              contextSpanSc.spanId == contextSpanContext.spanId)
+          ? contextSpan
+          : null;
+      return (parentSpanContext: contextSpanContext, parentSpan: parentSpan);
+    }
+
+    if (contextSpan != null && contextSpan.spanContext.isValid) {
+      // Local in-process parent span. A span whose SpanContext is invalid
+      // parents nothing: it falls through to the root case below, rather
+      // than minting an all-zero-trace child that APISpanCreate.create
+      // would then reject.
+      return (
+        parentSpanContext: contextSpan.spanContext,
+        parentSpan: contextSpan
+      );
+    }
+
+    if (contextSpanContext != null && contextSpanContext.isValid) {
+      // A valid non-remote SpanContext with no span object behind it, e.g.
+      // set via Context.withSpanContext or Context.copyWithSpanContext. It
+      // still identifies a parent, so the new span is a child of it rather
+      // than a fresh root.
+      return (parentSpanContext: contextSpanContext, parentSpan: null);
+    }
+
+    // No parent in context — the new span is a root.
+    return (parentSpanContext: null, parentSpan: null);
   }
 
   @override
