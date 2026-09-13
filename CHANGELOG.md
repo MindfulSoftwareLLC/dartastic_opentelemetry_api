@@ -91,6 +91,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
+- **BREAKING**: `APISpan` no longer exposes `attributes`, `spanEvents`, `spanLinks`,
+  `status` or `statusDescription`. trace/api.md says implementations SHOULD NOT
+  provide access to a span's data besides its `SpanContext`. An SDK reads them
+  through `getReadableSpan`, which is not exported from the package barrel.
+  Setting attributes is unchanged. SDK users are unaffected in practice: the SDK
+  span already gates every mutator on its own recording state, so this reaches
+  API-direct users and custom SDKs
+  ([#140](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/140)).
 - **BREAKING**: the `parentSpan` and `spanContext` parameters of
   `APITracer.startSpan` and `APITracer.createSpan`. The parent now comes from
   the `Context`, so `parentSpan: parent` becomes

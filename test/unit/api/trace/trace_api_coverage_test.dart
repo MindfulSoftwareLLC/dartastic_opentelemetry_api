@@ -6,6 +6,7 @@
 // equality.
 
 import 'package:dartastic_opentelemetry_api/dartastic_opentelemetry_api.dart';
+import 'package:dartastic_opentelemetry_api/src/api/trace/span.dart';
 import 'package:test/test.dart';
 
 import '../../../test_util.dart';
@@ -56,7 +57,8 @@ void main() {
       final span = tracer.createSpan(name: 'timed');
       final when = DateTime.utc(2026, 7, 18, 12, 30);
       span.setDateTimeAsStringAttribute('happened.at', when);
-      expect(span.attributes.getString('happened.at'), isNotNull);
+      expect(
+          getReadableSpan(span).attributes.getString('happened.at'), isNotNull);
     });
 
     test('addEvents adds one event per map entry', () {
@@ -65,8 +67,8 @@ void main() {
         'first': null,
         'second': Attributes.of({'k': 'v'}),
       });
-      expect(span.spanEvents, hasLength(2));
-      expect(span.spanEvents!.map((e) => e.name),
+      expect(getReadableSpan(span).spanEvents, hasLength(2));
+      expect(getReadableSpan(span).spanEvents!.map((e) => e.name),
           containsAll(['first', 'second']));
     });
 
@@ -78,13 +80,15 @@ void main() {
       );
       span.addLink(other, Attributes.of({'why': 'related'}));
       span.addSpanLink(OTelAPI.spanLink(other, Attributes.of({'why': 'also'})));
-      expect(span.spanLinks, hasLength(2));
+      expect(getReadableSpan(span).spanLinks, hasLength(2));
     });
 
     test('recordException survives a throwing toString', () {
       final span = tracer.createSpan(name: 'exceptional');
       span.recordException(_ThrowsOnToString());
-      expect(span.spanEvents!.any((e) => e.name == 'exception'), isTrue);
+      expect(
+          getReadableSpan(span).spanEvents!.any((e) => e.name == 'exception'),
+          isTrue);
     });
 
     test('span mutators throw StateError after reset', () {

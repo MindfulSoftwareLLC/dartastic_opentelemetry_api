@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import 'package:dartastic_opentelemetry_api/dartastic_opentelemetry_api.dart';
+import 'package:dartastic_opentelemetry_api/src/api/trace/span.dart';
 import 'package:test/test.dart';
 
 // Spec-compliance tests for trace/api.md, "Behavior of the API in the
@@ -58,9 +59,9 @@ void main() {
       span.setStatus(SpanStatusCode.Error, 'boom');
       span.updateName('renamed');
       span.end();
-      expect(span.attributes.toList(), isEmpty);
-      expect(span.spanEvents, isNull);
-      expect(span.status, equals(SpanStatusCode.Unset));
+      expect(getReadableSpan(span).attributes.toList(), isEmpty);
+      expect(getReadableSpan(span).spanEvents, isNull);
+      expect(getReadableSpan(span).status, equals(SpanStatusCode.Unset));
       expect(span.name, equals(''));
       expect(span.isEnded, isFalse);
       expect(span.isRecording, isFalse);
@@ -117,9 +118,9 @@ void main() {
       span.addEventNow('event');
       span.setStatus(SpanStatusCode.Ok);
       span.end();
-      expect(span.attributes.toList(), isEmpty);
-      expect(span.spanEvents, isNull);
-      expect(span.status, equals(SpanStatusCode.Unset));
+      expect(getReadableSpan(span).attributes.toList(), isEmpty);
+      expect(getReadableSpan(span).spanEvents, isNull);
+      expect(getReadableSpan(span).status, equals(SpanStatusCode.Unset));
       expect(span.isEnded, isFalse);
     });
   });
