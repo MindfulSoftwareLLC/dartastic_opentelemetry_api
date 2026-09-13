@@ -28,6 +28,17 @@ void main() {
       OTelFactory.otelFactory = originalFactory;
     });
 
+    test('isEnabled does not throw when no factory is installed', () {
+      // error-handling.md: an API method MUST NOT throw when used
+      // incorrectly. isEnabled reads the global factory, which reset()
+      // clears, so it has to tolerate a null one.
+      final tracer = OTelAPI.tracer('test-tracer');
+      OTelFactory.otelFactory = null;
+
+      expect(tracer.isEnabled, returnsNormally);
+      expect(tracer.isEnabled(), isFalse);
+    });
+
     test('does not invent a version or schemaUrl when none are given', () {
       final tracer = OTelAPI.tracer('test-tracer');
 

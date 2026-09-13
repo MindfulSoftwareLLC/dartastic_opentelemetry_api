@@ -72,8 +72,12 @@ class APITracer {
   /// No parameters are currently required by the spec, but this is a method
   /// (not a getter) so parameters such as [kind] and [context] can be added
   /// later without a breaking change.
-  bool isEnabled({SpanKind? kind, Context? context}) =>
-      !OTelFactory.otelFactory!.isAPIFactory;
+  bool isEnabled({SpanKind? kind, Context? context}) {
+    // No factory means nothing can record, and error-handling.md forbids
+    // throwing from an API method, so never dereference a null factory here.
+    final factory = OTelFactory.otelFactory;
+    return factory != null && !factory.isAPIFactory;
+  }
 
   /// Gets the currently active span from the current context
   APISpan? get currentSpan => Context.current.span;
