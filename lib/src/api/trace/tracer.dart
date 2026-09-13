@@ -225,15 +225,26 @@ class APITracer {
       if (root) {
         return NonRecordingSpan(OTelFactory.otelFactory!.spanContextInvalid());
       }
-      // Resolve the parent with the same precedence the SDK path uses, so
-      // a given Context parents identically with and without an SDK.
-      final resolved = _resolveParent(contextOfSpan);
       // trace/api.md, no-SDK behavior: "If the Span in the parent Context is
       // already non-recording, it SHOULD be returned directly without
-      // instantiating a new Span." (#129)
-      final parent = resolved.parentSpan;
-      if (parent != null && !parent.isRecording) {
-        return parent;
+      // instantiating a new Span." This is checked on the Context's span
+      // before parent resolution, because the resolver skips a parent whose
+      // SpanContext is invalid, and the span returned by an earlier no-SDK
+      // startSpan is exactly that: the empty, all-zero one. Returning it is
+      // still the spec's answer. (#129)
+      // Resolve with the same precedence the SDK path uses, so a given
+      // Context parents identically with and without an SDK.
+      final resolved = _resolveParent(contextOfSpan);
+      final contextSpan = contextOfSpan.span;
+      // Reuse the Context's span when it is non-recording and it is the
+      // parent: either the resolver picked it, or the resolver found nothing
+      // usable, which is the empty all-zero span an earlier no-SDK startSpan
+      // returned. A bare remote SpanContext that outranks it still wins.
+      if (contextSpan != null &&
+          !contextSpan.isRecording &&
+          (identical(resolved.parentSpan, contextSpan) ||
+              resolved.parentSpanContext == null)) {
+        return contextSpan;
       }
       return NonRecordingSpan(resolved.parentSpanContext ??
           OTelFactory.otelFactory!.spanContextInvalid());
