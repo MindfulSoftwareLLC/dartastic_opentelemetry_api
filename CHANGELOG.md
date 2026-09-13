@@ -65,7 +65,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The `callback` parameter on the three `createObservable*` methods. Use the
   `callbacks` list; a `callback` is prepended to it ([#113](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/113)).
 
-### Fixed (spec compliance)
+### Fixed
 
 - `TraceState` construction (`fromMap`, `OTelAPI`/`OTelFactory` `traceState(...)`)
   now validates keys and values against the W3C tracestate grammar, dropping
@@ -161,7 +161,7 @@ prerelease.
   an unsendable handler degrades to the child default and is
   reported).
 
-### Fixed (spec compliance)
+### Fixed
 - **`Span.end()` no longer promotes status from Unset to Ok** ([api#102](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/102)).
   `Unset` stays `Unset`; analysis tools can no longer be misled by
   fabricated Ok statuses. The deprecated `spanStatus` parameter still
