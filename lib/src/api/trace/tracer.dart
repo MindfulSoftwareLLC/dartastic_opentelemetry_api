@@ -300,7 +300,17 @@ class APITracer {
   /// Every candidate parent must carry a valid [SpanContext]. [Context] does
   /// not validate what is put into it, so a span with an invalid (all-zero)
   /// SpanContext can sit in one; per trace/api.md an invalid parent means the
-  /// new span is a root, not an error.
+  /// new span is a root, not an error. Validity is the only filter: an
+  /// *ended* span in the context is still a usable parent, which trace/api.md
+  /// makes a MUST.
+  ///
+  /// Do not look for these tiers in the specification. There the lookup is
+  /// single: the Span in the Context, with a remote SpanContext reaching a
+  /// Context only by being wrapped in a span (trace/api.md, "Wrapping a
+  /// SpanContext in a Span"). The tiers exist because this package's
+  /// [Context] carries a bare span-context slot alongside the span slot,
+  /// which predates context-driven span creation, and both slots have to
+  /// resolve to one parent.
   ///
   /// Static because it reads no per-tracer state: the parent depends only
   /// on [context].

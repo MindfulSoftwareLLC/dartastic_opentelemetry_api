@@ -369,6 +369,32 @@ void main() {
       expect(span.spanContext.spanId.isValid, isFalse);
     });
 
+    test('an ended span in the context still parents a new span', () {
+      final tracer = OTelAPI.tracer('test-tracer');
+
+      // trace/api.md: "It MUST still be possible to use an ended span as
+      // parent via a Context it is contained in." Parent resolution filters
+      // on SpanContext validity and never on isEnded, and ending a span does
+      // not touch its SpanContext. This test exists so that a later
+      // "safety" check on isEnded cannot be added without failing.
+      final parent = tracer.startSpan('parent');
+      parent.end();
+      expect(parent.isEnded, isTrue);
+
+      final ctx = Context.current.withSpan(parent);
+      final child = tracer.createSpan(name: 'child', context: ctx);
+
+      expect(child.parentSpan, same(parent));
+      expect(child.parentSpanContext, equals(parent.spanContext));
+      expect(child.spanContext.traceId, equals(parent.spanContext.traceId));
+      expect(child.spanContext.parentSpanId, equals(parent.spanContext.spanId));
+
+      // Not a root: it has a real parent, and a new span ID of its own.
+      expect(child.spanContext.parentSpanId?.isValid, isTrue);
+      expect(
+          child.spanContext.spanId, isNot(equals(parent.spanContext.spanId)));
+    });
+
     test('createSpan applies an explicit startTime', () {
       final tracer = OTelAPI.tracer('test-tracer');
       final startTime = DateTime.now().subtract(const Duration(minutes: 42));
