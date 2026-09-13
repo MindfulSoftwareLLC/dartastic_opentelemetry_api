@@ -20,6 +20,11 @@ part 'tracer_create.dart';
 /// The API prefix indicates that it's part of the API and not the SDK
 /// and generally should not be used since an API without an SDK is a noop.
 /// Use the TracerProvider from the SDK instead.
+///
+/// All methods of this class are safe for concurrent use by default:
+/// implementations must remain correct when methods are invoked from
+/// interleaved asynchronous tasks within an isolate. See
+/// [Trace API, concurrency requirements](https://github.com/open-telemetry/opentelemetry-specification/blob/v1.60.0/specification/trace/api.md#concurrency-requirements).
 class APITracer {
   /// Gets the name of the tracer, usually of a library, package or module
   final String name;

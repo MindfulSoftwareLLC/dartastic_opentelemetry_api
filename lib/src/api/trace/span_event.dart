@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import 'package:meta/meta.dart';
+import '../../util/otel_error_handler.dart' show OTelErrorHandling;
 import '../common/attributes.dart';
 
 part 'span_event_create.dart';

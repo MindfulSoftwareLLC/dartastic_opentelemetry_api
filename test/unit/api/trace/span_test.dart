@@ -345,13 +345,54 @@ void main() {
       expect(span.spanEvents, isNotNull);
     });
 
-    test('addEvent throws if name is empty', () {
-      // NOTE: becomes non-throwing under api#69 (#119), a separate issue.
+    test('an event with an empty name is dropped, not thrown (api#69)', () {
+      // error-handling.md: an API method must not throw when the user
+      // calls it incorrectly. Every event path drops the event instead.
+      // https://opentelemetry.io/docs/specs/otel/error-handling/#basic-error-handling-principles
       final span = tracer.startSpan('test');
-      expect(
-        () => span.addEvent(OTelAPI.spanEvent('')),
-        throwsArgumentError,
-      );
+
+      span.addEvent(OTelAPI.spanEvent(''));
+      span.addEventNow('');
+      span.addEvents({'': null});
+
+      expect(span.spanEvents ?? const <SpanEvent>[], isEmpty);
+    });
+
+    test('an empty event name reaches the error handler (api#69)', () {
+      final reported = <Object>[];
+      OTelAPI.setErrorHandler((error, stackTrace) => reported.add(error));
+      final span = tracer.startSpan('test');
+
+      span.addEventNow('');
+      expect(reported, hasLength(1));
+      expect(reported.single, isA<ArgumentError>());
+
+      reported.clear();
+      span.addEvents({'': null});
+      expect(reported, hasLength(1));
+      expect(reported.single, isA<ArgumentError>());
+
+      reported.clear();
+      OTelAPI.spanEvent('');
+      expect(reported, hasLength(1),
+          reason: 'making the event reports, even without a span');
+
+      reported.clear();
+      span.addEvent(OTelAPI.spanEvent(''));
+      expect(reported, hasLength(2),
+          reason: 'once when the event is made, once when the span drops it');
+
+      expect(span.spanEvents ?? const <SpanEvent>[], isEmpty);
+      OTelAPI.setErrorHandler(null);
+    });
+
+    test('an empty name drops only that entry of addEvents (api#69)', () {
+      final span = tracer.startSpan('test');
+
+      span.addEvents({'': null, 'kept': null});
+
+      expect(span.spanEvents, hasLength(1));
+      expect(span.spanEvents!.single.name, equals('kept'));
     });
 
     test('end() is idempotent', () {
