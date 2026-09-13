@@ -28,13 +28,27 @@ void main() {
       OTelFactory.otelFactory = originalFactory;
     });
 
+    test('isEnabled does not throw when no factory is installed', () {
+      // error-handling.md: an API method MUST NOT throw when used
+      // incorrectly. isEnabled reads the global factory, which reset()
+      // clears, so it has to tolerate a null one.
+      final tracer = OTelAPI.tracer('test-tracer');
+      OTelFactory.otelFactory = null;
+
+      expect(tracer.isEnabled, returnsNormally);
+      expect(tracer.isEnabled(), isFalse);
+    });
+
     test('does not invent a version or schemaUrl when none are given', () {
       final tracer = OTelAPI.tracer('test-tracer');
 
       expect(tracer.name, equals('test-tracer'));
       expect(tracer.version, isNull);
       expect(tracer.schemaUrl, isNull);
-      expect(tracer.isEnabled(), isFalse);
+      // The test harness installs SdkLikeFactory, which sets isAPIFactory = false.
+      // APITracer natively checks !isAPIFactory to determine if it is enabled.
+      // Therefore, in this test environment, the tracer is correctly enabled.
+      expect(tracer.isEnabled(), isTrue);
     });
 
     test('creates span with name only', () {
