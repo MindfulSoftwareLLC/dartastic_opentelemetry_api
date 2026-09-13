@@ -7,6 +7,7 @@ import 'instrument_advisory.dart';
 import 'measurement.dart';
 import 'meter.dart';
 import 'observable_callback.dart';
+import 'observable_instrument.dart';
 
 part 'observable_up_down_counter_create.dart';
 
@@ -15,7 +16,8 @@ part 'observable_up_down_counter_create.dart';
 ///
 /// An ObservableUpDownCounter is intended for capturing values that can increase or
 /// decrease, such as the current memory usage, active requests, or items in a queue.
-class APIObservableUpDownCounter<T extends num> {
+class APIObservableUpDownCounter<T extends num>
+    implements APIObservableInstrument {
   final String _name;
   final String? _description;
   final String? _unit;
@@ -33,6 +35,7 @@ class APIObservableUpDownCounter<T extends num> {
   }
 
   /// Returns the name of this observable up-down counter.
+  @override
   String get name => _name;
 
   /// Returns the description of this observable up-down counter.
@@ -53,6 +56,7 @@ class APIObservableUpDownCounter<T extends num> {
   bool isEnabled() => false;
 
   /// Returns the meter that created this observable up-down counter.
+  @override
   APIMeter get meter => _meter;
 
   /// Returns the current list of callbacks registered to this instrument.

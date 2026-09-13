@@ -9,9 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **Batch observations**: `APIMeter.registerBatchCallback(callback, instruments)` registers a callback that observes multiple instruments simultaneously. The callback receives a `BatchObservableResult` to emit measurements. Returns an `APIBatchCallbackRegistration` which can be unregistered. ([#87](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/87))
-- **`InstrumentAdvisory`** parameter on all seven `APIMeter.create*` methods to allow passing advisory hints to the SDK, such as `explicitBucketBoundaries` or `attributeKeys`. ([#88](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/88))
-- **Multiple callbacks per asynchronous instrument**: `createObservableCounter`, `createObservableUpDownCounter`, and `createObservableGauge` now accept a `callbacks` list. Added `addCallback(callback)` and `removeCallback(callback)` to the resulting API observable instruments to dynamically manage callbacks. `addCallback` returns a registration handle, while `removeCallback` allows direct reference removal (providing both patterns since single-instrument callbacks are simple enough not to strictly require a handle). ([#86](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/86))
+- `APIMeter.registerBatchCallback(callback, instruments)` registers one callback
+  that observes several instruments at once and returns an
+  `APIBatchCallbackRegistration` with `unregister()`. Instruments must belong
+  to the same meter, per metrics/api.md ([#113](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/113)).
+- `InstrumentAdvisory` on all seven `APIMeter.create*` methods, carrying
+  `explicitBucketBoundaries` and `attributeKeys` hints to the SDK
+  ([#113](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/113)).
+- `APIObservableInstrument`, implemented by the three observable instruments,
+  so batch callbacks and `registerBatchCallback` take a real type
+  ([#113](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/113)).
+- `createObservableCounter`, `createObservableUpDownCounter` and
+  `createObservableGauge` accept a `callbacks` list, and the instruments gain
+  `addCallback`, which returns a registration handle, and `removeCallback`
+  ([#113](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/113)).
 
 ### Changed
 
@@ -23,9 +34,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `Baggage.getAllEntries()` is now `@Deprecated` and delegates to
   `getAllValues()`; it will be removed in a future release
   ([#127](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/127)).
-- **BREAKING**: `APIMeterProvider` is now completely stateless in the API layer. Calling `getMeter()` returns a fresh `APIMeter` each time, correctly preserving the meter `name`, `version`, `schemaUrl`, and `attributes` for the no-op fallback, resolving an issue where the shared singleton no-op meter failed to retain distinct configuration. ([#89](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/89))
-- **BREAKING**: The `boundaries` parameter on `createHistogram` is deprecated. Use `advisory: InstrumentAdvisory(explicitBucketBoundaries: ...)` instead. When both are specified, `advisory.explicitBucketBoundaries` takes precedence. ([#88](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/88))
-- **BREAKING**: The `callback` parameter on the three `createObservable*` methods is deprecated. Use the new `callbacks` list instead. Passing a `callback` will prepend it to `callbacks`. ([#86](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/86))
+- **BREAKING**: `APIMeterProvider` holds no configuration or operational
+  state, per metrics/noop.md. The `endpoint`, `serviceName`, `serviceVersion`,
+  `enabled` and `isShutdown` getters and setters are removed, `getMeter`
+  returns a fresh no-op meter each call, and `shutdown` and `forceFlush`
+  always return `true` ([#113](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/113)).
+
+### Deprecated
+
+- The `boundaries` parameter on `createHistogram`. Use
+  `advisory: InstrumentAdvisory(explicitBucketBoundaries: ...)`. When both are
+  given, `boundaries` wins so existing callers keep their buckets, and the rest
+  of the advisory is kept ([#113](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/113)).
+- The `callback` parameter on the three `createObservable*` methods. Use the
+  `callbacks` list; a `callback` is prepended to it ([#113](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/113)).
 
 ### Fixed (spec compliance)
 

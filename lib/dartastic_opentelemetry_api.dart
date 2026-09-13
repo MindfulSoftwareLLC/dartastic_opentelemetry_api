@@ -49,6 +49,7 @@ export 'src/api/metrics/meter_provider.dart' hide MeterProviderCreate;
 export 'src/api/metrics/observable_callback.dart';
 export 'src/api/metrics/observable_counter.dart' hide ObservableCounterCreate;
 export 'src/api/metrics/observable_gauge.dart' hide ObservableGaugeCreate;
+export 'src/api/metrics/observable_instrument.dart';
 export 'src/api/metrics/observable_result.dart';
 export 'src/api/metrics/observable_up_down_counter.dart'
     hide ObservableUpDownCounterCreate;

@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import '../common/attributes.dart';
+import 'observable_instrument.dart';
 
 /// Callback for batch observations across multiple instruments.
 typedef BatchObservableCallback = void Function(BatchObservableResult result);
@@ -14,7 +15,8 @@ typedef BatchObservableCallback = void Function(BatchObservableResult result);
 /// does not validate the value type; the SDK may runtime-check it.
 abstract class BatchObservableResult {
   /// Records a measurement for [instrument] with [value] and optional [attributes].
-  void observe(dynamic instrument, num value, [Attributes? attributes]);
+  void observe(APIObservableInstrument instrument, num value,
+      [Attributes? attributes]);
 }
 
 /// Registration handle returned by [APIMeter.registerBatchCallback].

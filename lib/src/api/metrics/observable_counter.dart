@@ -7,6 +7,7 @@ import 'instrument_advisory.dart';
 import 'measurement.dart';
 import 'meter.dart';
 import 'observable_callback.dart';
+import 'observable_instrument.dart';
 
 part 'observable_counter_create.dart';
 
@@ -16,7 +17,7 @@ part 'observable_counter_create.dart';
 /// An ObservableCounter is intended for capturing values that can only increase,
 /// such as the system uptime, the number of total bytes received, or the number
 /// of page faults.
-class APIObservableCounter<T extends num> {
+class APIObservableCounter<T extends num> implements APIObservableInstrument {
   final String _name;
   final String? _description;
   final String? _unit;
@@ -33,6 +34,7 @@ class APIObservableCounter<T extends num> {
   }
 
   /// Returns the name of this observable counter.
+  @override
   String get name => _name;
 
   /// Returns the description of this observable counter.
@@ -53,6 +55,7 @@ class APIObservableCounter<T extends num> {
   bool isEnabled() => false;
 
   /// Returns the meter that created this observable counter.
+  @override
   APIMeter get meter => _meter;
 
   /// Returns the current list of callbacks registered to this instrument.

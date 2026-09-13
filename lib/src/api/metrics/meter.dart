@@ -3,6 +3,7 @@
 
 import 'package:meta/meta.dart';
 
+import '../../util/otel_error_handler.dart';
 import '../common/attributes.dart';
 import 'batch_callback.dart';
 import 'counter.dart';
@@ -12,6 +13,7 @@ import 'instrument_advisory.dart';
 import 'observable_callback.dart';
 import 'observable_counter.dart';
 import 'observable_gauge.dart';
+import 'observable_instrument.dart';
 import 'observable_up_down_counter.dart';
 import 'up_down_counter.dart';
 
@@ -128,9 +130,14 @@ class APIMeter {
       throw ArgumentError('Histogram name must not be empty');
     }
 
-    // Precedence: explicit boundaries parameter wins over advisory.explicitBucketBoundaries
+    // The deprecated boundaries parameter wins over
+    // advisory.explicitBucketBoundaries, so existing callers keep their
+    // buckets. Everything else on the advisory is kept.
     final effectiveAdvisory = boundaries != null
-        ? InstrumentAdvisory(explicitBucketBoundaries: boundaries)
+        ? InstrumentAdvisory(
+            explicitBucketBoundaries: boundaries,
+            attributeKeys: advisory?.attributeKeys,
+          )
         : advisory;
 
     return HistogramCreate.create<T>(
@@ -271,37 +278,19 @@ class APIMeter {
   /// Registers a batch callback for multiple observable instruments.
   APIBatchCallbackRegistration registerBatchCallback(
     BatchObservableCallback callback,
-    Set<dynamic> instruments,
+    Set<APIObservableInstrument> instruments,
   ) {
-    // Validate: each instrument must be an APIObservableCounter,
-    // APIObservableUpDownCounter, or APIObservableGauge, and
-    // instrument.meter must be identical(this).
+    // metrics/api.md: a multiple-instrument callback MUST be associated
+    // with instruments from the same Meter. The type already rules out a
+    // synchronous instrument; a foreign meter is reported and the callback
+    // is not registered. error-handling.md: never throw at the user.
     for (final instrument in instruments) {
-      if (instrument is! APIObservableCounter &&
-          instrument is! APIObservableUpDownCounter &&
-          instrument is! APIObservableGauge) {
-        throw ArgumentError(
-          'registerBatchCallback: instrument $instrument is not an '
-          'observable instrument type.',
-        );
-      }
-      final APIMeter instrumentMeter;
-      final String instrumentName;
-      if (instrument is APIObservableCounter) {
-        instrumentMeter = instrument.meter;
-        instrumentName = instrument.name;
-      } else if (instrument is APIObservableUpDownCounter) {
-        instrumentMeter = instrument.meter;
-        instrumentName = instrument.name;
-      } else {
-        instrumentMeter = (instrument as APIObservableGauge).meter;
-        instrumentName = instrument.name;
-      }
-      if (!identical(instrumentMeter, this)) {
-        throw ArgumentError(
-          'registerBatchCallback: instrument "$instrumentName" '
-          'belongs to a different Meter instance.',
-        );
+      if (!identical(instrument.meter, this)) {
+        OTelErrorHandling.report(ArgumentError(
+          'registerBatchCallback: instrument "${instrument.name}" belongs '
+          'to a different Meter; the callback was not registered.',
+        ));
+        return _NoopBatchCallbackRegistration();
       }
     }
     // No-op: return a stateless registration

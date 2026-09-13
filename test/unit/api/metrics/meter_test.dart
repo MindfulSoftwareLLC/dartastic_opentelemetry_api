@@ -5,6 +5,7 @@ import 'package:dartastic_opentelemetry_api/dartastic_opentelemetry_api.dart';
 import 'package:test/test.dart';
 
 void main() {
+  _batchCallbackTests();
   group('APIMeter', () {
     late APIMeter meter;
 
@@ -244,24 +245,9 @@ void main() {
       expect(handle, isNotNull);
       expect(handle.unregister, returnsNormally);
 
-      // Invalid instrument type
-      expect(
-        () => meter.registerBatchCallback(
-          (result) {},
-          {meter.createCounter<int>(name: 'sync-counter')},
-        ),
-        throwsArgumentError,
-      );
-
-      // Instrument from different meter
-      final otherMeter = OTelAPI.meterProvider().getMeter(name: 'other');
-      expect(
-        () => meter.registerBatchCallback(
-          (result) {},
-          {otherMeter.createObservableCounter<int>(name: 'other-c')},
-        ),
-        throwsArgumentError,
-      );
+      // A synchronous instrument is a compile-time error now that the set
+      // is typed APIObservableInstrument; a foreign meter is covered in the
+      // registerBatchCallback group below.
     });
 
     test('create methods accept InstrumentAdvisory', () {
@@ -297,6 +283,43 @@ void main() {
       final og =
           meter.createObservableGauge<double>(name: 'og', advisory: advisory);
       expect(og.advisory, equals(advisory));
+    });
+  });
+}
+
+void _batchCallbackTests() {
+  group('registerBatchCallback', () {
+    setUp(() => OTelAPI.initialize(
+        endpoint: 'http://localhost:4317',
+        serviceName: 'x',
+        serviceVersion: '1'));
+
+    test('an instrument from a different meter is reported, not thrown', () {
+      final a = OTelAPI.meterProvider().getMeter(name: 'a');
+      final b = OTelAPI.meterProvider().getMeter(name: 'b');
+      final foreign = b.createObservableCounter<int>(name: 'c');
+      final reported = <Object>[];
+      OTelAPI.setErrorHandler((e, _) => reported.add(e));
+      addTearDown(() => OTelAPI.setErrorHandler(null));
+
+      final reg = a.registerBatchCallback((_) {}, {foreign});
+
+      expect(reported, hasLength(1));
+      expect(reported.single, isA<ArgumentError>());
+      expect(reg, isNotNull);
+      expect(reg.unregister, returnsNormally);
+    });
+
+    test('instruments from the same meter register without a report', () {
+      final a = OTelAPI.meterProvider().getMeter(name: 'a');
+      final own = a.createObservableGauge<double>(name: 'g');
+      final reported = <Object>[];
+      OTelAPI.setErrorHandler((e, _) => reported.add(e));
+      addTearDown(() => OTelAPI.setErrorHandler(null));
+
+      a.registerBatchCallback((_) {}, {own});
+
+      expect(reported, isEmpty);
     });
   });
 }

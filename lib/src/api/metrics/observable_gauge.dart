@@ -7,6 +7,7 @@ import 'instrument_advisory.dart';
 import 'measurement.dart';
 import 'meter.dart';
 import 'observable_callback.dart';
+import 'observable_instrument.dart';
 
 part 'observable_gauge_create.dart';
 
@@ -16,7 +17,7 @@ part 'observable_gauge_create.dart';
 /// An ObservableGauge is intended for capturing values that are not meant to be combined
 /// across multiple entities, such as the current temperature, CPU usage percentage, or
 /// room occupancy.
-class APIObservableGauge<T extends num> {
+class APIObservableGauge<T extends num> implements APIObservableInstrument {
   final String _name;
   final String? _description;
   final String? _unit;
@@ -33,6 +34,7 @@ class APIObservableGauge<T extends num> {
   }
 
   /// Returns the name of this observable gauge.
+  @override
   String get name => _name;
 
   /// Returns the description of this observable gauge.
@@ -53,6 +55,7 @@ class APIObservableGauge<T extends num> {
   bool isEnabled() => false;
 
   /// Returns the meter that created this observable gauge.
+  @override
   APIMeter get meter => _meter;
 
   /// Returns the current list of callbacks registered to this instrument.
