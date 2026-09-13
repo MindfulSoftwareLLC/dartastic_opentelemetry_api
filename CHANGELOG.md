@@ -45,6 +45,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#118](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/118)).
 - `APITracer.startSpan` now accepts an optional `startTime` parameter
   ([#118](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/118)).
+- `TraceFlags.RANDOM_FLAG`, `TraceFlags.isRandom` and `TraceFlags.withRandom`
+  expose the random-trace-id bit (`0x02`), which W3C Trace Context Level 2
+  makes a MUST to propagate unchanged across a continued trace. The byte
+  already survived propagation, but the bit could not be read or set, so the
+  SDK had no supported way to mark a randomly generated root trace ID
+  ([#142](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/142)).
 
 ### Changed
 
