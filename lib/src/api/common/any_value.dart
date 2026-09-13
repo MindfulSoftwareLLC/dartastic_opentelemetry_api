@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import 'dart:collection';
-import 'dart:convert';
 import 'dart:typed_data';
 
 // UnmodifiableListView comes from dart:collection above; package:collection is
@@ -57,35 +56,38 @@ sealed class AnyValue {
     };
   }
 
-  /// Converts this value to its OTLP/JSON representation.
+  /// Implements JSON serialization, as plain Dart objects.
   ///
-  /// This differs from [unwrap] in exactly one respect: bytes are encoded as a
-  /// base64 String, at any nesting depth, because OTLP/JSON encodes
-  /// `bytesValue` that way. [unwrap] returns the raw `List<int>` instead.
-  /// Every other type has the same representation in both.
-  ///
-  /// Throws an [ArgumentError] if the value nests more than 32 levels deep.
-  Object? toJson() => _toJson(0);
+  /// This is [unwrap]: every type, bytes included, has the same representation
+  /// in both, and `List<int>` is JSON-encodable as it stands. This is **not**
+  /// the OTLP/JSON wire encoding, which is tagged — `{"intValue": "1"}`, with
+  /// int64 as a String — and is produced by the SDK's exporters from the
+  /// protobuf model, not here.
+  Object? toJson() => unwrap();
 
-  Object? _toJson(int depth) {
-    if (depth >= _maxDepth) {
-      throw ArgumentError(
-          'AnyValue nesting exceeds the maximum depth of $_maxDepth');
-    }
-    // Exhaustive over the sealed hierarchy rather than falling back on a
-    // wildcard, so a future composite subtype is a compile error here instead
-    // of silently losing byte encoding and depth threading.
+  /// A readable rendering of this value, for debuggers and error messages.
+  ///
+  /// Unlike [unwrap] this never throws. A structure nested deeper than 32
+  /// levels renders the excess as `...` rather than raising, because
+  /// `toString` runs in exactly the places — a debugger, an error message —
+  /// where an exception is least welcome. Attribute values cannot nest that
+  /// deeply, but a log body can.
+  @override
+  String toString() => _describe(0);
+
+  String _describe(int depth) {
+    if (depth >= _maxDepth) return '...';
     return switch (this) {
-      AnyValueNull() => null,
+      AnyValueNull() => 'null',
       AnyValueString(value: final v) => v,
-      AnyValueBool(value: final v) => v,
-      AnyValueInt(value: final v) => v,
-      AnyValueDouble(value: final v) => v,
+      AnyValueBool(value: final v) => '$v',
+      AnyValueInt(value: final v) => '$v',
+      AnyValueDouble(value: final v) => '$v',
+      AnyValueBytes(value: final v) => '$v',
       AnyValueArray(value: final v) =>
-        v.map((e) => e._toJson(depth + 1)).toList(),
+        '[${v.map((e) => e._describe(depth + 1)).join(', ')}]',
       AnyValueMap(value: final v) =>
-        v.map((k, val) => MapEntry(k, val._toJson(depth + 1))),
-      AnyValueBytes(value: final v) => base64Encode(v),
+        '{${v.entries.map((e) => '${e.key}: ${e.value._describe(depth + 1)}').join(', ')}}',
     };
   }
 
@@ -135,6 +137,11 @@ sealed class AnyValue {
     } else if (obj is bool) {
       return AnyValueBool(obj);
     } else if (obj is int) {
+      // On the web every number is a double, so `2.0 is int` is true and a
+      // whole-valued double arrives here as an AnyValueInt. Attributes'
+      // getDouble and getDoubleList promote an int, so a caller reading the
+      // value back gets 2.0 on both platforms; only the stored subtype, and
+      // so `is AnyValueInt`, differs.
       return AnyValueInt(obj);
     } else if (obj is double) {
       return AnyValueDouble(obj);
@@ -263,8 +270,12 @@ class AnyValueArray extends AnyValue {
   /// change this value's `hashCode`.
   AnyValueArray(List<AnyValue> value) : value = List.unmodifiable(value);
 
+  // Deep hashing walks the whole structure, and this value is immutable, so
+  // compute it once on first use rather than on every lookup.
+  late final int _hashCode = const DeepCollectionEquality().hash(value);
+
   @override
-  int get hashCode => const DeepCollectionEquality().hash(value);
+  int get hashCode => _hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -285,8 +296,12 @@ class AnyValueMap extends AnyValue {
   /// change this value's `hashCode`.
   AnyValueMap(Map<String, AnyValue> value) : value = Map.unmodifiable(value);
 
+  // Deep hashing walks the whole structure, and this value is immutable, so
+  // compute it once on first use rather than on every lookup.
+  late final int _hashCode = const DeepCollectionEquality().hash(value);
+
   @override
-  int get hashCode => const DeepCollectionEquality().hash(value);
+  int get hashCode => _hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -296,8 +311,8 @@ class AnyValueMap extends AnyValue {
 
 /// An [AnyValue] holding raw bytes.
 ///
-/// Serialized by [toJson] as a base64 String per the OTLP/JSON encoding, while
-/// [value] and [unwrap] return the raw bytes.
+/// [value], [unwrap] and [toJson] all return the raw `List<int>`; encoding it
+/// for a wire format is the exporter's job.
 ///
 /// Note that [value] is an unmodifiable view rather than a [Uint8List], so
 /// `AnyValue.fromObject(bytes.unwrap())` yields an [AnyValueArray] of
@@ -338,8 +353,12 @@ class AnyValueBytes extends AnyValue {
     return UnmodifiableListView<int>(Uint8List.fromList(value));
   }
 
+  // Deep hashing walks the whole payload, which for bytes may be large, and
+  // this value is immutable, so compute it once on first use.
+  late final int _hashCode = const DeepCollectionEquality().hash(value);
+
   @override
-  int get hashCode => const DeepCollectionEquality().hash(value);
+  int get hashCode => _hashCode;
 
   @override
   bool operator ==(Object other) =>

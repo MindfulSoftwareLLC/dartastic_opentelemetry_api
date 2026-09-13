@@ -35,7 +35,10 @@ class Attribute {
 
   @override
   String toString() {
-    return 'AttributeValue(${_value.value})';
+    // AnyValue.toString, not `_value.value`, which renders an array as
+    // `[Instance of 'AnyValueString', ...]`. It also truncates rather than
+    // throwing on a deeply nested value.
+    return 'AttributeValue($_value)';
   }
 
   @override
@@ -44,9 +47,9 @@ class Attribute {
 
     if (other is! Attribute) return false;
 
-    return runtimeType == other.runtimeType &&
-        key == other.key &&
-        value == other.value;
+    // No runtimeType comparison: Attribute is neither generic nor subclassed,
+    // so `other is! Attribute` above already settles it.
+    return key == other.key && value == other.value;
   }
 
   @override

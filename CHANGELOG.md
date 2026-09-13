@@ -52,10 +52,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   previously unsupported. `AnyValue.fromObject` converts plain Dart objects
   recursively, mapping `Uint8List` to `AnyValueBytes` and `DateTime` to a UTC
   ISO-8601 string; other typed lists such as `Int32List` convert as arrays.
-  `AnyValue.toJson` encodes bytes as base64 at any nesting depth per OTLP/JSON,
-  while `AnyValue.unwrap` returns the raw `List<int>`. `AnyValueBytes` rejects
-  elements outside 0-255 rather than masking them, and conversion is depth
-  limited to 32 levels
+  `AnyValue.unwrap` and `AnyValue.toJson` return plain Dart objects, bytes
+  included; the tagged OTLP wire encoding is the SDK exporters' job.
+  `AnyValueBytes` rejects elements outside 0-255 rather than masking them, and
+  conversion is depth limited to 32 levels
   ([#123](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/123)).
 
 ### Changed
@@ -91,13 +91,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `enabled` and `isShutdown` getters and setters are removed, `getMeter`
   returns a fresh no-op meter each call, and `shutdown` and `forceFlush`
   always return `true` ([#113](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/113)).
-- **BREAKING**: `Attribute` is no longer generic. `Attribute<T>` becomes a
-  concrete `Attribute` carrying an `AnyValue` payload. If you construct
-  `Attribute` directly, bypassing the factory, wrap the value in the
-  appropriate `AnyValue` subclass
+- **BREAKING**: `Attribute` is no longer generic. It is now a concrete
+  `Attribute` carrying an `AnyValue` payload, so every explicit type argument
+  has to go: `Attribute<String> a = ...` becomes `Attribute a = ...`, and
+  `List<Attribute<Object>>` becomes `List<Attribute>`. `attribute.value` is now
+  an `AnyValue` rather than the raw Dart value, so read it through the typed
+  `Attributes` getters or unwrap it. Construction is unaffected — the
+  `Attribute` constructor was already private
   ([#123](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/123)).
 - **BREAKING**: attribute conversion (`attrsFromMap` / `AnyValue.fromObject`)
-  is strict. The permissive `.toString()` fallback for unsupported objects is
+  no longer guesses. The permissive `.toString()` fallback for unsupported objects is
   gone: such values are dropped from the resulting `Attributes` and reported
   through `OTelErrorHandling` instead of being silently stringified. `DateTime`
   is natively supported, converted with `Timestamp.dateTimeToString` as
@@ -105,10 +108,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   structure throws an `ArgumentError` that `attrsFromMap` routes to
   `OTelErrorHandling` like any other unsupported value
   ([#123](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/123)).
-- **BREAKING**: `LogRecord.body` and `APILogger.emit(body: ...)` take an
-  `AnyValue?` instead of an `Object?`. Replace a directly passed object with
-  `AnyValue.fromObject(...)` or a specific subclass such as
-  `AnyValueString(...)`
+- **BREAKING**: `LogRecord.body` is an `AnyValue?` rather than an `Object?`, so
+  a reader gets the typed model. `APILogger.emit(body: ...)` still takes a
+  plain `Object?` and boxes it internally, so callers are unaffected; a body
+  the data model cannot carry is reported through `OTelErrorHandling` and
+  dropped rather than thrown into the caller's logging path
   ([#123](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/123)).
 - **BREAKING**: a `Uint8List` attribute value is dropped and reported instead
   of stored. `attrsFromMap` previously matched it on its `List<int>` branch, so

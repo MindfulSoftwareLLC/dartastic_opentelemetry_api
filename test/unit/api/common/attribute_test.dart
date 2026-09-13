@@ -1,7 +1,6 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
-import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:dartastic_opentelemetry_api/src/api/common/any_value.dart';
@@ -89,42 +88,28 @@ void main() {
         expect(value.value['payload'], isA<AnyValueBytes>());
       });
 
-      test('toJson base64-encodes the bytes per OTLP/JSON', () {
-        final bytes = [0, 1, 2, 250, 255];
-        final value = AnyValue.fromBytes(bytes);
-        expect(value.toJson(), equals(base64Encode(bytes)));
-        expect(base64Decode(value.toJson()! as String), equals(bytes));
-      });
-
       test('unwrap still returns the raw bytes', () {
         expect(AnyValue.fromBytes([1, 2, 3]).unwrap(), equals([1, 2, 3]));
       });
 
-      test('toJson base64-encodes bytes nested in a map', () {
+      test('toJson returns the raw bytes, same as unwrap', () {
+        // Not base64: toJson emits plain Dart objects and List<int> is
+        // JSON-encodable. The tagged OTLP wire encoding is the exporter's.
+        final bytes = [0, 1, 2, 250, 255];
+        final value = AnyValue.fromBytes(bytes);
+        expect(value.toJson(), equals(bytes));
+        expect(value.toJson(), equals(value.unwrap()));
+      });
+
+      test('toJson returns raw bytes when nested too', () {
         final value = AnyValueMap({
           'payload': AnyValueBytes([1, 2, 3])
         });
-        expect(value.toJson(), equals({'payload': 'AQID'}));
-      });
-
-      test('toJson base64-encodes bytes nested in an array', () {
-        final value = AnyValueArray([
-          AnyValueBytes([1, 2, 3]),
-        ]);
-        expect(value.toJson(), equals(['AQID']));
-      });
-
-      test('toJson base64-encodes bytes two levels down', () {
-        final value = AnyValueArray([
-          AnyValueMap({
-            'payload': AnyValueBytes([1, 2, 3])
-          }),
-        ]);
         expect(
             value.toJson(),
-            equals([
-              {'payload': 'AQID'},
-            ]));
+            equals({
+              'payload': [1, 2, 3],
+            }));
       });
 
       test('unwrap returns raw bytes at every nesting depth', () {
@@ -314,12 +299,20 @@ void main() {
         expect(nestedArray(maxDepth + 1).unwrap, throwsA(isA<ArgumentError>()));
       });
 
-      test('toJson accepts exactly maxDepth levels', () {
-        expect(nestedArray(maxDepth).toJson, returnsNormally);
+      // toString must never throw: it runs in debuggers and error messages,
+      // where an exception is worse than a truncated rendering.
+      test('toString truncates instead of throwing on a deep value', () {
+        final deep = nestedArray(100);
+        expect(deep.toString, returnsNormally);
+        expect(deep.toString(), contains('...'));
       });
 
-      test('toJson throws at maxDepth + 1 levels', () {
-        expect(nestedArray(maxDepth + 1).toJson, throwsA(isA<ArgumentError>()));
+      test('toString renders a shallow value in full', () {
+        final value = AnyValueArray([
+          const AnyValueString('a'),
+          AnyValueMap({'k': const AnyValueInt(1)}),
+        ]);
+        expect(value.toString(), equals('[a, {k: 1}]'));
       });
 
       test('attrsFromMap reports rather than throws on excessive nesting', () {

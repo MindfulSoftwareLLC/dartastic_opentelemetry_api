@@ -87,6 +87,37 @@ void main() {
       expect(attrs.getIntList('counts'), equals([1, 2, 3]));
     });
 
+    // Promotion is one way: an int reads as a double, never the reverse.
+    // It also absorbs the web's single number type, where a whole-valued
+    // double is stored as an AnyValueInt.
+    test('getDouble promotes a stored int', () {
+      final attrs = Attributes.of({'n': 2});
+      expect(attrs.getDouble('n'), equals(2.0));
+      expect(attrs.getInt('n'), equals(2));
+    });
+
+    test('getDoubleList promotes an all-int array', () {
+      final attrs = Attributes.of({
+        'nums': <int>[1, 2, 3],
+      });
+      expect(attrs.getDoubleList('nums'), equals([1.0, 2.0, 3.0]));
+      expect(attrs.getIntList('nums'), equals([1, 2, 3]));
+    });
+
+    test('getInt does not demote a stored double', () {
+      final attrs = Attributes.of({'d': 2.5});
+      expect(attrs.getInt('d'), isNull);
+      expect(attrs.getDouble('d'), equals(2.5));
+    });
+
+    test('getIntList does not demote a double array', () {
+      final attrs = Attributes.of({
+        'nums': <double>[1.5, 2.5],
+      });
+      expect(attrs.getIntList('nums'), isNull);
+      expect(attrs.getDoubleList('nums'), equals([1.5, 2.5]));
+    });
+
     test('Attributes.of promotes mixed numeric lists to double', () {
       final attrs = Attributes.of({
         'nums': <Object>[1, 2.5]

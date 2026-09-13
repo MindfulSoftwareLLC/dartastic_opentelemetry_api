@@ -61,8 +61,18 @@ class AttributeCreate {
         case AnyValueArray():
         case AnyValueMap():
         case AnyValueBytes():
+          // Nested arrays, maps and bytes are never attribute values.
+          return false;
         case AnyValueNull():
-          // Nested arrays, maps, bytes and null are never attribute values.
+          // A deliberate, reasoned deviation. common/README.md says a null
+          // within an array MUST be preserved where it cannot be prevented at
+          // compile time, and this drops the whole attribute instead.
+          // Preserving it would mean storing an array no typed getter can
+          // return: _getTyped hands back List<String>, not List<String?>, so
+          // ['a', null] would be stored and then read back as null — exactly
+          // the write-only attribute this check exists to eliminate. Dropping
+          // and reporting at least tells the caller something went wrong.
+          // Revisit if the getters ever gain nullable element types.
           return false;
       }
     }

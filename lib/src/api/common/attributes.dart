@@ -162,6 +162,12 @@ class Attributes {
     if (T == double && anyValue is AnyValueDouble) {
       return anyValue.value as T;
     }
+    // An int read as a double promotes; the reverse does not, so getInt on a
+    // stored double still returns null. This also absorbs the web's single
+    // number type, where a whole-valued double is stored as an AnyValueInt.
+    if (T == double && anyValue is AnyValueInt) {
+      return anyValue.value.toDouble() as T;
+    }
 
     if (anyValue is AnyValueArray) {
       final elements = anyValue.value;
@@ -188,12 +194,14 @@ class Attributes {
         final result = elements.map((e) => e.value as int).toList();
         if (result is T) return result as T;
       }
-      // Arrays holding any double promote ints to double, which is what
-      // attrsFromMap and fromJson did before AnyValue: JSON has a single
-      // number type, so [1, 2.5] is routine. An all-int array is matched by
-      // the int case above, so it is not promoted here.
-      if (elements.any((e) => e is AnyValueDouble) &&
-          elements.every((e) => e is AnyValueDouble || e is AnyValueInt)) {
+      // Any all-numeric array reads back as List<double>, promoting ints.
+      // A mixed [1, 2.5] is routine because JSON has a single number type,
+      // and an all-int array reaches here only when List<int> was not what
+      // the caller asked for, since the int case above matches first. On the
+      // web every number is a double, so an all-int array may be exactly what
+      // a caller who stored doubles has; promoting keeps getDoubleList
+      // working on both platforms.
+      if (elements.every((e) => e is AnyValueDouble || e is AnyValueInt)) {
         final result = elements
             .map((e) => e is AnyValueInt
                 ? e.value.toDouble()
@@ -375,8 +383,14 @@ class Attributes {
     return equality.equals(_entries, other._entries);
   }
 
+  // Hashing walks every entry, and every entry's value hashes deeply, so
+  // compute it once on first use. Attributes is immutable: copyWith and
+  // friends build a new instance rather than mutating this one.
+  late final int _hashCode =
+      const MapEquality<String, Attribute>().hash(_entries);
+
   @override
-  int get hashCode => const MapEquality<String, Attribute>().hash(_entries);
+  int get hashCode => _hashCode;
 }
 
 /// Extension to create Attributes from a simple Map

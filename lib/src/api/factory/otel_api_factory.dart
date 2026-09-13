@@ -11,7 +11,6 @@ import '../common/any_value.dart';
 import '../common/attribute.dart';
 import '../common/attributes.dart';
 import '../common/instrumentation_scope.dart';
-
 import '../context/context.dart';
 import '../context/context_key.dart';
 import '../id/id_generator.dart';
