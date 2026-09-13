@@ -91,6 +91,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
+- **BREAKING**: the `parentSpan` and `spanContext` parameters of
+  `APITracer.startSpan` and `APITracer.createSpan`. The parent now comes from
+  the `Context`, so `parentSpan: parent` becomes
+  `context: Context.current.withSpan(parent)`. `spanContext: sc` has no
+  equivalent, because it gave the new span `sc` verbatim, span ID included.
+  Put `sc` on the `Context` to parent a new span to it, or use
+  `OTelAPI.nonRecordingSpan(sc)` to wrap it unchanged. The `startSpan` dartdoc
+  documents the full parent precedence
+  ([#118](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/118)).
 - **BREAKING**: `Context.copyWithValue`. It generated a key the caller could never
   get back, so a value stored through it was unreachable. Create the key with
   `OTelAPI.contextKey<T>(name)` and use `Context.copyWith(key, value)`
