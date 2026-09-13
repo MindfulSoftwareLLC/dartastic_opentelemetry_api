@@ -7,6 +7,8 @@
 import 'dart:typed_data';
 
 import 'package:dartastic_opentelemetry_api/dartastic_opentelemetry_api.dart';
+import 'package:dartastic_opentelemetry_api/src/api/common/attribute.dart'
+    show AttributeCreate;
 import 'package:test/test.dart';
 
 void main() {
@@ -230,6 +232,22 @@ void _attributeValueDataModelTests() {
       expect(attrs.keys, equals(['good']));
       expect(reported, hasLength(1));
       expect(reported.single, isA<ArgumentError>());
+    });
+
+    // describeIllegalValue's scalar branch cannot be reached through either
+    // construction path, because a scalar is always a legal attribute value.
+    // The branch exists so the switch stays exhaustive over the sealed
+    // hierarchy, which makes a future AnyValue subtype a compile error there.
+    // Calling it directly covers the branch and pins its wording.
+    test('describeIllegalValue handles scalars, which callers never reach', () {
+      expect(AttributeCreate.describeIllegalValue(const AnyValueString('s')),
+          equals('a primitive'));
+      expect(AttributeCreate.describeIllegalValue(const AnyValueBool(true)),
+          equals('a primitive'));
+      expect(AttributeCreate.describeIllegalValue(const AnyValueInt(1)),
+          equals('a primitive'));
+      expect(AttributeCreate.describeIllegalValue(const AnyValueDouble(1.5)),
+          equals('a primitive'));
     });
 
     test('the report names the offending kind', () {
