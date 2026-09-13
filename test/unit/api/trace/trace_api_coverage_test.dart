@@ -137,10 +137,13 @@ void main() {
 
       // Map/header order is left-to-right = newest-to-oldest (W3C), so
       // key0 (first) is newest and key31 (last) is oldest and gets evicted.
+      // The new entry is first, key0..key30 keep their order one place to
+      // the right, and key31, the oldest, is the one evicted.
+      expect(evicted.entries.keys.toList(), [
+        'overflow',
+        for (var i = 0; i < 31; i++) 'key$i',
+      ]);
       expect(evicted.get('overflow'), equals('v'));
-      expect(evicted.get('key31'), isNull, reason: 'oldest entry is evicted');
-      expect(evicted.get('key0'), equals('value0'));
-      expect(evicted.entries, hasLength(32));
     });
 
     test('tracers with the same identity are equal', () {
