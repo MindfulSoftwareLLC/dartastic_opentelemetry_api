@@ -58,9 +58,7 @@ OTelErrorHandler? _pendingHandler;
 /// deliberately thrown by a user-installed handler propagates to the
 /// caller: per the spec, "configuring a custom error handler in this way
 /// is the only exception to the basic error handling principles".
-class OTelErrorHandling {
-  OTelErrorHandling._(); // coverage:ignore-line
-
+abstract class OTelErrorHandling {
   /// The handler [report] currently resolves to.
   ///
   /// Resolution order: the user-installed handler (factory-held, or

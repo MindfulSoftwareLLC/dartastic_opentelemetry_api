@@ -3,6 +3,7 @@
 
 import 'package:meta/meta.dart';
 import '../common/attributes.dart';
+import 'instrument_advisory.dart';
 import 'meter.dart';
 
 part 'counter_create.dart';
@@ -24,6 +25,9 @@ class APICounter<T extends num> {
   /// The meter that created this counter instrument.
   final APIMeter _meter;
 
+  /// The optional advisory parameters for this counter instrument.
+  final InstrumentAdvisory? _advisory;
+
   /// Creates a new [APICounter] instrument.
   ///
   /// This constructor is typically not called directly. Instead, use [APIMeter.createCounter].
@@ -32,12 +36,9 @@ class APICounter<T extends num> {
   /// [_description] Optional description of the counter instrument.
   /// [_unit] Optional unit of measurement for the counter.
   /// [_meter] The meter that created this counter instrument.
-  APICounter(
-    this._name,
-    this._description,
-    this._unit,
-    this._meter,
-  );
+  /// [_advisory] Optional advisory parameters for the counter.
+  APICounter(this._name, this._description, this._unit, this._meter,
+      [this._advisory]);
 
   /// Returns the name of this Counter.
   String get name => _name;
@@ -58,6 +59,9 @@ class APICounter<T extends num> {
 
   /// Returns the meter that created this counter.
   APIMeter get meter => _meter;
+
+  /// Returns the advisory parameters of this Counter.
+  InstrumentAdvisory? get advisory => _advisory;
 
   /// Adds a value to the counter's sum.
   ///
