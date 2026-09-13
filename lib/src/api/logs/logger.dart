@@ -8,7 +8,7 @@ import 'severity.dart';
 
 part 'logger_create.dart';
 
-/// Logger is responsible for creating [LogRecords]s.
+/// Logger is responsible for creating [LogRecord]s.
 /// The API prefix indicates that it's part of the API and not the SDK
 /// and generally should not be used since an API without an SDK is a noop.
 /// Use the Logger from the SDK instead.
@@ -31,7 +31,7 @@ class APILogger {
   final Attributes? attributes;
 
   /// Creates a new [APILogger].
-  /// You cannot create a Logger directly; you must use [LoggerProvider]:
+  /// You cannot create a Logger directly; you must use [APILoggerProvider]:
   /// ```dart
   /// final logProvider = OTel.loggerProvider() or more likely, OTel.loggerProvider().getLogger("my-library");
   /// ```
