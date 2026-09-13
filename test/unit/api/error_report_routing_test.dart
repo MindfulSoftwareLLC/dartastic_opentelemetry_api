@@ -42,11 +42,9 @@ void main() {
     });
 
     test('a dropped attribute (unsupported value type) is reported', () {
-      // Attributes.of stringifies unknown scalar types by design; fromJson
-      // drops them — the drop must reach the handler.
-      final attrs = Attributes.fromJson({
-        'unsupported': {'nested': 'map'}
-      });
+      // Both Attributes.of and fromJson drop an unconvertible value; nothing
+      // is stringified any more. The drop must reach the handler.
+      final attrs = Attributes.fromJson({'unsupported': () {}});
 
       expect(attrs.toList(), isEmpty, reason: 'the attribute is dropped');
       expect(reported, hasLength(1));
@@ -57,6 +55,19 @@ void main() {
     });
 
     test('a dropped attribute (unsupported list element type) is reported', () {
+      final attrs = Attributes.of({
+        'mixed': [1, () {}]
+      });
+
+      expect(attrs.toList(), isEmpty, reason: 'the attribute is dropped');
+      expect(reported, hasLength(1));
+      expect(reported.single, isArgumentError);
+    });
+
+    test('a dropped attribute (heterogeneous list) is reported', () {
+      // [1, 'two'] converts cleanly to an AnyValueArray, so it is caught by
+      // the attribute-value check rather than by a conversion failure. It
+      // must not be stored: no typed getter could ever read it back.
       final attrs = Attributes.of({
         'mixed': [1, 'two']
       });

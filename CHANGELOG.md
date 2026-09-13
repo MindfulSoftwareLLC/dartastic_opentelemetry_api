@@ -45,6 +45,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#118](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/118)).
 - `APITracer.startSpan` now accepts an optional `startTime` parameter
   ([#118](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/118)).
+- `AnyValue`, a sealed hierarchy covering every attribute and log body type in
+  the OpenTelemetry specification: `AnyValueString`, `AnyValueBool`,
+  `AnyValueInt`, `AnyValueDouble`, `AnyValueArray`, `AnyValueMap`,
+  `AnyValueBytes` and `AnyValueNull`. Maps, nested arrays, bytes and null were
+  previously unsupported. `AnyValue.fromObject` converts plain Dart objects
+  recursively, mapping `Uint8List` to `AnyValueBytes` and `DateTime` to a UTC
+  ISO-8601 string; other typed lists such as `Int32List` convert as arrays.
+  `AnyValue.unwrap` and `AnyValue.toJson` return plain Dart objects, bytes
+  included; the tagged OTLP wire encoding is the SDK exporters' job.
+  `AnyValueBytes` rejects elements outside 0-255 rather than masking them, and
+  conversion is depth limited to 32 levels
+  ([#123](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/123)).
 
 ### Changed
 
@@ -79,6 +91,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `enabled` and `isShutdown` getters and setters are removed, `getMeter`
   returns a fresh no-op meter each call, and `shutdown` and `forceFlush`
   always return `true` ([#113](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/113)).
+- **BREAKING**: `Attribute` is no longer generic. It is now a concrete
+  `Attribute` carrying an `AnyValue` payload, so every explicit type argument
+  has to go: `Attribute<String> a = ...` becomes `Attribute a = ...`, and
+  `List<Attribute<Object>>` becomes `List<Attribute>`. `attribute.value` is now
+  an `AnyValue` rather than the raw Dart value, so read it through the typed
+  `Attributes` getters or unwrap it. Construction is unaffected — the
+  `Attribute` constructor was already private
+  ([#123](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/123)).
+- **BREAKING**: attribute conversion (`attrsFromMap` / `AnyValue.fromObject`)
+  no longer guesses. The permissive `.toString()` fallback for unsupported objects is
+  gone: such values are dropped from the resulting `Attributes` and reported
+  through `OTelErrorHandling` instead of being silently stringified. `DateTime`
+  is natively supported, converted with `Timestamp.dateTimeToString` as
+  elsewhere in the API. Conversion is depth limited to 32 levels; a deeper
+  structure throws an `ArgumentError` that `attrsFromMap` routes to
+  `OTelErrorHandling` like any other unsupported value
+  ([#123](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/123)).
+- **BREAKING**: `LogRecord.body` is an `AnyValue?` rather than an `Object?`, so
+  a reader gets the typed model. `APILogger.emit(body: ...)` still takes a
+  plain `Object?` and boxes it internally, so callers are unaffected; a body
+  the data model cannot carry is reported through `OTelErrorHandling` and
+  dropped rather than thrown into the caller's logging path
+  ([#123](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/123)).
+- `Attributes.getDouble` and `getDoubleList` promote a stored integer instead
+  of returning null and reporting a type mismatch. `getDouble` on `2` returns
+  `2.0`, and an all-integer array reads back as a `List<double>`. Promotion is
+  one way: `getInt` on a stored double still returns null. This also settles a
+  platform difference — on the web every number is a double, so a whole-valued
+  double is stored as an integer, and promotion makes `getDouble` agree across
+  platforms. Not marked breaking: it returns a value where it previously
+  returned null, so code that worked still works, unless a caller was using
+  null from `getDouble` to tell an integer attribute from a double one
+  ([#123](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/123)).
+- **BREAKING**: a `Uint8List` attribute value is dropped and reported instead
+  of stored. `attrsFromMap` previously matched it on its `List<int>` branch, so
+  it was flattened into an int list and read back through `getIntList`. Bytes
+  are not an attribute value in the OpenTelemetry data model — common/README.md
+  allows a primitive or a homogeneous array of primitives — so the old reading
+  misrepresented the value. Pass bytes as a log body, where `AnyValueBytes`
+  carries them faithfully, or encode them yourself for an attribute
+  ([#123](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/123)).
+- **BREAKING**: `AnyValueArray`, `AnyValueMap` and `AnyValueBytes` copy their
+  contents into unmodifiable collections and so are no longer `const`
+  constructible; replace `const AnyValueArray(...)` with `AnyValueArray(...)`.
+  The scalar subtypes (`AnyValueNull`, `AnyValueString`, `AnyValueBool`,
+  `AnyValueInt`, `AnyValueDouble`) remain `const`
+  ([#123](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/123)).
 
 ### Deprecated
 

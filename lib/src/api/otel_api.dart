@@ -440,52 +440,49 @@ class OTelAPI {
   }
 
   /// Create a string attribute key
-  static Attribute<String> attributeString(String name, String value) {
+  static Attribute attributeString(String name, String value) {
     _getAndCacheOtelFactory();
     return OTelFactory.otelFactory!.attributeString(name, value);
   }
 
   /// Create a boolean attribute key
-  static Attribute<bool> attributeBool(String name, bool value) {
+  static Attribute attributeBool(String name, bool value) {
     _getAndCacheOtelFactory();
     return OTelFactory.otelFactory!.attributeBool(name, value);
   }
 
   /// Create an integer attribute key
-  static Attribute<int> attributeInt(String name, int value) {
+  static Attribute attributeInt(String name, int value) {
     _getAndCacheOtelFactory();
     return OTelFactory.otelFactory!.attributeInt(name, value);
   }
 
   /// Create a double attribute key
-  static Attribute<double> attributeDouble(String name, double value) {
+  static Attribute attributeDouble(String name, double value) {
     _getAndCacheOtelFactory();
     return OTelFactory.otelFactory!.attributeDouble(name, value);
   }
 
   /// Create a string list attribute key
-  static Attribute<List<String>> attributeStringList(
-      String name, List<String> value) {
+  static Attribute attributeStringList(String name, List<String> value) {
     _getAndCacheOtelFactory();
     return OTelFactory.otelFactory!.attributeStringList(name, value);
   }
 
   /// Create a boolean list attribute key
-  static Attribute<List<bool>> attributeBoolList(
-      String name, List<bool> value) {
+  static Attribute attributeBoolList(String name, List<bool> value) {
     _getAndCacheOtelFactory();
     return OTelFactory.otelFactory!.attributeBoolList(name, value);
   }
 
   /// Create an integer list attribute key
-  static Attribute<List<int>> attributeIntList(String name, List<int> value) {
+  static Attribute attributeIntList(String name, List<int> value) {
     _getAndCacheOtelFactory();
     return OTelFactory.otelFactory!.attributeIntList(name, value);
   }
 
   /// Create a double list attribute key
-  static Attribute<List<double>> attributeDoubleList(
-      String name, List<double> value) {
+  static Attribute attributeDoubleList(String name, List<double> value) {
     _getAndCacheOtelFactory();
     return OTelFactory.otelFactory!.attributeDoubleList(name, value);
   }

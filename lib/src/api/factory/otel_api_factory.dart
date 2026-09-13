@@ -7,10 +7,10 @@ import '../../factory/otel_factory.dart';
 import '../../util/otel_error_handler.dart';
 import '../baggage/baggage.dart';
 import '../baggage/baggage_entry.dart';
+import '../common/any_value.dart';
 import '../common/attribute.dart';
 import '../common/attributes.dart';
 import '../common/instrumentation_scope.dart';
-import '../common/timestamp.dart';
 import '../context/context.dart';
 import '../context/context_key.dart';
 import '../id/id_generator.dart';
@@ -158,114 +158,91 @@ class OTelAPIFactory extends OTelFactory {
 
   /// Creates Attributes from a map of string keys to arbitrary values.
   ///
-  /// This method handles converting various value types to appropriate attribute values:
-  /// - String values become string attributes (empty strings are stored per the OTel spec)
-  /// - int, double, and bool values become their respective attribute types
-  /// - DateTime values are converted to ISO8601 string attributes
-  /// - Attribute values are passed through directly
-  /// - Lists of strings, booleans, integers, or doubles become list attributes
-  /// - Other values are converted to strings using toString()
+  /// `Attribute` values pass through directly. Every other value is converted
+  /// by [AnyValue.fromObject]: Strings, bools, ints, doubles, lists and
+  /// `DateTime` (as a UTC ISO-8601 String). Empty Strings and empty lists are
+  /// stored per the OTel spec.
+  ///
+  /// A value that cannot be converted, or that converts to something the
+  /// attribute data model does not allow — a map, bytes, null, or a nested or
+  /// heterogeneous array — is dropped and reported via `OTelErrorHandling`
+  /// rather than being stringified or stored unreadably.
   static Attributes attrsFromMap(Map<String, Object> namedMap) {
     final attributes = <Attribute>[];
     namedMap.forEach((key, value) {
-      if (value is String) {
-        attributes.add(AttributeCreate.create<String>(key, value));
-      } else if (value is int) {
-        attributes.add(AttributeCreate.create<int>(key, value));
-      } else if (value is double) {
-        attributes.add(AttributeCreate.create<double>(key, value));
-      } else if (value is bool) {
-        attributes.add(AttributeCreate.create<bool>(key, value));
-      } else if (value is DateTime) {
-        final isoTimestamp = Timestamp.dateTimeToString(value);
-        attributes.add(AttributeCreate.create<String>(key, isoTimestamp));
-      } else if (value is Attribute) {
+      if (value is Attribute) {
         attributes.add(value);
-      } else if (value is List<String>) {
-        attributes.add(AttributeCreate.create<List<String>>(key, value));
-      } else if (value is List<bool>) {
-        attributes.add(AttributeCreate.create<List<bool>>(key, value));
-      } else if (value is List<int>) {
-        attributes.add(AttributeCreate.create<List<int>>(key, value));
-      } else if (value is List<double>) {
-        attributes.add(AttributeCreate.create<List<double>>(key, value));
-      } else if (value is List) {
-        // Untyped lists (List<Object> / List<dynamic>): element-check
-        // rather than hard-cast.  Empty untyped lists take the
-        // List<String> fallback because .every() is vacuously true.
-        if (value.every((e) => e is String)) {
-          attributes.add(
-              AttributeCreate.create<List<String>>(key, value.cast<String>()));
-        } else if (value.every((e) => e is bool)) {
-          attributes
-              .add(AttributeCreate.create<List<bool>>(key, value.cast<bool>()));
-        } else if (value.every((e) => e is int)) {
-          attributes
-              .add(AttributeCreate.create<List<int>>(key, value.cast<int>()));
-        } else if (value.every((e) => e is double || e is int)) {
-          // Mixed numeric lists are promoted to double.
-          attributes.add(AttributeCreate.create<List<double>>(
-              key,
-              value
-                  .map((e) => e is int ? e.toDouble() : e as double)
-                  .toList()));
-        } else {
-          OTelErrorHandling.report(ArgumentError(
-              'Ignoring attribute $key because the list contains unsupported types. Only String, bool, int, double lists are allowed by the OTel specification.'));
-        }
-      } else {
-        attributes.add(AttributeCreate.create<String>(key, '$value'));
+        return;
       }
+
+      // Only the conversion failure is handled here; whether a converted
+      // AnyValue is a legal *attribute* value is Attributes._'s single rule.
+      // Reporting outside the catch: a user handler may rethrow (strict mode),
+      // and catching that here would report the same value twice.
+      final AnyValue anyValue;
+      try {
+        anyValue = AnyValue.fromObject(value);
+      } catch (e) {
+        OTelErrorHandling.report(ArgumentError(
+            'Ignoring attribute "$key" because it contains unsupported types: $e'));
+        return;
+      }
+
+      attributes.add(AttributeCreate.create(key, anyValue));
     });
     return AttributesCreate.create(attributes);
   }
 
-  /// Creates an `AttributeValue` for the given String.
+  /// Creates an `Attribute` for the given String.
   @override
-  Attribute<String> attributeString(String key, String value) {
-    return AttributeCreate.create(key, value);
+  Attribute attributeString(String key, String value) {
+    return AttributeCreate.create(key, AnyValueString(value));
   }
 
-  /// Creates an `AttributeValue` for the given boolean.
+  /// Creates an `Attribute` for the given boolean.
   @override
-  Attribute<bool> attributeBool(String key, bool value) {
-    return AttributeCreate.create(key, value);
+  Attribute attributeBool(String key, bool value) {
+    return AttributeCreate.create(key, AnyValueBool(value));
   }
 
-  /// Creates an `AttributeValue` for the given int.
+  /// Creates an `Attribute` for the given int.
   @override
-  Attribute<int> attributeInt(String key, int value) {
-    return AttributeCreate.create(key, value);
+  Attribute attributeInt(String key, int value) {
+    return AttributeCreate.create(key, AnyValueInt(value));
   }
 
-  /// Creates an `AttributeValue` for the given double.
+  /// Creates an `Attribute` for the given double.
   @override
-  Attribute<double> attributeDouble(String key, double value) {
-    return AttributeCreate.create(key, value);
+  Attribute attributeDouble(String key, double value) {
+    return AttributeCreate.create(key, AnyValueDouble(value));
   }
 
-  /// Creates an `AttributeValue` for the given String.
+  /// Creates an `Attribute` for the given String list.
   @override
-  Attribute<List<String>> attributeStringList(String key, List<String> value) {
-    return AttributeCreate.create(key, value);
+  Attribute attributeStringList(String key, List<String> value) {
+    return AttributeCreate.create(
+        key, AnyValueArray(value.map(AnyValueString.new).toList()));
   }
 
-  /// Creates an `AttributeValue` for the given boolean.
+  /// Creates an `Attribute` for the given boolean list.
   @override
-  Attribute<List<bool>> attributeBoolList(String key, List<bool> value) {
-    return AttributeCreate.create(key, value);
+  Attribute attributeBoolList(String key, List<bool> value) {
+    return AttributeCreate.create(
+        key, AnyValueArray(value.map(AnyValueBool.new).toList()));
   }
 
-  /// Creates an `AttributeValue` for the given int.
+  /// Creates an `Attribute` for the given int list.
   @override
-  Attribute<List<int>> attributeIntList(String key, List<int> value) {
-    return AttributeCreate.create(key, value);
+  Attribute attributeIntList(String key, List<int> value) {
+    return AttributeCreate.create(
+        key, AnyValueArray(value.map(AnyValueInt.new).toList()));
   }
 
-  /// Creates an `AttributeValue` for the given double.
+  /// Creates an `Attribute` for the given double list.
   @override
-  Attribute<List<double>> attributeDoubleList(String key, List<double> value) {
-    return AttributeCreate.create(key, value);
+  Attribute attributeDoubleList(String key, List<double> value) {
+    return AttributeCreate.create(
+        key, AnyValueArray(value.map(AnyValueDouble.new).toList()));
   }
 
   @override

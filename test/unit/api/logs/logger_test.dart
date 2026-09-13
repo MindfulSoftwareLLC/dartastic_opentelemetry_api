@@ -68,9 +68,9 @@ void main() {
 
       expect(logger, isNotNull);
       expect(logger.attributes, isNotNull);
-      expect(logger.attributes?.toMap()['library.name']?.value,
+      expect(logger.attributes?.toMap()['library.name']?.value.unwrap(),
           equals('test-logger'));
-      expect(logger.attributes?.toMap()['library.language']?.value,
+      expect(logger.attributes?.toMap()['library.language']?.value.unwrap(),
           equals('dart'));
     });
 
@@ -190,7 +190,7 @@ void main() {
       final logger = provider.getLogger('test-logger');
 
       // String body
-      expect(() => logger.emit(body: 'string message'), returnsNormally);
+      expect(() => logger.emit(body: 'string body'), returnsNormally);
 
       // Number body
       expect(() => logger.emit(body: 42), returnsNormally);
@@ -219,6 +219,33 @@ void main() {
           () => logger.emit(severityNumber: Severity.ERROR), returnsNormally);
       expect(
           () => logger.emit(severityNumber: Severity.FATAL), returnsNormally);
+    });
+
+    test('an unsupported body is reported and dropped, never thrown', () {
+      final provider = OTelAPI.loggerProvider();
+      final logger = provider.getLogger('test-logger');
+      final reported = <Object>[];
+      OTelAPI.setErrorHandler((e, _) => reported.add(e));
+      addTearDown(() => OTelAPI.setErrorHandler(null));
+
+      // A closure has no AnyValue representation. Telemetry that cannot be
+      // represented must not take down the caller's logging path.
+      expect(() => logger.emit(body: () {}), returnsNormally);
+      expect(reported, hasLength(1));
+      expect(reported.single, isA<ArgumentError>());
+    });
+
+    test('a supported body reports nothing', () {
+      final provider = OTelAPI.loggerProvider();
+      final logger = provider.getLogger('test-logger');
+      final reported = <Object>[];
+      OTelAPI.setErrorHandler((e, _) => reported.add(e));
+      addTearDown(() => OTelAPI.setErrorHandler(null));
+
+      logger.emit(body: 'fine');
+      logger.emit(body: {'k': 1});
+      logger.emit();
+      expect(reported, isEmpty);
     });
 
     test('multiple emit calls do not interfere', () {

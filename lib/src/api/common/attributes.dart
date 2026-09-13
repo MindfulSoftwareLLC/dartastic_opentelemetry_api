@@ -9,6 +9,7 @@ import 'package:collection/collection.dart';
 import 'package:meta/meta.dart';
 import '../../factory/otel_factory.dart';
 import '../../util/otel_error_handler.dart';
+import 'any_value.dart';
 import 'attribute.dart';
 
 part 'attributes_create.dart';
@@ -17,7 +18,7 @@ part 'attributes_create.dart';
 /// Create with the OTelFactory methods.
 @immutable
 class Attributes {
-  final Map<String, Attribute<Object>> _entries = {};
+  final Map<String, Attribute> _entries = {};
 
   /// Creates an Attributes instance from a map of key-value pairs.
   /// Uses the appropriate factory method (OTelFactory or OTelAPIFactory) based on initialization state.
@@ -30,71 +31,63 @@ class Attributes {
 
   /// Creates an Attributes instance from a JSON map.
   /// This is a utility method for deserialization from logs or exports.
+  ///
+  /// A value that cannot be converted, or that converts to something the
+  /// attribute data model does not allow — a map, bytes, null, or a nested or
+  /// heterogeneous array — is dropped and reported via [OTelErrorHandling].
   static Attributes fromJson(Map<String, dynamic> json) {
-    final attributes = <Attribute<Object>>[];
+    final attributes = <Attribute>[];
 
     for (final entry in json.entries) {
-      final key = entry.key;
-      final value = entry.value;
-
-      if (value is String) {
-        attributes.add(AttributeCreate.create<String>(key, value));
-      } else if (value is bool) {
-        attributes.add(AttributeCreate.create<bool>(key, value));
-      } else if (value is int) {
-        attributes.add(AttributeCreate.create<int>(key, value));
-      } else if (value is double) {
-        attributes.add(AttributeCreate.create<double>(key, value));
-      } else if (value is List<String>) {
-        attributes.add(AttributeCreate.create<List<String>>(key, value));
-      } else if (value is List<bool>) {
-        attributes.add(AttributeCreate.create<List<bool>>(key, value));
-      } else if (value is List<int>) {
-        attributes.add(AttributeCreate.create<List<int>>(key, value));
-      } else if (value is List<double>) {
-        attributes.add(AttributeCreate.create<List<double>>(key, value));
-      } else if (value is List) {
-        // Untyped lists (List<Object> / List<dynamic>): element-check
-        // rather than hard-cast.  Empty untyped lists take the
-        // List<String> fallback because .every() is vacuously true.
-        if (value.every((e) => e is String)) {
-          attributes.add(
-              AttributeCreate.create<List<String>>(key, value.cast<String>()));
-        } else if (value.every((e) => e is bool)) {
-          attributes
-              .add(AttributeCreate.create<List<bool>>(key, value.cast<bool>()));
-        } else if (value.every((e) => e is int)) {
-          attributes
-              .add(AttributeCreate.create<List<int>>(key, value.cast<int>()));
-        } else if (value.every((e) => e is double || e is int)) {
-          // Convert all to double
-          attributes.add(AttributeCreate.create<List<double>>(
-              key,
-              value
-                  .map((e) => e is int ? e.toDouble() : e as double)
-                  .toList()));
-        } else {
-          OTelErrorHandling.report(ArgumentError(
-              'Ignoring attribute $key because the list contains unsupported types. Only lists of Strings, bools, ints and doubles are allowed by the OTel specification.'));
-        }
-      } else {
+      // Only the conversion failure is handled here; whether a converted
+      // AnyValue is a legal *attribute* value is Attributes._'s single rule.
+      // Reporting outside the catch: a user handler may rethrow (strict mode),
+      // and catching that here would report the same value twice.
+      final AnyValue anyValue;
+      try {
+        anyValue = AnyValue.fromObject(entry.value);
+      } catch (e) {
         OTelErrorHandling.report(ArgumentError(
-            'Ignoring attribute $key because the value is not a valid attribute type. Only String, bool, int, double and Lists of those types are allowed by the OTel specification.'));
+            'Ignoring attribute ${entry.key} because it contains unsupported types: $e'));
+        continue;
       }
+
+      attributes.add(AttributeCreate.create(entry.key, anyValue));
     }
 
     return AttributesCreate.create(attributes);
   }
 
   /// Private constructor to enforce immutability.
+  ///
+  /// Every Attributes is built here, so this is the one place that enforces
+  /// the attribute data model: a non-empty key, and a value that is a
+  /// primitive or a homogeneous array of primitives. Enforcing it here rather
+  /// than in the conversion helpers covers every route in, including
+  /// [attributesFromList], an `Attribute` passed straight through
+  /// `attrsFromMap`, and the `copyWith*` methods.
+  /// error-handling.md: report it, never throw.
   Attributes._(List<Attribute> entries) {
     for (var attr in entries) {
       // common/README.md: an attribute key MUST be a non-empty string. Every
       // Attributes is built here, so this is the one place to drop such an
       // attribute. error-handling.md: report it, never throw.
+      //
+      // The key check comes first because it identifies the attribute, and
+      // the value message names the key, which reads as `attribute ""` for an
+      // empty one. Each failure continues, so an attribute that is wrong both
+      // ways is dropped once and reported once.
       if (attr.key.isEmpty) {
         OTelErrorHandling.report(ArgumentError(
             'Attribute with an empty key dropped; keys must be non-empty.'));
+        continue;
+      }
+      if (!AttributeCreate.isValidAttributeValue(attr.value)) {
+        OTelErrorHandling.report(ArgumentError(
+            'Ignoring attribute "${attr.key}" because '
+            '${AttributeCreate.describeIllegalValue(attr.value)} is not a '
+            'legal attribute value. The OTel specification allows a primitive '
+            'or a homogeneous array of primitives.'));
         continue;
       }
       _entries[attr.key] = attr;
@@ -127,7 +120,10 @@ class Attributes {
   int? getInt(String name) => _getTyped<int>(name);
 
   /// Gets a Double attribute value by key.
-  /// Returns null if the key doesn't exist or if the value is not a Double.
+  /// Returns null if the key doesn't exist or if the value is neither a Double
+  /// nor an Integer. A stored Integer is promoted, so `getDouble` on `2`
+  /// returns `2.0`. Promotion is one way: [getInt] on a stored Double returns
+  /// null.
   double? getDouble(String name) => _getTyped<double>(name);
 
   /// Gets a String List attribute value by key.
@@ -143,7 +139,10 @@ class Attributes {
   List<int>? getIntList(String name) => _getTyped<List<int>>(name);
 
   /// Gets a Double List attribute value by key.
-  /// Returns null if the key doesn't exist or if the value is not a Double List.
+  /// Returns null if the key doesn't exist or if the value is not an array of
+  /// numbers. Integer elements are promoted, so an all-Integer or mixed
+  /// Integer/Double array reads back as a `List<double>`. Promotion is one
+  /// way: [getIntList] on an array holding any Double returns null.
   List<double>? getDoubleList(String name) => _getTyped<List<double>>(name);
 
   /// Returns the number of attributes in this collection.
@@ -159,13 +158,74 @@ class Attributes {
     final attribute = _entries[key];
     if (attribute == null) return null;
 
-    final value = attribute.value;
-    if (value is T) {
-      return value as T;
+    final anyValue = attribute.value;
+
+    if (T == String && anyValue is AnyValueString) {
+      return anyValue.value as T;
     }
-    OTelErrorHandling.report(
-        StateError('Attribute value for key "$key" is a ${value.runtimeType}, '
-            'not a $T; returning null.'));
+    if (T == bool && anyValue is AnyValueBool) {
+      return anyValue.value as T;
+    }
+    if (T == int && anyValue is AnyValueInt) {
+      return anyValue.value as T;
+    }
+    if (T == double && anyValue is AnyValueDouble) {
+      return anyValue.value as T;
+    }
+    // An int read as a double promotes; the reverse does not, so getInt on a
+    // stored double still returns null. This also absorbs the web's single
+    // number type, where a whole-valued double is stored as an AnyValueInt.
+    if (T == double && anyValue is AnyValueInt) {
+      return anyValue.value.toDouble() as T;
+    }
+
+    if (anyValue is AnyValueArray) {
+      final elements = anyValue.value;
+
+      // An empty array carries no element type, so it satisfies whichever
+      // list getter was asked for. Without this an empty list would survive
+      // storage but read back as null from every typed getter.
+      if (elements.isEmpty) {
+        if (<String>[] is T) return <String>[] as T;
+        if (<bool>[] is T) return <bool>[] as T;
+        if (<int>[] is T) return <int>[] as T;
+        if (<double>[] is T) return <double>[] as T;
+      }
+
+      if (elements.every((e) => e is AnyValueString)) {
+        final result = elements.map((e) => e.value as String).toList();
+        if (result is T) return result as T;
+      }
+      if (elements.every((e) => e is AnyValueBool)) {
+        final result = elements.map((e) => e.value as bool).toList();
+        if (result is T) return result as T;
+      }
+      if (elements.every((e) => e is AnyValueInt)) {
+        final result = elements.map((e) => e.value as int).toList();
+        if (result is T) return result as T;
+      }
+      // Any all-numeric array reads back as List<double>, promoting ints.
+      // A mixed [1, 2.5] is routine because JSON has a single number type,
+      // and an all-int array reaches here only when List<int> was not what
+      // the caller asked for, since the int case above matches first. On the
+      // web every number is a double, so an all-int array may be exactly what
+      // a caller who stored doubles has; promoting keeps getDoubleList
+      // working on both platforms.
+      if (elements.every((e) => e is AnyValueDouble || e is AnyValueInt)) {
+        final result = elements
+            .map((e) => e is AnyValueInt
+                ? e.value.toDouble()
+                : (e as AnyValueDouble).value)
+            .toList();
+        if (result is T) return result as T;
+      }
+    }
+
+    // Per #106 a type mismatch is reported and yields null rather than
+    // throwing, which is what the getter doc comments promise.
+    OTelErrorHandling.report(StateError(
+        'Attribute value for key "$key" is a ${anyValue.runtimeType}, '
+        'not a $T; returning null.'));
     return null;
   }
 
@@ -177,7 +237,7 @@ class Attributes {
   Attributes copyWithStringAttribute(String name, String value) {
     return AttributesCreate.create([
       ..._entries.values,
-      AttributeCreate.create<String>(name, value),
+      AttributeCreate.create(name, AnyValueString(value)),
     ]);
   }
 
@@ -189,7 +249,7 @@ class Attributes {
   Attributes copyWithBoolAttribute(String name, bool value) {
     return AttributesCreate.create([
       ..._entries.values,
-      AttributeCreate.create<bool>(name, value),
+      AttributeCreate.create(name, AnyValueBool(value)),
     ]);
   }
 
@@ -201,7 +261,7 @@ class Attributes {
   Attributes copyWithIntAttribute(String name, int value) {
     return AttributesCreate.create([
       ..._entries.values,
-      AttributeCreate.create<int>(name, value),
+      AttributeCreate.create(name, AnyValueInt(value)),
     ]);
   }
 
@@ -213,7 +273,7 @@ class Attributes {
   Attributes copyWithDoubleAttribute(String name, double value) {
     return AttributesCreate.create([
       ..._entries.values,
-      AttributeCreate.create<double>(name, value),
+      AttributeCreate.create(name, AnyValueDouble(value)),
     ]);
   }
 
@@ -225,7 +285,8 @@ class Attributes {
   Attributes copyWithStringListAttribute(String name, List<String> value) {
     return AttributesCreate.create([
       ..._entries.values,
-      AttributeCreate.create<List<String>>(name, value),
+      AttributeCreate.create(
+          name, AnyValueArray(value.map(AnyValueString.new).toList())),
     ]);
   }
 
@@ -237,7 +298,8 @@ class Attributes {
   Attributes copyWithBoolListAttribute(String name, List<bool> value) {
     return AttributesCreate.create([
       ..._entries.values,
-      AttributeCreate.create<List<bool>>(name, value),
+      AttributeCreate.create(
+          name, AnyValueArray(value.map(AnyValueBool.new).toList())),
     ]);
   }
 
@@ -249,7 +311,8 @@ class Attributes {
   Attributes copyWithIntListAttribute(String name, List<int> value) {
     return AttributesCreate.create([
       ..._entries.values,
-      AttributeCreate.create<List<int>>(name, value),
+      AttributeCreate.create(
+          name, AnyValueArray(value.map(AnyValueInt.new).toList())),
     ]);
   }
 
@@ -261,7 +324,8 @@ class Attributes {
   Attributes copyWithDoubleListAttribute(String name, List<double> value) {
     return AttributesCreate.create([
       ..._entries.values,
-      AttributeCreate.create<List<double>>(name, value),
+      AttributeCreate.create(
+          name, AnyValueArray(value.map(AnyValueDouble.new).toList())),
     ]);
   }
 
@@ -314,7 +378,7 @@ class Attributes {
   Map<String, dynamic> toJson() {
     final result = <String, dynamic>{};
     for (final entry in _entries.entries) {
-      result[entry.key] = entry.value.value;
+      result[entry.key] = entry.value.value.unwrap();
     }
     return result;
   }
@@ -329,8 +393,14 @@ class Attributes {
     return equality.equals(_entries, other._entries);
   }
 
+  // Hashing walks every entry, and every entry's value hashes deeply, so
+  // compute it once on first use. Attributes is immutable: copyWith and
+  // friends build a new instance rather than mutating this one.
+  late final int _hashCode =
+      const MapEquality<String, Attribute>().hash(_entries);
+
   @override
-  int get hashCode => const MapEquality<String, Attribute>().hash(_entries);
+  int get hashCode => _hashCode;
 }
 
 /// Extension to create Attributes from a simple Map

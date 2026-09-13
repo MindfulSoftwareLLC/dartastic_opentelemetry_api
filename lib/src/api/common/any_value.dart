@@ -1,0 +1,374 @@
+// Copyright The OpenTelemetry Authors
+// SPDX-License-Identifier: Apache-2.0
+
+import 'dart:collection';
+import 'dart:typed_data';
+
+// UnmodifiableListView comes from dart:collection above; package:collection is
+// narrowed so it is not silently supplied by that package's re-export.
+import 'package:collection/collection.dart' show DeepCollectionEquality;
+import 'package:meta/meta.dart';
+
+import 'timestamp.dart';
+
+/// Represents a value of any type supported by the OpenTelemetry specification.
+@immutable
+sealed class AnyValue {
+  // The maximum nesting depth allowed when converting to or from plain Dart
+  // objects. Conversion is recursive, so an excessively nested (or
+  // caller-constructed cyclic) structure would otherwise overflow the stack.
+  // Structures deeper than this are rejected with an ArgumentError, which
+  // callers such as attrsFromMap route to OTelErrorHandling like any other
+  // unsupported value.
+  static const int _maxDepth = 32;
+
+  /// Const constructor for subclasses.
+  const AnyValue();
+
+  /// Returns the underlying Dart object (not recursively unwrapped).
+  Object? get value;
+
+  /// Recursively converts this value back into plain Dart objects.
+  ///
+  /// Arrays become `List<Object?>` and maps become `Map<String, Object?>`,
+  /// with every nested [AnyValue] unwrapped in turn. Bytes are returned as the
+  /// raw `List<int>`.
+  ///
+  /// Throws an [ArgumentError] if the value nests more than 32 levels deep.
+  Object? unwrap() => _unwrap(0);
+
+  Object? _unwrap(int depth) {
+    if (depth >= _maxDepth) {
+      throw ArgumentError(
+          'AnyValue nesting exceeds the maximum depth of $_maxDepth');
+    }
+    return switch (this) {
+      AnyValueNull() => null,
+      AnyValueString(value: final v) => v,
+      AnyValueBool(value: final v) => v,
+      AnyValueInt(value: final v) => v,
+      AnyValueDouble(value: final v) => v,
+      AnyValueArray(value: final v) =>
+        v.map((e) => e._unwrap(depth + 1)).toList(),
+      AnyValueMap(value: final v) =>
+        v.map((k, val) => MapEntry(k, val._unwrap(depth + 1))),
+      AnyValueBytes(value: final v) => v,
+    };
+  }
+
+  /// Implements JSON serialization, as plain Dart objects.
+  ///
+  /// This is [unwrap]: every type, bytes included, has the same representation
+  /// in both, and `List<int>` is JSON-encodable as it stands. This is **not**
+  /// the OTLP/JSON wire encoding, which is tagged — `{"intValue": "1"}`, with
+  /// int64 as a String — and is produced by the SDK's exporters from the
+  /// protobuf model, not here.
+  Object? toJson() => unwrap();
+
+  /// A readable rendering of this value, for debuggers and error messages.
+  ///
+  /// Bounded in both directions, because `toString` runs in exactly the places
+  /// — a debugger, an error message — where an exception or a megabyte of
+  /// output is least welcome. Unlike [unwrap] it never throws: nesting past 32
+  /// levels renders as `...`. Bytes render as `<N bytes>` rather than their
+  /// contents, since the length is what you want when debugging and the
+  /// individual values almost never are.
+  ///
+  /// A String nested inside an array or a map is quoted, so `["a", "b"]` and
+  /// `["a, b"]` are distinguishable. A top-level String renders bare.
+  @override
+  String toString() => _describe(0);
+
+  // Depth doubles as the nested flag: toString enters at 0, and every
+  // recursive call is at 1 or more, so `depth > 0` is exactly "inside a
+  // collection". That avoids threading a second parameter through.
+  String _describe(int depth) {
+    if (depth >= _maxDepth) return '...';
+    return switch (this) {
+      AnyValueNull() => 'null',
+      AnyValueString(value: final v) => depth == 0 ? v : '"$v"',
+      AnyValueBool(value: final v) => '$v',
+      AnyValueInt(value: final v) => '$v',
+      AnyValueDouble(value: final v) => '$v',
+      AnyValueBytes(value: final v) => '<${v.length} bytes>',
+      AnyValueArray(value: final v) =>
+        '[${v.map((e) => e._describe(depth + 1)).join(', ')}]',
+      AnyValueMap(value: final v) =>
+        '{${v.entries.map((e) => '${e.key}: ${e.value._describe(depth + 1)}').join(', ')}}',
+    };
+  }
+
+  /// Creates an AnyValue from a String.
+  factory AnyValue.fromString(String value) = AnyValueString;
+
+  /// Creates an AnyValue from a boolean.
+  factory AnyValue.fromBool(bool value) = AnyValueBool;
+
+  /// Creates an AnyValue from an integer.
+  factory AnyValue.fromInt(int value) = AnyValueInt;
+
+  /// Creates an AnyValue from a double.
+  factory AnyValue.fromDouble(double value) = AnyValueDouble;
+
+  /// Creates an AnyValue from a List of AnyValues.
+  factory AnyValue.fromList(List<AnyValue> value) = AnyValueArray;
+
+  /// Creates an AnyValue from a Map of String to AnyValue.
+  factory AnyValue.fromMap(Map<String, AnyValue> value) = AnyValueMap;
+
+  /// Creates an AnyValue from a byte array.
+  factory AnyValue.fromBytes(List<int> value) = AnyValueBytes;
+
+  /// Creates the null AnyValue.
+  factory AnyValue.nullValue() = AnyValueNull;
+
+  /// Creates an AnyValue by recursively converting a standard Dart object.
+  ///
+  /// [Uint8List] is converted to [AnyValueBytes]; other lists become an
+  /// [AnyValueArray] of converted elements. [DateTime] is converted to a UTC
+  /// ISO-8601 string.
+  ///
+  /// Throws [ArgumentError] if it encounters an unsupported type, a non-String
+  /// map key, or a structure nested more than 32 levels deep.
+  factory AnyValue.fromObject(Object? obj) => _fromObject(obj, 0);
+
+  static AnyValue _fromObject(Object? obj, int depth) {
+    if (depth >= _maxDepth) {
+      throw ArgumentError(
+          'AnyValue nesting exceeds the maximum depth of $_maxDepth');
+    }
+    if (obj == null) {
+      return const AnyValueNull();
+    } else if (obj is String) {
+      return AnyValueString(obj);
+    } else if (obj is bool) {
+      return AnyValueBool(obj);
+    } else if (obj is int) {
+      // On the web every number is a double, so `2.0 is int` is true and a
+      // whole-valued double arrives here as an AnyValueInt. Attributes'
+      // getDouble and getDoubleList promote an int, so a caller reading the
+      // value back gets 2.0 on both platforms; only the stored subtype, and
+      // so `is AnyValueInt`, differs.
+      return AnyValueInt(obj);
+    } else if (obj is double) {
+      return AnyValueDouble(obj);
+    } else if (obj is Uint8List) {
+      // Must precede the List check: Uint8List implements List<int>, so it
+      // would otherwise become an array of AnyValueInt.
+      return AnyValueBytes(obj);
+    } else if (obj is List) {
+      return AnyValueArray(obj.map((e) => _fromObject(e, depth + 1)).toList());
+    } else if (obj is Map) {
+      final map = <String, AnyValue>{};
+      obj.forEach((key, val) {
+        if (key is! String) {
+          throw ArgumentError(
+              'AnyValue map keys must be Strings, got ${key.runtimeType}');
+        }
+        map[key] = _fromObject(val, depth + 1);
+      });
+      return AnyValueMap(map);
+    } else if (obj is DateTime) {
+      // Timestamp.dateTimeToString, not toIso8601String: it is what
+      // attrsFromMap and Span.setDateTimeAttribute already emit, and it pins
+      // the fractional part to milliseconds instead of widening to
+      // microseconds whenever the DateTime happens to carry them.
+      return AnyValueString(Timestamp.dateTimeToString(obj));
+    } else {
+      throw ArgumentError(
+          'Unsupported type in AnyValue conversion: ${obj.runtimeType}');
+    }
+  }
+}
+
+/// An [AnyValue] holding no value, serialized as JSON `null`.
+class AnyValueNull extends AnyValue {
+  /// Creates the null AnyValue.
+  const AnyValueNull();
+
+  @override
+  Object? get value => null;
+
+  @override
+  int get hashCode => null.hashCode;
+
+  @override
+  bool operator ==(Object other) => other is AnyValueNull;
+}
+
+/// An [AnyValue] holding a String.
+class AnyValueString extends AnyValue {
+  /// The wrapped String.
+  @override
+  final String value;
+
+  /// Creates an AnyValue holding [value].
+  const AnyValueString(this.value);
+
+  @override
+  int get hashCode => value.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      other is AnyValueString && value == other.value;
+}
+
+/// An [AnyValue] holding a boolean.
+class AnyValueBool extends AnyValue {
+  /// The wrapped boolean.
+  @override
+  final bool value;
+
+  /// Creates an AnyValue holding [value].
+  const AnyValueBool(this.value);
+
+  @override
+  int get hashCode => value.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      other is AnyValueBool && value == other.value;
+}
+
+/// An [AnyValue] holding an integer.
+class AnyValueInt extends AnyValue {
+  /// The wrapped integer.
+  @override
+  final int value;
+
+  /// Creates an AnyValue holding [value].
+  const AnyValueInt(this.value);
+
+  @override
+  int get hashCode => value.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      other is AnyValueInt && value == other.value;
+}
+
+/// An [AnyValue] holding a double.
+class AnyValueDouble extends AnyValue {
+  /// The wrapped double.
+  @override
+  final double value;
+
+  /// Creates an AnyValue holding [value].
+  const AnyValueDouble(this.value);
+
+  @override
+  int get hashCode => value.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      other is AnyValueDouble && value == other.value;
+}
+
+/// An [AnyValue] holding an ordered list of [AnyValue]s.
+class AnyValueArray extends AnyValue {
+  /// The wrapped list, which is unmodifiable.
+  @override
+  final List<AnyValue> value;
+
+  /// Creates an AnyValue holding a defensive, unmodifiable copy of [value].
+  ///
+  /// The copy is required because [AnyValue] is value-equal and is used as a
+  /// key by [Attributes]; sharing the caller's list would let a later mutation
+  /// change this value's `hashCode`.
+  AnyValueArray(List<AnyValue> value) : value = List.unmodifiable(value);
+
+  // Deep hashing walks the whole structure, and this value is immutable, so
+  // compute it once on first use rather than on every lookup.
+  late final int _hashCode = const DeepCollectionEquality().hash(value);
+
+  @override
+  int get hashCode => _hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      other is AnyValueArray &&
+      const DeepCollectionEquality().equals(value, other.value);
+}
+
+/// An [AnyValue] holding a map of String keys to [AnyValue]s.
+class AnyValueMap extends AnyValue {
+  /// The wrapped map, which is unmodifiable.
+  @override
+  final Map<String, AnyValue> value;
+
+  /// Creates an AnyValue holding a defensive, unmodifiable copy of [value].
+  ///
+  /// The copy is required because [AnyValue] is value-equal and is used as a
+  /// key by [Attributes]; sharing the caller's map would let a later mutation
+  /// change this value's `hashCode`.
+  AnyValueMap(Map<String, AnyValue> value) : value = Map.unmodifiable(value);
+
+  // Deep hashing walks the whole structure, and this value is immutable, so
+  // compute it once on first use rather than on every lookup.
+  late final int _hashCode = const DeepCollectionEquality().hash(value);
+
+  @override
+  int get hashCode => _hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      other is AnyValueMap &&
+      const DeepCollectionEquality().equals(value, other.value);
+}
+
+/// An [AnyValue] holding raw bytes.
+///
+/// [value], [unwrap] and [toJson] all return the raw `List<int>`; encoding it
+/// for a wire format is the exporter's job.
+///
+/// Note that [value] is an unmodifiable view rather than a [Uint8List], so
+/// `AnyValue.fromObject(bytes.unwrap())` yields an [AnyValueArray] of
+/// [AnyValueInt] rather than an [AnyValueBytes].
+class AnyValueBytes extends AnyValue {
+  /// The wrapped bytes, which are unmodifiable.
+  ///
+  /// Every element is in the range 0-255; the constructor rejects anything
+  /// else. Backed by a [Uint8List] rather than `List.unmodifiable`, which
+  /// would box every element: bytes carry blobs, so a 1 MB payload would
+  /// otherwise become a million boxed ints.
+  @override
+  final List<int> value;
+
+  /// Creates an AnyValue holding a defensive, unmodifiable copy of [value].
+  ///
+  /// The copy is required because [AnyValue] is value-equal and is used as a
+  /// key by [Attributes]; sharing the caller's list would let a later mutation
+  /// change this value's `hashCode`.
+  ///
+  /// Throws an [ArgumentError] if any element falls outside the range 0-255.
+  AnyValueBytes(List<int> value) : value = _asBytes(value);
+
+  static List<int> _asBytes(List<int> value) {
+    // A Uint8List is in range by construction, and Uint8List.fromList is
+    // already an O(n) copy, so only an arbitrary List<int> needs scanning.
+    // Masking out-of-range values the way Uint8List does would silently
+    // corrupt an opaque payload, which is the behavior this package rejects
+    // for every other unsupported input.
+    if (value is! Uint8List) {
+      for (final byte in value) {
+        if (byte < 0 || byte > 255) {
+          throw ArgumentError.value(byte, 'value',
+              'AnyValueBytes elements must be in the range 0-255');
+        }
+      }
+    }
+    return UnmodifiableListView<int>(Uint8List.fromList(value));
+  }
+
+  // Deep hashing walks the whole payload, which for bytes may be large, and
+  // this value is immutable, so compute it once on first use.
+  late final int _hashCode = const DeepCollectionEquality().hash(value);
+
+  @override
+  int get hashCode => _hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      other is AnyValueBytes &&
+      const DeepCollectionEquality().equals(value, other.value);
+}

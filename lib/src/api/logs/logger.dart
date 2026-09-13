@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import 'package:meta/meta.dart';
+import '../../util/otel_error_handler.dart';
+import '../common/any_value.dart';
 import '../common/attributes.dart';
 import '../context/context.dart';
 import 'severity.dart';
@@ -59,6 +61,16 @@ class APILogger {
 
   /// Emit a LogRecord.
   ///
+  /// [body] takes a plain Dart object and is boxed internally by
+  /// [bodyToAnyValue]; [LogRecord.body] holds the resulting [AnyValue].
+  ///
+  /// This no-op implementation still converts [body], so a body the data model
+  /// cannot represent is reported even with no SDK installed — silently
+  /// discarding it would hide exactly the mistake worth surfacing. That
+  /// conversion allocates, so call [isEnabled] first, as the spec asks
+  /// instrumentation to do before every record: it is `false` here, which
+  /// skips the call and its cost entirely.
+  ///
   /// More info https://opentelemetry.io/docs/specs/otel/logs/api/#emit-a-logrecord
   void emit({
     DateTime? timeStamp,
@@ -66,10 +78,37 @@ class APILogger {
     Context? context,
     Severity? severityNumber,
     String? severityText,
-    dynamic body,
+    Object? body,
     Attributes? attributes,
     String? eventName,
   }) {
-    // Base implementation is a no-op
+    // Base implementation is a no-op, but the body is still normalized so an
+    // unsupported value is reported here rather than by whichever SDK
+    // happens to be installed.
+    bodyToAnyValue(body);
+  }
+
+  /// Boxes an [emit] body into the [AnyValue] that [LogRecord.body] holds.
+  ///
+  /// Returns null when [body] is null or cannot be represented. A value the
+  /// data model cannot carry is reported through [OTelErrorHandling] and the
+  /// body dropped, never thrown: error-handling.md makes throwing on end-user
+  /// misuse a MUST NOT, and failing telemetry must not take down the caller's
+  /// logging path. This mirrors what `attrsFromMap` does for attributes.
+  ///
+  /// Static, not an instance method: SDK loggers `implement` [APILogger] and
+  /// delegate rather than extending it, so an instance member would oblige
+  /// every one of them to supply its own implementation — the opposite of
+  /// sharing this one. Call it as `APILogger.bodyToAnyValue(body)`.
+  static AnyValue? bodyToAnyValue(Object? body) {
+    if (body == null) return null;
+    try {
+      return AnyValue.fromObject(body);
+    } catch (e) {
+      OTelErrorHandling.report(ArgumentError(
+          'Dropping the log record body because it contains unsupported '
+          'types: $e'));
+      return null;
+    }
   }
 }
