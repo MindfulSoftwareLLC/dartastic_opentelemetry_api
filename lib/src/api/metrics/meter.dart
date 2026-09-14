@@ -41,7 +41,7 @@ class APIMeter {
   final Attributes? attributes;
 
   /// Creates a new [APIMeter].
-  /// You cannot create a Meter directly; you must use [MeterProvider]:
+  /// You cannot create a Meter directly; you must use [APIMeterProvider]:
   /// ```dart
   /// var meter = OTel.meterProvider() or more likely, OTel.meterProvider().getMeter("my-library");
   /// ```

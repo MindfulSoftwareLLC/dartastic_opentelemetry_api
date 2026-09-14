@@ -619,7 +619,7 @@ class OTelAPI {
     }
   }
 
-  /// Creates an invalid [Trace] (all zeros)
+  /// Creates an invalid [TraceId] (all zeros)
   static TraceId traceIdInvalid() {
     return traceIdOf(TraceId.invalidTraceIdBytes);
   }
