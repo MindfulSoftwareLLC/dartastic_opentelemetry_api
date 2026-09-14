@@ -43,6 +43,8 @@ class TraceFlags {
   /// [hex] Two lowercase hexadecimal digits.
   ///
   /// Returns a new TraceFlags instance, or null if [hex] is anything else.
+  /// A propagator must reject the enclosing traceparent when this returns null;
+  /// substituting [none] would accept an invalid header.
   static TraceFlags? fromString(String hex) {
     if (hex.length != 2) return null;
     final bytes = IdGenerator.hexToBytes(hex);

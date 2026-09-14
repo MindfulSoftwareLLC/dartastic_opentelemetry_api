@@ -30,5 +30,21 @@ void main() {
             reason: 'flags $flags');
       }
     });
+
+    test('SpanContext.fromJson retains only the flags byte', () {
+      const cases = {0x100: 0x00, 0x1ff: 0xff, 300: 0x2c, -1: 0xff};
+      for (final entry in cases.entries) {
+        final context = SpanContext.fromJson({
+          'traceId': '4bf92f3577b34da6a3ce929d0e0e4736',
+          'spanId': '00f067aa0ba902b7',
+          'traceFlags': entry.key,
+          'isRemote': true,
+        });
+        expect(context.traceFlags.asByte, entry.value);
+        expect(context.toJson()['traceFlags'], entry.value);
+        expect(context.traceFlags.toString(), hasLength(2));
+        expect(context.isRemote, isTrue);
+      }
+    });
   });
 }

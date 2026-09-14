@@ -18,10 +18,25 @@ void main() {
       expect(TraceFlags.fromString('0f')!.asByte, equals(0x0f));
     });
 
+    test('fromString preserves every byte and its sampling bit', () {
+      for (var byte = 0; byte <= 0xff; byte++) {
+        final hex = byte.toRadixString(16).padLeft(2, '0');
+        final flags = TraceFlags.fromString(hex)!;
+        expect(flags.asByte, byte, reason: hex);
+        expect(flags.toString(), hex);
+        expect(flags.isSampled, byte.isOdd, reason: hex);
+        expect(flags.withSampled(true).asByte, byte | 1, reason: hex);
+        expect(flags.withSampled(false).asByte, byte & 0xfe, reason: hex);
+      }
+    });
+
     test('fromString should return null unless there are two characters', () {
       expect(TraceFlags.fromString(''), isNull);
       expect(TraceFlags.fromString('0'), isNull);
       expect(TraceFlags.fromString('100'), isNull);
+      expect(TraceFlags.fromString('0001'), isNull);
+      expect(TraceFlags.fromString('0x01'), isNull);
+      expect(TraceFlags.fromString('01\n'), isNull);
       expect(TraceFlags.fromString('randomtext'), isNull);
     });
 
@@ -32,6 +47,30 @@ void main() {
       // '+1' and '-1' are two characters, so only the grammar rejects them.
       expect(TraceFlags.fromString('+1'), isNull);
       expect(TraceFlags.fromString('-1'), isNull);
+    });
+
+    test('fromString rejects non-hex ASCII in either digit', () {
+      const hexDigits = '0123456789abcdef';
+      for (var codeUnit = 0; codeUnit < 128; codeUnit++) {
+        final character = String.fromCharCode(codeUnit);
+        if (hexDigits.contains(character)) continue;
+        expect(TraceFlags.fromString('${character}0'), isNull,
+            reason: 'first digit: ASCII $codeUnit');
+        expect(TraceFlags.fromString('0$character'), isNull,
+            reason: 'second digit: ASCII $codeUnit');
+      }
+    });
+
+    test('fromString rejects non-ASCII characters', () {
+      for (final hex in [
+        '\u00a01',
+        '1\u00a0',
+        '\uff10\uff11',
+        '0\u00e9',
+        '\u{1f600}'
+      ]) {
+        expect(TraceFlags.fromString(hex), isNull, reason: hex);
+      }
     });
 
     test('asByte should return the correct value', () {
