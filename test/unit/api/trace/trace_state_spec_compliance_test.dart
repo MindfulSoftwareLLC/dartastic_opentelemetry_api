@@ -142,19 +142,23 @@ void main() {
     });
 
     test('removing one large entry can make the rest fit', () {
-      // 404 + 61 + 61 + separators = 528 characters: over budget. The
-      // over-128 entry is removed, and that alone brings the value to
-      // 123 characters, so the two under-128 entries both survive.
-      final bigValue = List.filled(400, 'v').join(); // big=... 404 chars
-      final ok1Value = List.filled(58, 'w').join(); // ok1=... 62 chars
-      final ok2Value = List.filled(58, 'x').join(); // ok2=... 62 chars
-      final traceState = TraceState.fromMap({
-        'ok1': ok1Value,
-        'ok2': ok2Value,
-        'big': bigValue,
-      });
+      // big=... is 258 characters. Eight 59-character entries plus big
+      // and separators total 738: over budget. The over-128 entry is
+      // removed, and that alone brings the value to 479 characters, so
+      // the eight under-128 entries all survive.
+      final v55 = List.filled(55, 'v').join(); // k0=... 59 chars
+      final bigValue = List.filled(254, 'w').join(); // big=... 258 chars
+      final entries = <String, String>{};
+      for (var i = 0; i < 8; i++) {
+        entries['k$i'] = v55;
+      }
+      entries['big'] = bigValue;
+      final traceState = TraceState.fromMap(entries);
       final header = traceState.toHeaderString();
-      expect(header, equals('ok1=$ok1Value,ok2=$ok2Value'));
+      expect(
+          header,
+          equals('k0=$v55,k1=$v55,k2=$v55,k3=$v55,'
+              'k4=$v55,k5=$v55,k6=$v55,k7=$v55'));
       expect(header.length, lessThanOrEqualTo(512));
     });
 
@@ -219,6 +223,73 @@ void main() {
       } finally {
         OTelErrorHandling.resetToDefault();
       }
+    });
+
+    test('a header one character over budget keeps what fits', () {
+      // a=... is 255 characters, b=... is 257, plus the comma: 513.
+      // Removing either entry alone fits, so only the first one goes.
+      final longA = List.filled(253, 'x').join();
+      final longB = List.filled(255, 'y').join();
+      final traceState = TraceState.fromMap({'a': longA, 'b': longB});
+      expect(traceState.toHeaderString(), equals('b=$longB'));
+    });
+
+    test('stops dropping over-128 entries once the value fits', () {
+      // Three 180-character entries total 542. Dropping the first
+      // brings the value to 361, so the other two over-128 entries
+      // must survive and only one drop is reported.
+      final received = <Object>[];
+      OTelErrorHandling.handler = (error, stackTrace) {
+        received.add(error);
+      };
+      try {
+        final v178 = List.filled(178, 'v').join();
+        final traceState =
+            TraceState.fromMap({'a': v178, 'b': v178, 'c': v178});
+        final header = traceState.toHeaderString();
+        expect(header, equals('b=$v178,c=$v178'));
+        expect(received.length, 1,
+            reason: 'only the first over-128 entry is dropped');
+      } finally {
+        OTelErrorHandling.resetToDefault();
+      }
+    });
+
+    test('returns the value untouched at exactly 512 characters', () {
+      // Both entries are over 128 characters, but 255 + 256 + the
+      // comma is exactly 512, so no truncation runs at all.
+      final a = List.filled(253, 'x').join(); // a=... 255 chars
+      final b = List.filled(254, 'y').join(); // b=... 256 chars
+      final traceState = TraceState.fromMap({'a': a, 'b': b});
+      expect(traceState.toHeaderString(), equals('a=$a,b=$b'));
+    });
+
+    test('an entry of exactly 128 characters is not over-long', () {
+      // Five entries of exactly 128 characters total 644. If 128
+      // counted as over-long the over-128 pass would drop all five
+      // and return an empty string. Since only entries over 128 are
+      // dropped, the pass removes nothing and the end-truncation
+      // keeps the first three entries.
+      final v125 = List.filled(125, 'x').join(); // sN=... 128 chars
+      final traceState = TraceState.fromMap({
+        's0': v125,
+        's1': v125,
+        's2': v125,
+        's3': v125,
+        's4': v125,
+      });
+      final header = traceState.toHeaderString();
+      expect(header, equals('s0=$v125,s1=$v125,s2=$v125'));
+    });
+
+    test('a single maximum-size entry yields an empty header', () {
+      // A 256-character key with a 256-character value is 513
+      // characters, over budget on its own, so the entry is dropped
+      // and nothing remains.
+      final key = List.filled(256, 'k').join();
+      final value = List.filled(256, 'v').join();
+      final traceState = TraceState.fromMap({key: value});
+      expect(traceState.toHeaderString(), equals(''));
     });
   });
 }
