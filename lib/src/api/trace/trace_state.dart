@@ -9,6 +9,15 @@ part 'trace_state_create.dart';
 
 /// Key-value pairs carried along with a span context.
 /// TraceState follows the W3C Trace Context specification.
+///
+/// Size policy: the grammar limits (W3C §3.3.1.1) — a maximum of 32
+/// list-members and the per-key/per-value length rules — are enforced on
+/// every path. [toString] serializes exactly what the state holds and
+/// does not truncate beyond them; [toHeaderString] applies the §3.3.1.5
+/// truncation procedure for callers that need a bounded header value.
+/// Vendors SHOULD propagate at least 512 characters of the combined
+/// header, so 512 is a floor the procedure keeps whole entries within,
+/// not a ceiling imposed on the state itself.
 class TraceState {
   static const int _maxKeyValuePairs = 32;
   static final RegExp _simpleKeyFormat = RegExp(r'^[a-z][a-z0-9_\-*/]{0,255}$');
@@ -141,6 +150,66 @@ class TraceState {
   @override
   String toString() {
     return _entries.entries.map((e) => '${e.key}=${e.value}').join(',');
+  }
+
+  /// Produces the W3C `tracestate` header value, applying the truncation
+  /// procedure of W3C Trace Context §3.3.1.5.
+  ///
+  /// The procedure only runs when the value needs to be truncated: if the
+  /// joined value fits the 512-character budget it is returned as-is,
+  /// including entries over 128 characters. When it does not fit, whole
+  /// entries are removed, entries larger than 128 characters first, then
+  /// entries from the end. Removals stop as soon as the value fits the
+  /// budget, so no entry is dropped that the budget could still hold.
+  /// Every dropped entry is reported through [OTelErrorHandling]. Unlike
+  /// [toString], this may return a value that no longer contains all
+  /// entries.
+  String toHeaderString() {
+    final entries = _entries.entries.toList(growable: false);
+    final parts =
+        entries.map((e) => '${e.key}=${e.value}').toList(growable: false);
+    var length = parts.isEmpty
+        ? 0
+        : parts.fold<int>(0, (sum, part) => sum + part.length) +
+            parts.length -
+            1;
+    if (length <= 512) {
+      return parts.join(',');
+    }
+
+    // W3C §3.3.1.5: "Entries larger than 128 characters long SHOULD be
+    // removed first", as part of truncating a value that does not fit.
+    // The length of a list-member is its `key=value` size. Entries are
+    // dropped in order only while the value is still over budget.
+    final kept = List<bool>.filled(parts.length, true);
+    var remaining = parts.length;
+    for (var i = 0; i < parts.length && length > 512; i++) {
+      if (parts[i].length <= 128) continue;
+      kept[i] = false;
+      remaining--;
+      length = remaining == 0 ? 0 : length - parts[i].length - 1;
+      OTelErrorHandling.report(StateError(
+          'TraceState entry ${entries[i].key} exceeds 128 characters; '
+          'dropped.'));
+    }
+
+    // Then entries should be removed starting from the end of the
+    // tracestate until the value fits the 512-character budget.
+    for (var i = parts.length - 1; i >= 0 && length > 512; i--) {
+      if (!kept[i]) continue;
+      kept[i] = false;
+      remaining--;
+      length = remaining == 0 ? 0 : length - parts[i].length - 1;
+      OTelErrorHandling.report(StateError(
+          'TraceState exceeds 512 characters; entry '
+          '${entries[i].key} dropped.'));
+    }
+
+    final value = <String>[];
+    for (var i = 0; i < parts.length; i++) {
+      if (kept[i]) value.add(parts[i]);
+    }
+    return value.join(',');
   }
 
   /// Validate a tracestate key: a simple key, or a multi-tenant
