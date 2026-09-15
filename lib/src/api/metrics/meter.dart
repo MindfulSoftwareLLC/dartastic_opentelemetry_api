@@ -19,7 +19,7 @@ import 'up_down_counter.dart';
 
 part 'meter_create.dart';
 
-/// Meter is responsible for creating [Instrument]s and recording metrics.
+/// Meter is responsible for creating [APIInstrument]s and recording metrics.
 /// The API prefix indicates that it's part of the API and not the SDK
 /// and generally should not be used since an API without an SDK is a noop.
 /// Use the Meter from the SDK instead.
@@ -41,7 +41,7 @@ class APIMeter {
   final Attributes? attributes;
 
   /// Creates a new [APIMeter].
-  /// You cannot create a Meter directly; you must use [MeterProvider]:
+  /// You cannot create a Meter directly; you must use [APIMeterProvider]:
   /// ```dart
   /// var meter = OTel.meterProvider() or more likely, OTel.meterProvider().getMeter("my-library");
   /// ```
@@ -60,7 +60,7 @@ class APIMeter {
   /// SDK subclasses override this to compute the real, current value.
   bool isEnabled() => false;
 
-  /// Creates a [Counter] with the given name.
+  /// Creates a [APICounter] with the given name.
   ///
   /// A Counter is a synchronous Instrument which supports non-negative increments.
   ///
@@ -82,7 +82,7 @@ class APIMeter {
     );
   }
 
-  /// Creates an [UpDownCounter] with the given name.
+  /// Creates a [APIUpDownCounter] with the given name.
   ///
   /// An UpDownCounter is a synchronous Instrument which supports increments and decrements.
   ///
@@ -104,7 +104,7 @@ class APIMeter {
     );
   }
 
-  /// Creates a [Histogram] with the given name.
+  /// Creates a [APIHistogram] with the given name.
   ///
   /// A Histogram is a synchronous Instrument which can be used to report arbitrary values
   /// that are likely to be statistically meaningful.
@@ -141,7 +141,7 @@ class APIMeter {
     );
   }
 
-  /// Creates a [Gauge] with the given name.
+  /// Creates a [APIGauge] with the given name.
   ///
   /// A Gauge is a synchronous Instrument which can be used to record non-additive value(s)
   /// when changes occur.
@@ -164,7 +164,7 @@ class APIMeter {
     );
   }
 
-  /// Creates an [ObservableCounter] with the given name.
+  /// Creates a [APIObservableCounter] with the given name.
   ///
   /// An ObservableCounter is an asynchronous Instrument which reports monotonically increasing
   /// value(s) when the instrument is being observed.
@@ -193,7 +193,7 @@ class APIMeter {
     );
   }
 
-  /// Creates an [ObservableUpDownCounter] with the given name.
+  /// Creates a [APIObservableUpDownCounter] with the given name.
   ///
   /// An ObservableUpDownCounter is an asynchronous Instrument which reports values that increase
   /// or decrease when the instrument is being observed.
@@ -222,7 +222,7 @@ class APIMeter {
     );
   }
 
-  /// Creates an [ObservableGauge] with the given name.
+  /// Creates a [APIObservableGauge] with the given name.
   ///
   /// An ObservableGauge is an asynchronous Instrument which reports non-additive value(s)
   /// when the instrument is being observed.

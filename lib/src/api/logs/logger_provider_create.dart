@@ -5,9 +5,9 @@ part of 'logger_provider.dart';
 
 @internal
 class LogProviderCreate {
-  /// Creates a new [APIMeterProvider] instance.
+  /// Creates a new [APILoggerProvider] instance.
   /// This is an implementation detail and should not be used directly.
-  /// Use [OTelAPI.meterProvider()] or [OTel.meterProvider()] instead.
+  /// Use [OTelAPI.loggerProvider()] or [OTel.loggerProvider()] instead.
   static APILoggerProvider create({
     required String endpoint,
     required String serviceName,

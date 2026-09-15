@@ -263,7 +263,7 @@ abstract class OTelFactory {
   }
 
   /// Creates a new LogProvider referenced by [name] .  If name is null, this returns
-  /// the global default [APILogProvider], if not it returns a
+  /// the global default [APILoggerProvider], if not it returns a
   /// LogProvider for the name.  If the LogProvider does not exist,
   /// it is created.
   APILoggerProvider addLogProvider(String name,
@@ -337,7 +337,7 @@ abstract class OTelFactory {
   APIMeterProvider meterProvider(
       {required String endpoint, String serviceName, String serviceVersion});
 
-  /// Creates a [APILogProvider]
+  /// Creates a [APILoggerProvider]
   APILoggerProvider loggerProvider(
       {required String endpoint, String serviceName, String serviceVersion});
 

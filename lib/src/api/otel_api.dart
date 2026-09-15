@@ -78,8 +78,8 @@ class OTelAPI {
   /// the instrumentation library (e.g. @dart/dartastic_opentelemetry_api),
   /// package, module or class name.
   /// [serviceVersion] defaults to the matching OTel spec version
-  /// plus a release version of this library, currently  1.11.0.0
-  /// [otelFactoryCreationFunction] defaults to a function that constructs
+  /// plus a release version of this library, currently 1.11.0.0
+  /// [oTelFactoryCreationFunction] defaults to a function that constructs
   /// the noop OTelAPIFactory as required by the specification. A factory
   /// method is required for serialization across
   /// execution contexts (isolates).
@@ -203,13 +203,13 @@ class OTelAPI {
         attributes: attributes);
   }
 
-  /// returns a list of [APITracerProvider]s including the the global default
+  /// returns a list of [APITracerProvider]s including the global default
   /// and any named providers added.
   static List<APITracerProvider> tracerProviders() {
     return OTelFactory.otelFactory?.getTracerProviders() ?? [];
   }
 
-  /// returns a list of [APIMeterProvider]s including the the global default
+  /// returns a list of [APIMeterProvider]s including the global default
   /// and any named providers added.
   static List<APIMeterProvider> meterProviders() {
     return OTelFactory.otelFactory?.getMeterProviders() ?? [];
@@ -407,7 +407,7 @@ class OTelAPI {
   }
 
   /// Creates an `Baggage` with the given `name` and `keyValuePairs` which
-  /// are converted into `BaggeEntry`s without metadata.
+  /// are converted into `BaggageEntry`s without metadata.
   static Baggage baggageForMap(Map<String, String> keyValuePairs) {
     _getAndCacheOtelFactory();
     return OTelFactory.otelFactory!.baggageForMap(keyValuePairs);
@@ -619,7 +619,7 @@ class OTelAPI {
     }
   }
 
-  /// Creates an invalid [Trace] (all zeros)
+  /// Creates an invalid [TraceId] (all zeros)
   static TraceId traceIdInvalid() {
     return traceIdOf(TraceId.invalidTraceIdBytes);
   }
