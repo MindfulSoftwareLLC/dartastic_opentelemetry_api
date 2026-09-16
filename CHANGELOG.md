@@ -106,7 +106,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `Attribute` constructor was already private
   ([#123](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/123)).
 - Attribute conversion (`attrsFromMap` / `AnyValue.fromObject`) follows
-  "Mapping Arbitrary Data to OTLP AnyValue". A type with no dedicated mapping
+  "Mapping Arbitrary Data to OTLP AnyValue". An `AnyValue` passes through
+  unchanged at any depth, so a value read off an existing `Attribute` can be
+  handed straight back in. A type with no dedicated mapping
   is converted through its `toString()`, per that document's Other Values
   rules; if `toString()` itself throws, the failure is reported through
   `OTelErrorHandling` and the value becomes an empty `AnyValue`, the last

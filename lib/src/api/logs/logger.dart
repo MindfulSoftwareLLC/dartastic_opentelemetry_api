@@ -107,7 +107,8 @@ class APILogger {
   static AnyValue? bodyToAnyValue(Object? body) {
     if (body == null) return null;
     // Already boxed: emit(body: record.body) is the natural way to forward a
-    // record, and converting an AnyValue would report it as unsupported.
+    // record. AnyValue.fromObject does this too, at every depth; this is the
+    // same rule applied one call earlier for the common top-level case.
     if (body is AnyValue) return body;
     try {
       return AnyValue.fromObject(body);

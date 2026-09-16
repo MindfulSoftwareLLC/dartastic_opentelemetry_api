@@ -334,6 +334,55 @@ void _attributeValueDataModelTests() {
       expect(reported, isEmpty);
     });
 
+    // An AnyValue handed back in must survive untouched. Without the
+    // passthrough the type ladder misses it and Other Values stringifies it,
+    // so AnyValueInt(42) would store as '42' and AnyValueBytes would store as
+    // its '<N bytes>' rendering, losing the payload outright.
+    test('an attribute value can be reinserted under a new key', () {
+      final original = OTelAPI.attributeInt('old', 42);
+      final attrs = Attributes.of({'renamed': original.value});
+
+      expect(attrs.getInt('renamed'), equals(42));
+      expect(attrs.toMap()['renamed']!.value, isA<AnyValueInt>());
+      expect(reported, isEmpty);
+    });
+
+    test('a wrapped value nested in a map keeps its type', () {
+      final bytes = AnyValueBytes([1, 2]);
+      final attrs = Attributes.of({
+        'wrapper': {'payload': bytes, 'n': const AnyValueInt(7)},
+      });
+
+      final map = attrs.toMap()['wrapper']!.value as AnyValueMap;
+      expect(identical(map.value['payload'], bytes), isTrue);
+      expect(map.value['payload']!.unwrap(), equals([1, 2]));
+      expect(map.value['n'], equals(const AnyValueInt(7)));
+      expect(reported, isEmpty);
+    });
+
+    test('a wrapped value nested in a list keeps its type', () {
+      final attrs = Attributes.of({
+        'items': [const AnyValueInt(1), 'plain', const AnyValueBool(true)],
+      });
+
+      final array = attrs.toMap()['items']!.value as AnyValueArray;
+      expect(array.value[0], equals(const AnyValueInt(1)));
+      expect(array.value[1], equals(const AnyValueString('plain')));
+      expect(array.value[2], equals(const AnyValueBool(true)));
+      expect(reported, isEmpty);
+    });
+
+    test('fromObject returns an AnyValue unchanged', () {
+      final value = AnyValueMap({'k': const AnyValueString('v')});
+      expect(identical(AnyValue.fromObject(value), value), isTrue);
+
+      const scalar = AnyValueInt(42);
+      expect(identical(AnyValue.fromObject(scalar), scalar), isTrue);
+
+      const nullValue = AnyValueNull();
+      expect(identical(AnyValue.fromObject(nullValue), nullValue), isTrue);
+    });
+
     test('a throwing toString is reported and becomes an empty value', () {
       final attrs = Attributes.of({'bad': _ThrowingToString(), 'good': 'kept'});
 

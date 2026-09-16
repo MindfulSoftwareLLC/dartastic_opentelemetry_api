@@ -129,6 +129,9 @@ sealed class AnyValue {
   /// [AnyValueArray] of converted elements. [DateTime] is converted to a UTC
   /// ISO-8601 string.
   ///
+  /// An [AnyValue] passes through unchanged, at any nesting depth, so a value
+  /// read off an existing [Attribute] can be handed straight back in.
+  ///
   /// Any other type falls back to its `toString()`, per "Mapping Arbitrary
   /// Data to OTLP AnyValue", Other Values. If that `toString()` throws, the
   /// failure is reported through `OTelErrorHandling` and the value becomes an
@@ -147,6 +150,14 @@ sealed class AnyValue {
     if (depth >= _maxDepth) {
       throw ArgumentError(
           'AnyValue nesting exceeds the maximum depth of $_maxDepth');
+    }
+    // Already converted: return it untouched. This runs at every depth, so a
+    // wrapped value nested in a list or a map survives too. Without it the
+    // type ladder below misses an AnyValue and the Other Values fallback
+    // stringifies it, turning AnyValueInt(42) into '42' and, worse,
+    // AnyValueBytes([1, 2]) into its '<2 bytes>' rendering.
+    if (obj is AnyValue) {
+      return obj;
     }
     if (obj == null) {
       return const AnyValueNull();
