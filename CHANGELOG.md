@@ -105,14 +105,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `Attributes` getters or unwrap it. Construction is unaffected — the
   `Attribute` constructor was already private
   ([#123](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/123)).
-- **BREAKING**: attribute conversion (`attrsFromMap` / `AnyValue.fromObject`)
-  no longer guesses. The permissive `.toString()` fallback for unsupported objects is
-  gone: such values are dropped from the resulting `Attributes` and reported
-  through `OTelErrorHandling` instead of being silently stringified. `DateTime`
-  is natively supported, converted with `Timestamp.dateTimeToString` as
-  elsewhere in the API. Conversion is depth limited to 32 levels; a deeper
-  structure throws an `ArgumentError` that `attrsFromMap` routes to
-  `OTelErrorHandling` like any other unsupported value
+- Attribute conversion (`attrsFromMap` / `AnyValue.fromObject`) follows
+  "Mapping Arbitrary Data to OTLP AnyValue". A type with no dedicated mapping
+  is converted through its `toString()`, per that document's Other Values
+  rules; if `toString()` itself throws, the failure is reported through
+  `OTelErrorHandling` and the value becomes an empty `AnyValue`, the last
+  resort the same section prescribes. `DateTime` is natively supported,
+  converted with `Timestamp.dateTimeToString` as elsewhere in the API.
+  Conversion is depth limited to 32 levels, and a non-String map key is still
+  refused; either throws an `ArgumentError` that `attrsFromMap` routes to
+  `OTelErrorHandling`, dropping that attribute
   ([#123](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/123)).
 - **BREAKING**: `LogRecord.body` is an `AnyValue?` rather than an `Object?`, so
   a reader gets the typed model. `APILogger.emit(body: ...)` still takes a

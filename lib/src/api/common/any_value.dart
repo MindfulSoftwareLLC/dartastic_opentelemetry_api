@@ -9,6 +9,7 @@ import 'dart:typed_data';
 import 'package:collection/collection.dart' show DeepCollectionEquality;
 import 'package:meta/meta.dart';
 
+import '../../util/otel_error_handler.dart';
 import 'timestamp.dart';
 
 /// Represents a value of any type supported by the OpenTelemetry specification.
@@ -128,18 +129,18 @@ sealed class AnyValue {
   /// [AnyValueArray] of converted elements. [DateTime] is converted to a UTC
   /// ISO-8601 string.
   ///
-  /// Throws [ArgumentError] if it encounters an unsupported type, a non-String
-  /// map key, or a structure nested more than 32 levels deep. This is a strict
-  /// converter, like `int.parse`: an unsupported type is a programming error
-  /// here, not telemetry to be guessed at. There is deliberately no
-  /// `toString()` fallback — silently turning a domain object into
-  /// `Instance of 'MyClass'` corrupts backend data and hides the integration
-  /// bug that produced it.
+  /// Any other type falls back to its `toString()`, per "Mapping Arbitrary
+  /// Data to OTLP AnyValue", Other Values. If that `toString()` throws, the
+  /// failure is reported through `OTelErrorHandling` and the value becomes an
+  /// empty [AnyValueNull], which is the last resort the same section
+  /// prescribes. Note that a class without its own `toString()` stringifies to
+  /// `Instance of 'MyClass'`, which is rarely the telemetry you wanted — give
+  /// a type you log a meaningful `toString()`, or convert it yourself.
   ///
-  /// Prefer an entry point that already handles the failure if you are passing
-  /// user-supplied values: `Attributes.of`, `Attributes.fromJson` and
-  /// `APILogger.bodyToAnyValue` all catch this, drop the value and report it
-  /// through `OTelErrorHandling` rather than throwing at you.
+  /// Throws [ArgumentError] only for a non-String map key or a structure
+  /// nested more than 32 levels deep. Callers that must not throw —
+  /// `Attributes.of`, `Attributes.fromJson`, `APILogger.bodyToAnyValue` —
+  /// catch those, drop the value and report it.
   factory AnyValue.fromObject(Object? obj) => _fromObject(obj, 0);
 
   static AnyValue _fromObject(Object? obj, int depth) {
@@ -185,8 +186,22 @@ sealed class AnyValue {
       // microseconds whenever the DateTime happens to carry them.
       return AnyValueString(Timestamp.dateTimeToString(obj));
     } else {
-      throw ArgumentError(
-          'Unsupported type in AnyValue conversion: ${obj.runtimeType}');
+      // "Mapping Arbitrary Data to OTLP AnyValue", Other Values: anything not
+      // listed above SHOULD be converted to a string via toString(), and to an
+      // empty AnyValue if that is not possible. Dart offers no general way to
+      // serialize an arbitrary object to bytes, so the spec's intermediate
+      // bytes_value step has nothing to implement and is skipped.
+      try {
+        return AnyValueString(obj.toString());
+      } catch (e) {
+        // A user-defined toString() can throw. error-handling.md: report it,
+        // never propagate, and fall through to the empty value the mapping
+        // doc prescribes as the last resort.
+        OTelErrorHandling.report(ArgumentError(
+            'toString() threw while converting a ${obj.runtimeType} to an '
+            'AnyValue; using an empty value instead: $e'));
+        return const AnyValueNull();
+      }
     }
   }
 }

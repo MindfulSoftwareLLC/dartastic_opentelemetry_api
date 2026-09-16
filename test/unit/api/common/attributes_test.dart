@@ -242,15 +242,18 @@ void main() {
       expect(attrs.getString('ts'), equals('2023-01-01T12:00:00.000Z'));
     });
 
-    test('should ignore unsupported objects in Map<String, Object>', () {
+    test('stringifies an enum value in Map<String, Object>', () {
       final attrs = OTelAPI.attributesFromMap({
-        'net.type': NetworkConnectionType.wifi, // Unsupported enum
+        'net.type': NetworkConnectionType.wifi,
         'valid': 123,
       });
-      // net.type is ignored, only valid is kept
-      expect(attrs.getString('net.type'), isNull);
+      // "Mapping Arbitrary Data to OTLP AnyValue", Other Values: a type with
+      // no dedicated mapping is converted through toString(). This enum has a
+      // toString() returning its symbolic name, which is what that section
+      // asks for enumerations.
+      expect(attrs.getString('net.type'), equals('wifi'));
       expect(attrs.getInt('valid'), equals(123));
-      expect(attrs.length, equals(1));
+      expect(attrs.length, equals(2));
     });
 
     test('remove returns new Attributes without given key', () {

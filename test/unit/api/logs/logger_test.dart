@@ -281,13 +281,25 @@ void main() {
       expect(body.reads, greaterThan(0));
     });
 
-    test('bodyToAnyValue reports and drops an unrepresentable body', () {
+    test('bodyToAnyValue stringifies a body with no dedicated mapping', () {
       final reported = <Object>[];
       OTelAPI.setErrorHandler((e, _) => reported.add(e));
       addTearDown(() => OTelAPI.setErrorHandler(null));
 
-      // The helper an SDK calls still reports: there the record is real.
-      expect(APILogger.bodyToAnyValue(() {}), isNull);
+      // Other Values: stringified rather than dropped.
+      expect(APILogger.bodyToAnyValue(Duration.zero),
+          equals(AnyValueString(Duration.zero.toString())));
+      expect(reported, isEmpty);
+    });
+
+    test('bodyToAnyValue reports and drops a body it cannot convert', () {
+      final reported = <Object>[];
+      OTelAPI.setErrorHandler((e, _) => reported.add(e));
+      addTearDown(() => OTelAPI.setErrorHandler(null));
+
+      // A non-String map key is still refused; the helper reports and drops,
+      // because with an SDK installed the record is real.
+      expect(APILogger.bodyToAnyValue({1: 'v'}), isNull);
       expect(reported, hasLength(1));
       expect(reported.single, isA<ArgumentError>());
     });

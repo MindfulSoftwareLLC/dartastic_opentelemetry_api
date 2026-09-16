@@ -127,13 +127,15 @@ void main() {
       expect(attrs.getIntList('nums'), isNull);
     });
 
-    test('Attributes.of ignores lists of unsupported types', () {
+    test('Attributes.of stringifies unmapped types inside a list', () {
       final attrs = Attributes.of({
-        'bad': <Object>[Duration.zero],
+        'durations': <Object>[Duration.zero],
         'good': 'kept',
       });
       expect(attrs.getString('good'), equals('kept'));
-      expect(attrs.getStringList('bad'), isNull);
+      // Other Values applies recursively to array elements.
+      expect(
+          attrs.getStringList('durations'), equals([Duration.zero.toString()]));
     });
 
     test(
@@ -186,11 +188,18 @@ void main() {
   _attributeValueDataModelTests();
 }
 
-/// common/README.md constrains an attribute value to a primitive or a
-/// homogeneous array of primitives. `AnyValue` is wider than that because it
-/// is the log body model, so both attribute construction paths check the
-/// converted value and drop what the attribute model does not allow. Without
-/// the check such a value stores fine but no typed getter can read it back.
+/// A type whose `toString()` throws, to exercise the last resort in
+/// "Mapping Arbitrary Data to OTLP AnyValue", Other Values.
+class _ThrowingToString {
+  @override
+  String toString() => throw StateError('no string for you');
+}
+
+/// common.md, Attribute: "The attribute value MUST be one of types defined in
+/// AnyValue", which covers a map, a nested array, a byte array and null. This
+/// package previously supported only a primitive or a homogeneous list of
+/// primitives, which is what #95 was filed about, so these pin that each of
+/// those shapes now survives storage and reads back.
 void _attributeValueDataModelTests() {
   group('attribute value data model', () {
     late List<Object> reported;
@@ -306,23 +315,33 @@ void _attributeValueDataModelTests() {
           isNull);
     });
 
-    test('a complex value is still dropped if it cannot be converted', () {
-      // Removing the data-model restriction does not resurrect the
-      // `.toString()` fallback: a closure has no AnyValue representation.
-      final attrs = Attributes.of({'bad': () {}, 'good': 'kept'});
-      expect(attrs.keys, equals(['good']));
-      expect(reported, hasLength(1));
-      expect(reported.single, isA<ArgumentError>());
+    // "Mapping Arbitrary Data to OTLP AnyValue", Other Values: a type with no
+    // dedicated mapping is stringified rather than dropped.
+    test('an unmapped type is stringified, not dropped', () {
+      final attrs = Attributes.of({'obj': Duration.zero, 'good': 'kept'});
+      expect(attrs.keys, containsAll(['obj', 'good']));
+      expect(attrs.getString('obj'), equals(Duration.zero.toString()));
+      expect(reported, isEmpty);
     });
 
-    test('a complex value nested inside a map is dropped with the attribute',
-        () {
+    test('an unmapped type nested inside a map is stringified', () {
       final attrs = Attributes.of({
-        'bad': {'inner': () {}},
-        'good': 'kept',
+        'wrapper': {'inner': Duration.zero},
       });
-      expect(attrs.keys, equals(['good']));
+      final value = attrs.toMap()['wrapper']!.value as AnyValueMap;
+      expect(value.value['inner'],
+          equals(AnyValueString(Duration.zero.toString())));
+      expect(reported, isEmpty);
+    });
+
+    test('a throwing toString is reported and becomes an empty value', () {
+      final attrs = Attributes.of({'bad': _ThrowingToString(), 'good': 'kept'});
+
+      // Other Values' last resort: an empty AnyValue, never a thrown error.
+      expect(attrs.keys, containsAll(['bad', 'good']));
+      expect(attrs.toMap()['bad']!.value, isA<AnyValueNull>());
       expect(reported, hasLength(1));
+      expect(reported.single, isA<ArgumentError>());
     });
 
     test('legal scalars are stored by both paths', () {

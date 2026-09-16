@@ -41,10 +41,12 @@ void main() {
       OTelLog.currentLevel = LogLevel.info;
     });
 
-    test('a dropped attribute (unsupported value type) is reported', () {
-      // Both Attributes.of and fromJson drop an unconvertible value; nothing
-      // is stringified any more. The drop must reach the handler.
-      final attrs = Attributes.fromJson({'unsupported': () {}});
+    test('a dropped attribute (non-String map key) is reported', () {
+      // A non-String map key is one of the two conditions AnyValue.fromObject
+      // still refuses; fromJson catches it, drops the attribute and reports.
+      final attrs = Attributes.fromJson({
+        'unsupported': {1: 'v'},
+      });
 
       expect(attrs.toList(), isEmpty, reason: 'the attribute is dropped');
       expect(reported, hasLength(1));
@@ -54,10 +56,12 @@ void main() {
           reason: 'the report replaces the warn-level log line');
     });
 
-    test('a dropped attribute (unsupported list element type) is reported', () {
-      final attrs = Attributes.of({
-        'mixed': [1, () {}]
-      });
+    test('a dropped attribute (over-deep structure) is reported', () {
+      Object deep = 'leaf';
+      for (var i = 0; i < 40; i++) {
+        deep = <Object>[deep];
+      }
+      final attrs = Attributes.of({'deep': deep});
 
       expect(attrs.toList(), isEmpty, reason: 'the attribute is dropped');
       expect(reported, hasLength(1));
