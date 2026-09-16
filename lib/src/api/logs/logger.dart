@@ -61,15 +61,17 @@ class APILogger {
 
   /// Emit a LogRecord.
   ///
-  /// [body] takes a plain Dart object and is boxed internally by
-  /// [bodyToAnyValue]; [LogRecord.body] holds the resulting [AnyValue].
+  /// [body] takes either a plain Dart object or an [AnyValue]; an SDK boxes it
+  /// with [bodyToAnyValue], and [LogRecord.body] holds the resulting
+  /// [AnyValue].
   ///
-  /// This no-op implementation still converts [body], so a body the data model
-  /// cannot represent is reported even with no SDK installed — silently
-  /// discarding it would hide exactly the mistake worth surfacing. That
-  /// conversion allocates, so call [isEnabled] first, as the spec asks
-  /// instrumentation to do before every record: it is `false` here, which
-  /// skips the call and its cost entirely.
+  /// This implementation does nothing at all, per logs/noop.md: the No-Op
+  /// Logger accepts the parameters and neither validates them nor records
+  /// anything. It deliberately does not convert [body] — no record is produced
+  /// without an SDK, so there is nothing for an unrepresentable body to
+  /// corrupt, and traversing it would charge users who installed no SDK for
+  /// work whose result is discarded. An SDK reports the unrepresentable body,
+  /// because there the record is real.
   ///
   /// More info https://opentelemetry.io/docs/specs/otel/logs/api/#emit-a-logrecord
   void emit({
@@ -82,13 +84,15 @@ class APILogger {
     Attributes? attributes,
     String? eventName,
   }) {
-    // Base implementation is a no-op, but the body is still normalized so an
-    // unsupported value is reported here rather than by whichever SDK
-    // happens to be installed.
-    bodyToAnyValue(body);
+    // Intentionally empty. See the dartdoc: a no-op Logger does nothing, and
+    // that includes not touching the body.
   }
 
   /// Boxes an [emit] body into the [AnyValue] that [LogRecord.body] holds.
+  ///
+  /// An [AnyValue] passes through unchanged, so a record read back from
+  /// [LogRecord.body] can be forwarded to [emit] without being re-wrapped.
+  /// Anything else is converted by [AnyValue.fromObject].
   ///
   /// Returns null when [body] is null or cannot be represented. A value the
   /// data model cannot carry is reported through [OTelErrorHandling] and the
@@ -102,6 +106,9 @@ class APILogger {
   /// sharing this one. Call it as `APILogger.bodyToAnyValue(body)`.
   static AnyValue? bodyToAnyValue(Object? body) {
     if (body == null) return null;
+    // Already boxed: emit(body: record.body) is the natural way to forward a
+    // record, and converting an AnyValue would report it as unsupported.
+    if (body is AnyValue) return body;
     try {
       return AnyValue.fromObject(body);
     } catch (e) {

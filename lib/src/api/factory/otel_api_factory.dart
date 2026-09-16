@@ -152,22 +152,23 @@ class OTelAPIFactory extends OTelFactory {
   }
 
   @override
-  Attributes attributesFromMap(Map<String, Object> namedMap) {
+  Attributes attributesFromMap(Map<String, Object?> namedMap) {
     return attrsFromMap(namedMap);
   }
 
   /// Creates Attributes from a map of string keys to arbitrary values.
   ///
   /// `Attribute` values pass through directly. Every other value is converted
-  /// by [AnyValue.fromObject]: Strings, bools, ints, doubles, lists and
-  /// `DateTime` (as a UTC ISO-8601 String). Empty Strings and empty lists are
-  /// stored per the OTel spec.
+  /// by [AnyValue.fromObject]: Strings, bools, ints, doubles, lists, maps,
+  /// `Uint8List`, `DateTime` (as a UTC ISO-8601 String) and null. common.md
+  /// defines an attribute value as any of the `AnyValue` types, so a map, a
+  /// nested array, a byte array and null are all stored. Empty Strings and
+  /// empty lists are stored too.
   ///
-  /// A value that cannot be converted, or that converts to something the
-  /// attribute data model does not allow — a map, bytes, null, or a nested or
-  /// heterogeneous array — is dropped and reported via `OTelErrorHandling`
-  /// rather than being stringified or stored unreadably.
-  static Attributes attrsFromMap(Map<String, Object> namedMap) {
+  /// A value [AnyValue.fromObject] cannot convert at all — a closure, a domain
+  /// object — is dropped and reported via `OTelErrorHandling` rather than
+  /// being stringified.
+  static Attributes attrsFromMap(Map<String, Object?> namedMap) {
     final attributes = <Attribute>[];
     namedMap.forEach((key, value) {
       if (value is Attribute) {
@@ -175,8 +176,6 @@ class OTelAPIFactory extends OTelFactory {
         return;
       }
 
-      // Only the conversion failure is handled here; whether a converted
-      // AnyValue is a legal *attribute* value is Attributes._'s single rule.
       // Reporting outside the catch: a user handler may rethrow (strict mode),
       // and catching that here would report the same value twice.
       final AnyValue anyValue;

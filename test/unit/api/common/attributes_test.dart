@@ -582,7 +582,7 @@ void main() {
       expect(roundTripped.getStringList('k'), equals(<String>[]));
     });
 
-    test('fromJson drops a list of Map values', () {
+    test('fromJson stores a list of Map values', () {
       final json = <String, dynamic>{
         'key': [
           {'nested': 'object'}
@@ -590,21 +590,27 @@ void main() {
       };
       final attrs = Attributes.fromJson(json);
 
-      // An array of maps converts to a perfectly good AnyValue, which a log
-      // body may carry, but common/README.md allows an attribute value to be
-      // only a primitive or a homogeneous array of primitives. Storing it
-      // would produce an attribute no typed getter could read back.
-      expect(attrs.isEmpty, isTrue);
+      // common.md defines an attribute value as any AnyValue type, which
+      // includes a nested array and a map (#95).
+      expect(attrs.isEmpty, isFalse);
+      expect(
+          ((attrs.toMap()['key']!.value as AnyValueArray).value.first
+                  as AnyValueMap)
+              .value
+              .keys
+              .first,
+          equals('nested'));
     });
 
-    test('fromJson drops Map values', () {
+    test('fromJson stores Map values', () {
       final json = <String, dynamic>{
         'key': {'nested': 'object'}
       };
       final attrs = Attributes.fromJson(json);
 
-      // A map is a legal log body, not a legal attribute value.
-      expect(attrs.isEmpty, isTrue);
+      expect(attrs.isEmpty, isFalse);
+      expect((attrs.toMap()['key']!.value as AnyValueMap).value.keys.first,
+          equals('nested'));
     });
   });
 

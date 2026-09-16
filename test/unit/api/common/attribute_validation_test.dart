@@ -7,8 +7,6 @@
 import 'dart:typed_data';
 
 import 'package:dartastic_opentelemetry_api/dartastic_opentelemetry_api.dart';
-import 'package:dartastic_opentelemetry_api/src/api/common/attribute.dart'
-    show AttributeCreate;
 import 'package:test/test.dart';
 
 void main() {
@@ -210,88 +208,121 @@ void _attributeValueDataModelTests() {
 
     tearDown(() => OTelAPI.setErrorHandler(null));
 
-    // Each illegal value is checked through both construction paths.
-    void expectDroppedByBothPaths(String label, Object value) {
-      final fromMap = Attributes.of({'bad': value, 'good': 'kept'});
-      expect(fromMap.keys, equals(['good']),
+    // common.md, Attribute: "The attribute value MUST be one of types defined
+    // in AnyValue", which covers a map, a nested array, a byte array and null.
+    // Issue #95 was filed because this package supported only a primitive and
+    // a homogeneous list of primitives, so each of these must now survive
+    // storage and be readable back.
+    void expectStoredByBothPaths(
+      String label,
+      Object? value,
+      Matcher anyValueMatcher,
+    ) {
+      final fromMap = Attributes.of({'v': value, 'other': 'kept'});
+      expect(fromMap.keys, containsAll(['v', 'other']),
           reason: '$label via Attributes.of');
-      expect(reported, hasLength(1),
-          reason: '$label reported by Attributes.of');
-      expect(reported.single, isA<ArgumentError>());
+      expect(fromMap.toMap()['v']!.value, anyValueMatcher,
+          reason: '$label round-trips via Attributes.of');
 
-      reported.clear();
+      final fromJson = Attributes.fromJson({'v': value, 'other': 'kept'});
+      expect(fromJson.keys, containsAll(['v', 'other']),
+          reason: '$label via fromJson');
+      expect(fromJson.toMap()['v']!.value, anyValueMatcher,
+          reason: '$label round-trips via fromJson');
 
-      final fromJson = Attributes.fromJson({'bad': value, 'good': 'kept'});
-      expect(fromJson.keys, equals(['good']), reason: '$label via fromJson');
-      expect(reported, hasLength(1), reason: '$label reported by fromJson');
-      expect(reported.single, isA<ArgumentError>());
+      expect(reported, isEmpty, reason: '$label is legal, nothing to report');
     }
 
-    test('a map value is dropped and reported', () {
-      expectDroppedByBothPaths('map', {'a': 1});
+    test('a map value is stored and readable', () {
+      expectStoredByBothPaths('map', {'nested': true}, isA<AnyValueMap>());
+
+      final attrs = Attributes.of({
+        'context': {'nested': true},
+      });
+      final value = attrs.toMap()['context']!.value as AnyValueMap;
+      expect(value.value['nested'], equals(const AnyValueBool(true)));
+      expect(value.unwrap(), equals({'nested': true}));
     });
 
-    // This is a change, not a long-standing rule. attrsFromMap used to match a
-    // Uint8List on its `value is List<int>` branch, so it was stored as an int
-    // list and read back through getIntList. Bytes are not an attribute value
-    // in the OTel data model, so that reading misrepresented the value; it is
-    // now dropped. See the BREAKING note in the CHANGELOG.
-    test('a bytes value is dropped and reported', () {
-      expectDroppedByBothPaths('bytes', Uint8List.fromList([1, 2, 3]));
+    test('a bytes value is stored and readable', () {
+      expectStoredByBothPaths(
+          'bytes', Uint8List.fromList([1, 2, 3]), isA<AnyValueBytes>());
+
+      final attrs = Attributes.of({
+        'b': Uint8List.fromList([1, 2, 3])
+      });
+      expect(attrs.toMap()['b']!.value.unwrap(), equals([1, 2, 3]));
     });
 
-    test('a nested array value is dropped and reported', () {
-      expectDroppedByBothPaths('nested array', [
-        [1, 2],
-      ]);
+    test('a nested array value is stored and readable', () {
+      expectStoredByBothPaths(
+          'nested array',
+          [
+            [1, 2],
+          ],
+          isA<AnyValueArray>());
+
+      final attrs = Attributes.of({
+        'matrix': [
+          [1, 2],
+          [3],
+        ],
+      });
+      expect(
+          attrs.toMap()['matrix']!.value.unwrap(),
+          equals([
+            [1, 2],
+            [3],
+          ]));
     });
 
-    test('a heterogeneous array value is dropped and reported', () {
-      expectDroppedByBothPaths('mixed scalars', [1, 'two']);
-      reported.clear();
-      expectDroppedByBothPaths('mixed bool/string', [true, 'two']);
+    test('a heterogeneous array value is stored and readable', () {
+      expectStoredByBothPaths(
+          'mixed scalars', [1, 'two'], isA<AnyValueArray>());
+
+      final attrs = Attributes.of({
+        'mixed': [1, 'two', true],
+      });
+      expect(attrs.toMap()['mixed']!.value.unwrap(), equals([1, 'two', true]));
     });
 
-    test('an array containing null is dropped and reported', () {
-      expectDroppedByBothPaths('array with null', <Object?>[1, null]);
+    test('an array containing null is stored, preserving the null', () {
+      // common/README.md: a null within an array MUST be preserved where it
+      // cannot be prevented at compile time.
+      expectStoredByBothPaths(
+          'array with null', <Object?>[1, null], isA<AnyValueArray>());
+
+      final attrs = Attributes.of({
+        'sparse': <Object?>['a', null, 'c'],
+      });
+      expect(attrs.toMap()['sparse']!.value.unwrap(), equals(['a', null, 'c']));
     });
 
-    // Attributes.of takes Map<String, Object>, so a bare null cannot reach it.
-    // fromJson takes Map<String, dynamic> and can.
-    test('a null value is dropped and reported by fromJson', () {
-      final attrs = Attributes.fromJson({'bad': null, 'good': 'kept'});
+    test('a null value is stored as AnyValueNull by both paths', () {
+      expectStoredByBothPaths('null', null, isA<AnyValueNull>());
+
+      expect(Attributes.of({'n': null}).toMap()['n']!.value.unwrap(), isNull);
+      expect(Attributes.fromJson({'n': null}).toMap()['n']!.value.unwrap(),
+          isNull);
+    });
+
+    test('a complex value is still dropped if it cannot be converted', () {
+      // Removing the data-model restriction does not resurrect the
+      // `.toString()` fallback: a closure has no AnyValue representation.
+      final attrs = Attributes.of({'bad': () {}, 'good': 'kept'});
       expect(attrs.keys, equals(['good']));
       expect(reported, hasLength(1));
       expect(reported.single, isA<ArgumentError>());
     });
 
-    // describeIllegalValue's scalar branch cannot be reached through either
-    // construction path, because a scalar is always a legal attribute value.
-    // The branch exists so the switch stays exhaustive over the sealed
-    // hierarchy, which makes a future AnyValue subtype a compile error there.
-    // Calling it directly covers the branch and pins its wording.
-    test('describeIllegalValue handles scalars, which callers never reach', () {
-      expect(AttributeCreate.describeIllegalValue(const AnyValueString('s')),
-          equals('a primitive'));
-      expect(AttributeCreate.describeIllegalValue(const AnyValueBool(true)),
-          equals('a primitive'));
-      expect(AttributeCreate.describeIllegalValue(const AnyValueInt(1)),
-          equals('a primitive'));
-      expect(AttributeCreate.describeIllegalValue(const AnyValueDouble(1.5)),
-          equals('a primitive'));
-    });
-
-    test('the report names the offending kind', () {
-      Attributes.of({
-        'a map': {'a': 1},
+    test('a complex value nested inside a map is dropped with the attribute',
+        () {
+      final attrs = Attributes.of({
+        'bad': {'inner': () {}},
+        'good': 'kept',
       });
-      expect('${reported.single}', contains('a map'));
-
-      reported.clear();
-      Attributes.of({
-        'an array': [1, 'two'],
-      });
-      expect('${reported.single}', contains('heterogeneous'));
+      expect(attrs.keys, equals(['good']));
+      expect(reported, hasLength(1));
     });
 
     test('legal scalars are stored by both paths', () {

@@ -1,8 +1,36 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
+import 'dart:collection';
+
 import 'package:dartastic_opentelemetry_api/dartastic_opentelemetry_api.dart';
 import 'package:test/test.dart';
+
+/// A List that counts element reads, so a test can prove whether the no-op
+/// [APILogger.emit] walked the body or left it alone.
+class _CountingList extends ListBase<int> {
+  _CountingList(this._inner);
+
+  final List<int> _inner;
+
+  /// How many elements have been read.
+  int reads = 0;
+
+  @override
+  int get length => _inner.length;
+
+  @override
+  set length(int newLength) => _inner.length = newLength;
+
+  @override
+  int operator [](int index) {
+    reads++;
+    return _inner[index];
+  }
+
+  @override
+  void operator []=(int index, int value) => _inner[index] = value;
+}
 
 void main() {
   group('APILogger', () {
@@ -221,30 +249,74 @@ void main() {
           () => logger.emit(severityNumber: Severity.FATAL), returnsNormally);
     });
 
-    test('an unsupported body is reported and dropped, never thrown', () {
+    // logs/noop.md: the No-Op Logger accepts the parameters and does nothing.
+    // No record is produced without an SDK, so there is nothing an
+    // unrepresentable body could corrupt, and reporting it would charge users
+    // with no SDK installed for a diagnosis they cannot act on.
+    test('no-op emit reports nothing, whatever the body', () {
       final provider = OTelAPI.loggerProvider();
       final logger = provider.getLogger('test-logger');
       final reported = <Object>[];
       OTelAPI.setErrorHandler((e, _) => reported.add(e));
       addTearDown(() => OTelAPI.setErrorHandler(null));
 
-      // A closure has no AnyValue representation. Telemetry that cannot be
-      // represented must not take down the caller's logging path.
       expect(() => logger.emit(body: () {}), returnsNormally);
+      expect(() => logger.emit(body: 'fine'), returnsNormally);
+      expect(() => logger.emit(body: {'k': 1}), returnsNormally);
+      expect(logger.emit, returnsNormally);
+
+      expect(reported, isEmpty);
+    });
+
+    test('no-op emit does not traverse the body', () {
+      final provider = OTelAPI.loggerProvider();
+      final logger = provider.getLogger('test-logger');
+      final body = _CountingList([1, 2, 3]);
+
+      logger.emit(body: body);
+      expect(body.reads, isZero, reason: 'the no-op never read the body');
+
+      // The SDK-facing helper does read it, which is the difference.
+      APILogger.bodyToAnyValue(body);
+      expect(body.reads, greaterThan(0));
+    });
+
+    test('bodyToAnyValue reports and drops an unrepresentable body', () {
+      final reported = <Object>[];
+      OTelAPI.setErrorHandler((e, _) => reported.add(e));
+      addTearDown(() => OTelAPI.setErrorHandler(null));
+
+      // The helper an SDK calls still reports: there the record is real.
+      expect(APILogger.bodyToAnyValue(() {}), isNull);
       expect(reported, hasLength(1));
       expect(reported.single, isA<ArgumentError>());
     });
 
-    test('a supported body reports nothing', () {
-      final provider = OTelAPI.loggerProvider();
-      final logger = provider.getLogger('test-logger');
+    test('bodyToAnyValue converts a plain value', () {
+      expect(APILogger.bodyToAnyValue(null), isNull);
+      expect(APILogger.bodyToAnyValue('s'), equals(const AnyValueString('s')));
+      expect(APILogger.bodyToAnyValue(1), equals(const AnyValueInt(1)));
+      expect(APILogger.bodyToAnyValue({'k': 1}),
+          equals(AnyValueMap({'k': const AnyValueInt(1)})));
+    });
+
+    // LogRecord.body is an AnyValue?, so emit(body: record.body) is the
+    // natural way to forward a record. Re-wrapping it would report it as
+    // unsupported and drop it.
+    test('bodyToAnyValue passes an AnyValue through unchanged', () {
       final reported = <Object>[];
       OTelAPI.setErrorHandler((e, _) => reported.add(e));
       addTearDown(() => OTelAPI.setErrorHandler(null));
 
-      logger.emit(body: 'fine');
-      logger.emit(body: {'k': 1});
-      logger.emit();
+      final body = AnyValueMap({'k': const AnyValueString('v')});
+      expect(identical(APILogger.bodyToAnyValue(body), body), isTrue);
+
+      const scalar = AnyValueString('s');
+      expect(identical(APILogger.bodyToAnyValue(scalar), scalar), isTrue);
+
+      const nullValue = AnyValueNull();
+      expect(identical(APILogger.bodyToAnyValue(nullValue), nullValue), isTrue);
+
       expect(reported, isEmpty);
     });
 

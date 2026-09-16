@@ -64,17 +64,18 @@ void main() {
       expect(reported.single, isArgumentError);
     });
 
-    test('a dropped attribute (heterogeneous list) is reported', () {
-      // [1, 'two'] converts cleanly to an AnyValueArray, so it is caught by
-      // the attribute-value check rather than by a conversion failure. It
-      // must not be stored: no typed getter could ever read it back.
+    test('a heterogeneous list is stored, not reported', () {
+      // [1, 'two'] converts cleanly to an AnyValueArray. common.md defines an
+      // attribute value as any AnyValue type, so this is legal and nothing is
+      // reported. Only a value AnyValue cannot represent at all is dropped,
+      // which the two tests above cover.
       final attrs = Attributes.of({
         'mixed': [1, 'two']
       });
 
-      expect(attrs.toList(), isEmpty, reason: 'the attribute is dropped');
-      expect(reported, hasLength(1));
-      expect(reported.single, isArgumentError);
+      expect(attrs.keys, equals(['mixed']));
+      expect(attrs.toMap()['mixed']!.value.unwrap(), equals([1, 'two']));
+      expect(reported, isEmpty);
     });
 
     test('a dropped span event (empty name) is reported (api#69)', () {

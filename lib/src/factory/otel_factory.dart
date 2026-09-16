@@ -391,7 +391,7 @@ abstract class OTelFactory {
   /// List\<String>, List\<bool>, List\<int> or List\<double> are used
   /// directly, DateTime is converted to the UTC formatted String,
   /// other values have their toString() used
-  Attributes attributesFromMap(Map<String, Object> namedMap);
+  Attributes attributesFromMap(Map<String, Object?> namedMap);
 
   /// Creates an `Attributes` from a list of values;
   Attributes attributesFromList(List<Attribute> attributeList);

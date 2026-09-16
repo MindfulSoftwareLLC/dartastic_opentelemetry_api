@@ -530,13 +530,17 @@ class OTelAPI {
   ) =>
       attributesFromSemanticMap(typedMap.cast<OTelSemantic, Object>());
 
-  /// Creates an empty `Attributes` collection from a named set of values.
-  /// String, bool, int and double or Lists of those types get turned into
-  /// the matching typed attribute.
-  /// DateTime gets converted to an Attribute\<String> with the UTC time string.
-  /// Attributes get added as-is (note - that would be unnecessary code)
-  /// Anything else gets converted to an Attribute\<String> via its toString.
-  static Attributes attributesFromMap(Map<String, Object> namedMap) {
+  /// Creates an `Attributes` collection from a named set of values.
+  ///
+  /// Every type [AnyValue.fromObject] converts is accepted: String, bool, int
+  /// and double, lists of those, maps, nested arrays, `Uint8List` (as a byte
+  /// array) and null, per common.md's definition of an attribute value.
+  /// DateTime is converted to a UTC time String, and `Attribute` values pass
+  /// through as-is.
+  ///
+  /// A value that cannot be converted is dropped and reported through the
+  /// error handler; there is no `toString()` fallback.
+  static Attributes attributesFromMap(Map<String, Object?> namedMap) {
     _getAndCacheOtelFactory();
     return OTelFactory.otelFactory!.attributesFromMap(namedMap);
   }

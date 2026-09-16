@@ -129,7 +129,17 @@ sealed class AnyValue {
   /// ISO-8601 string.
   ///
   /// Throws [ArgumentError] if it encounters an unsupported type, a non-String
-  /// map key, or a structure nested more than 32 levels deep.
+  /// map key, or a structure nested more than 32 levels deep. This is a strict
+  /// converter, like `int.parse`: an unsupported type is a programming error
+  /// here, not telemetry to be guessed at. There is deliberately no
+  /// `toString()` fallback — silently turning a domain object into
+  /// `Instance of 'MyClass'` corrupts backend data and hides the integration
+  /// bug that produced it.
+  ///
+  /// Prefer an entry point that already handles the failure if you are passing
+  /// user-supplied values: `Attributes.of`, `Attributes.fromJson` and
+  /// `APILogger.bodyToAnyValue` all catch this, drop the value and report it
+  /// through `OTelErrorHandling` rather than throwing at you.
   factory AnyValue.fromObject(Object? obj) => _fromObject(obj, 0);
 
   static AnyValue _fromObject(Object? obj, int depth) {

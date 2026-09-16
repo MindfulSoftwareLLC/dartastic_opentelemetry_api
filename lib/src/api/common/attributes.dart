@@ -23,24 +23,26 @@ class Attributes {
   /// Creates an Attributes instance from a map of key-value pairs.
   /// Uses the appropriate factory method (OTelFactory or OTelAPIFactory) based on initialization state.
   ///
+  /// Values may be anything [AnyValue.fromObject] converts: a primitive, a
+  /// list, a map, a `Uint8List`, a `DateTime`, or null. A value it cannot
+  /// convert is dropped and reported via [OTelErrorHandling].
+  ///
   /// @param map The map of key-value pairs to convert to attributes
   /// @return A new Attributes instance containing the converted attributes
-  static Attributes of(Map<String, Object> map) {
+  static Attributes of(Map<String, Object?> map) {
     return OTelFactory.getOrCreateDefault().attributesFromMap(map);
   }
 
   /// Creates an Attributes instance from a JSON map.
   /// This is a utility method for deserialization from logs or exports.
   ///
-  /// A value that cannot be converted, or that converts to something the
-  /// attribute data model does not allow — a map, bytes, null, or a nested or
-  /// heterogeneous array — is dropped and reported via [OTelErrorHandling].
+  /// A value that cannot be converted is dropped and reported via
+  /// [OTelErrorHandling]. Maps, nested arrays and null convert fine and are
+  /// stored, per common.md's Attribute definition.
   static Attributes fromJson(Map<String, dynamic> json) {
     final attributes = <Attribute>[];
 
     for (final entry in json.entries) {
-      // Only the conversion failure is handled here; whether a converted
-      // AnyValue is a legal *attribute* value is Attributes._'s single rule.
       // Reporting outside the catch: a user handler may rethrow (strict mode),
       // and catching that here would report the same value twice.
       final AnyValue anyValue;
@@ -61,33 +63,19 @@ class Attributes {
   /// Private constructor to enforce immutability.
   ///
   /// Every Attributes is built here, so this is the one place that enforces
-  /// the attribute data model: a non-empty key, and a value that is a
-  /// primitive or a homogeneous array of primitives. Enforcing it here rather
-  /// than in the conversion helpers covers every route in, including
-  /// [attributesFromList], an `Attribute` passed straight through
-  /// `attrsFromMap`, and the `copyWith*` methods.
-  /// error-handling.md: report it, never throw.
+  /// the key rule. The *value* is unconstrained beyond being an [AnyValue]:
+  /// common.md's Attribute section says the value MUST be one of the types
+  /// defined in AnyValue, which includes a map, a nested array, a byte array
+  /// and null. Narrowing that to primitives and homogeneous arrays is the bug
+  /// #95 was filed about.
   Attributes._(List<Attribute> entries) {
     for (var attr in entries) {
       // common/README.md: an attribute key MUST be a non-empty string. Every
       // Attributes is built here, so this is the one place to drop such an
       // attribute. error-handling.md: report it, never throw.
-      //
-      // The key check comes first because it identifies the attribute, and
-      // the value message names the key, which reads as `attribute ""` for an
-      // empty one. Each failure continues, so an attribute that is wrong both
-      // ways is dropped once and reported once.
       if (attr.key.isEmpty) {
         OTelErrorHandling.report(ArgumentError(
             'Attribute with an empty key dropped; keys must be non-empty.'));
-        continue;
-      }
-      if (!AttributeCreate.isValidAttributeValue(attr.value)) {
-        OTelErrorHandling.report(ArgumentError(
-            'Ignoring attribute "${attr.key}" because '
-            '${AttributeCreate.describeIllegalValue(attr.value)} is not a '
-            'legal attribute value. The OTel specification allows a primitive '
-            'or a homogeneous array of primitives.'));
         continue;
       }
       _entries[attr.key] = attr;
@@ -404,7 +392,7 @@ class Attributes {
 }
 
 /// Extension to create Attributes from a simple Map
-extension AttributesExtension on Map<String, Object> {
+extension AttributesExtension on Map<String, Object?> {
   /// Convert this map to Attributes
   /// Empty strings and empty lists are stored per the OTel spec
   Attributes toAttributes() {

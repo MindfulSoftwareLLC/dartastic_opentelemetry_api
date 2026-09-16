@@ -35,9 +35,11 @@ class Attribute {
 
   @override
   String toString() {
-    // AnyValue.toString, not `_value.value`, which renders an array as
-    // `[Instance of 'AnyValueString', ...]`. It also truncates rather than
-    // throwing on a deeply nested value.
+    // Interpolating _value calls AnyValue.toString, which renders the value
+    // recursively: an array of Strings reads as `["a", "b"]`, and bytes as
+    // `<3 bytes>`. It is also bounded — it truncates deep nesting rather than
+    // throwing, which matters because toString runs inside debuggers and
+    // error messages.
     return 'AttributeValue($_value)';
   }
 
