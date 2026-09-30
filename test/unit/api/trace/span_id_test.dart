@@ -41,6 +41,7 @@ void main() {
     test('handles invalid hex string', () {
       final received = <Object>[];
       OTelErrorHandling.handler = (error, _) => received.add(error);
+      addTearDown(OTelErrorHandling.resetToDefault);
 
       final id = OTelAPI.spanIdFrom('invalid');
 
@@ -52,6 +53,7 @@ void main() {
     test('handles wrong-length hex string', () {
       final received = <Object>[];
       OTelErrorHandling.handler = (error, _) => received.add(error);
+      addTearDown(OTelErrorHandling.resetToDefault);
 
       final id = OTelAPI.spanIdFrom('a1b2c3');
 
