@@ -60,30 +60,44 @@ void main() {
     });
 
     test('rejects a correctly sized uppercase hex string', () {
-      expect(
-        () => OTelAPI.spanIdFrom('00F067AA0BA902B7'),
-        throwsA(isA<FormatException>()),
-      );
+      final received = <Object>[];
+      OTelErrorHandling.handler = (error, _) => received.add(error);
+      addTearDown(OTelErrorHandling.resetToDefault);
+
+      final id = OTelAPI.spanIdFrom('00F067AA0BA902B7');
+
+      expect(id.isValid, isFalse);
+      expect(id.toString(), equals('0000000000000000'));
+      expect(received.single, isA<FormatException>());
     });
 
     test('rejects a signed hex string instead of corrupting the id', () {
-      // '+0' parsed to 0, so this quietly produced a plausible-looking
-      // '00f067aa0ba902b7'.
-      expect(
-        () => OTelAPI.spanIdFrom('+0f067aa0ba902b7'),
-        throwsA(isA<FormatException>()),
-      );
+      // '+0' parsed to 0, so this once quietly produced a plausible-looking
+      // '00f067aa0ba902b7'. The id is not corrupted now: the input is
+      // reported and an invalid id returned.
+      final received = <Object>[];
+      OTelErrorHandling.handler = (error, _) => received.add(error);
+      addTearDown(OTelErrorHandling.resetToDefault);
+
+      final id = OTelAPI.spanIdFrom('+0f067aa0ba902b7');
+
+      expect(id.isValid, isFalse);
+      expect(id.toString(), equals('0000000000000000'));
+      expect(received.single, isA<FormatException>());
     });
 
     test('rejects lowercase hex that is not 16 characters', () {
-      expect(
-        () => OTelAPI.spanIdFrom('a1b2c3d4e5f678'),
-        throwsA(isA<FormatException>()),
-      );
-      expect(
-        () => OTelAPI.spanIdFrom('a1b2c3d4e5f6789012'),
-        throwsA(isA<FormatException>()),
-      );
+      final received = <Object>[];
+      OTelErrorHandling.handler = (error, _) => received.add(error);
+      addTearDown(OTelErrorHandling.resetToDefault);
+
+      final short = OTelAPI.spanIdFrom('a1b2c3d4e5f678');
+      final long = OTelAPI.spanIdFrom('a1b2c3d4e5f6789012');
+
+      expect(short.isValid, isFalse);
+      expect(long.isValid, isFalse);
+      expect(received, hasLength(2));
+      expect(received, everyElement(isA<FormatException>()));
     });
 
     test('provides access to raw bytes', () {
