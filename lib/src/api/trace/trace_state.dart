@@ -200,9 +200,9 @@ class TraceState {
       kept[i] = false;
       remaining--;
       length = remaining == 0 ? 0 : length - parts[i].length - 1;
-      OTelErrorHandling.report(StateError(
-          'TraceState exceeds 512 characters; entry '
-          '${entries[i].key} dropped.'));
+      OTelErrorHandling.report(
+          StateError('TraceState exceeds 512 characters; entry '
+              '${entries[i].key} dropped.'));
     }
 
     final value = <String>[];
