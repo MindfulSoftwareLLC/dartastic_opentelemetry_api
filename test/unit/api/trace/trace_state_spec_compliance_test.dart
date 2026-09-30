@@ -409,5 +409,57 @@ void main() {
       final traceState = TraceState.fromMap({key: value});
       expect(traceState.toHeaderString(), equals(''));
     });
+
+    test('both removal passes run and the survivors keep their order', () {
+      // Two over-128 entries (big0=..., big1=... are 135 characters
+      // each) plus eight 83-character entries total 943. The over-128
+      // pass drops big0 and big1 first, leaving 671, still over
+      // budget, so the end pass also drops k7 and k6 and stops at
+      // exactly 503. The six survivors keep k0..k5 in insertion
+      // order, every drop is reported once, and the state itself
+      // still holds all ten entries.
+      final received = <Object>[];
+      OTelErrorHandling.handler = (error, stackTrace) {
+        received.add(error);
+      };
+      try {
+        final x80 = List.filled(80, 'x').join(); // kN=... 83 chars
+        final v130 = List.filled(130, 'v').join(); // bigN=... 135 chars
+        final entries = <String, String>{
+          'big0': v130,
+          'k0': x80,
+          'k1': x80,
+          'k2': x80,
+          'k3': x80,
+          'k4': x80,
+          'k5': x80,
+          'k6': x80,
+          'k7': x80,
+          'big1': v130,
+        };
+        final traceState = TraceState.fromMap(entries);
+
+        final header = traceState.toHeaderString();
+
+        expect(
+            header,
+            equals('k0=$x80,k1=$x80,k2=$x80,k3=$x80,'
+                'k4=$x80,k5=$x80'));
+        expect(header.length, 503);
+        expect(received, hasLength(4), reason: 'one report per dropped entry');
+        expect(received[0].toString(), contains('big0'));
+        expect(received[1].toString(), contains('big1'));
+        expect(received[0].toString(), contains('128'));
+        expect(received[2].toString(), contains('k7'));
+        expect(received[3].toString(), contains('k6'));
+        expect(received[2].toString(), contains('512'));
+        // Truncation is a header concern: the state is unchanged.
+        expect(traceState.entries.length, 10);
+        expect(traceState.entries['big0'], v130);
+        expect(traceState.entries['k7'], x80);
+      } finally {
+        OTelErrorHandling.resetToDefault();
+      }
+    });
   });
 }

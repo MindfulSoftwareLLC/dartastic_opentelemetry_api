@@ -25,6 +25,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `TraceState.toHeaderString()` returns the W3C `tracestate` header value and
+  applies the §3.3.1.5 truncation procedure when the joined value exceeds the
+  512-character budget: whole entries are removed, entries over 128 characters
+  first, then entries from the end, and every removal is reported through
+  `OTelErrorHandling`. `toString()` continues to return all entries
+  ([#128](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/128)).
 - `APIMeter.registerBatchCallback(callback, instruments)` registers one callback
   that observes several instruments at once and returns an
   `APIBatchCallbackRegistration` with `unregister()`. Instruments must belong
