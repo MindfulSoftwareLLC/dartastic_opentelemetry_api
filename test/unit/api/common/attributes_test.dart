@@ -7,6 +7,7 @@ import 'package:dartastic_opentelemetry_api/dartastic_opentelemetry_api.dart';
 import 'package:test/test.dart';
 
 void main() {
+  _emptyKeyTests();
   group('Attributes', () {
     late Attributes attributes;
 
@@ -594,6 +595,49 @@ void main() {
       final attrs = map.toAttributes();
 
       expect(attrs.getString('key'), equals('value'));
+    });
+  });
+}
+
+void _emptyKeyTests() {
+  group('empty attribute keys are dropped and reported', () {
+    late List<Object> reported;
+    setUp(() {
+      OTelAPI.initialize(
+          endpoint: 'http://localhost:4317',
+          serviceName: 'x',
+          serviceVersion: '1');
+      reported = <Object>[];
+      OTelAPI.setErrorHandler((e, _) => reported.add(e));
+    });
+    tearDown(() => OTelAPI.setErrorHandler(null));
+
+    test('Attributes.of drops an empty key and keeps the rest', () {
+      final attrs = Attributes.of({'': 'gone', 'kept': 'v'});
+      expect(attrs.keys, equals(['kept']));
+      expect(reported, hasLength(1));
+      expect(reported.single, isA<ArgumentError>());
+    });
+
+    test(
+        'a factory-built attribute with an empty key never enters a collection',
+        () {
+      final bad = OTelAPI.attributeString('', 'v');
+      final good = OTelAPI.attributeString('k', 'v');
+      final attrs = OTelAPI.attributesFromList([bad, good]);
+      expect(attrs.keys, equals(['k']));
+      expect(reported, hasLength(1));
+    });
+
+    test('fromJson drops an empty key', () {
+      final attrs = Attributes.fromJson({'': 'gone', 'kept': 1});
+      expect(attrs.keys, equals(['kept']));
+      expect(reported, hasLength(1));
+    });
+
+    test('nothing is reported when every key is non-empty', () {
+      Attributes.of({'a': 1, 'b': 'two'});
+      expect(reported, isEmpty);
     });
   });
 }

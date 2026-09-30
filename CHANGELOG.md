@@ -116,12 +116,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#112](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/112)).
 - `OTelAPI.traceIdFrom` and `OTelAPI.spanIdFrom` no longer throw a
   `FormatException` on malformed or wrong-length input: the error is reported
-  through `OTelErrorHandling` and an invalid (all-zero) id is returned, per
-  error-handling.md
+  through `OTelErrorHandling` and an invalid (all-zero) id is returned, since
+  error-handling.md says API methods MUST NOT throw on incorrect use
   ([#137](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/137)).
+- `APISpan.addLink` and `APISpan.addSpanLink` now document that a link given at
+  span creation is preferred to a later call. The trace/api.md spec makes this
+  a MUST, because head sampling can only use the information present at span
+  creation. Comments only, no behavior change
+  ([#133](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/133)).
 - The trace API now documents that `APITracerProvider`, `APITracer` and
   `APISpan` implementations need to be safe for concurrent use, which
-  trace/api.md makes a MUST. Comments only, no behaviour change
+  trace/api.md makes a MUST. Comments only, no behavior change
   ([#120](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/120)).
 - The logs API now documents that `APILoggerProvider` and `APILogger`
   implementations need to be safe for concurrent use, which logs/api.md makes

@@ -43,12 +43,15 @@ void main() {
       expect(counter.isHistogram, isFalse);
     });
 
-    test('throws when creating counter with empty name', () {
-      // Assert
-      expect(
-        () => meter.createCounter<int>(name: ''),
-        throwsArgumentError,
-      );
+    test('accepts an empty counter name without throwing or reporting', () {
+      final reported = <Object>[];
+      OTelAPI.setErrorHandler((e, _) => reported.add(e));
+      addTearDown(() => OTelAPI.setErrorHandler(null));
+
+      final instrument = meter.createCounter<int>(name: '');
+
+      expect(instrument, isNotNull);
+      expect(reported, isEmpty, reason: 'the no-op meter must not report');
     });
 
     test('creates up-down counter with valid name', () {
@@ -67,12 +70,16 @@ void main() {
       expect(upDownCounter.isHistogram, isFalse);
     });
 
-    test('throws when creating up-down counter with empty name', () {
-      // Assert
-      expect(
-        () => meter.createUpDownCounter<int>(name: ''),
-        throwsArgumentError,
-      );
+    test('accepts an empty up-down counter name without throwing or reporting',
+        () {
+      final reported = <Object>[];
+      OTelAPI.setErrorHandler((e, _) => reported.add(e));
+      addTearDown(() => OTelAPI.setErrorHandler(null));
+
+      final instrument = meter.createUpDownCounter<int>(name: '');
+
+      expect(instrument, isNotNull);
+      expect(reported, isEmpty, reason: 'the no-op meter must not report');
     });
 
     test('creates histogram with valid name', () {
@@ -90,12 +97,15 @@ void main() {
       expect(histogram.isHistogram, isTrue);
     });
 
-    test('throws when creating histogram with empty name', () {
-      // Assert
-      expect(
-        () => meter.createHistogram<double>(name: ''),
-        throwsArgumentError,
-      );
+    test('accepts an empty histogram name without throwing or reporting', () {
+      final reported = <Object>[];
+      OTelAPI.setErrorHandler((e, _) => reported.add(e));
+      addTearDown(() => OTelAPI.setErrorHandler(null));
+
+      final instrument = meter.createHistogram<double>(name: '');
+
+      expect(instrument, isNotNull);
+      expect(reported, isEmpty, reason: 'the no-op meter must not report');
     });
 
     test('creates gauge with valid name', () {
@@ -113,12 +123,15 @@ void main() {
       expect(gauge.isHistogram, isFalse);
     });
 
-    test('throws when creating gauge with empty name', () {
-      // Assert
-      expect(
-        () => meter.createGauge<double>(name: ''),
-        throwsArgumentError,
-      );
+    test('accepts an empty gauge name without throwing or reporting', () {
+      final reported = <Object>[];
+      OTelAPI.setErrorHandler((e, _) => reported.add(e));
+      addTearDown(() => OTelAPI.setErrorHandler(null));
+
+      final instrument = meter.createGauge<double>(name: '');
+
+      expect(instrument, isNotNull);
+      expect(reported, isEmpty, reason: 'the no-op meter must not report');
     });
 
     test('creates observable counter with valid name', () {
@@ -133,12 +146,17 @@ void main() {
           isFalse); // API implementation is disabled by default
     });
 
-    test('throws when creating observable counter with empty name', () {
-      // Assert
-      expect(
-        () => meter.createObservableCounter<int>(name: ''),
-        throwsArgumentError,
-      );
+    test(
+        'accepts an empty observable counter name without throwing or reporting',
+        () {
+      final reported = <Object>[];
+      OTelAPI.setErrorHandler((e, _) => reported.add(e));
+      addTearDown(() => OTelAPI.setErrorHandler(null));
+
+      final instrument = meter.createObservableCounter<int>(name: '');
+
+      expect(instrument, isNotNull);
+      expect(reported, isEmpty, reason: 'the no-op meter must not report');
     });
 
     test('creates observable up-down counter with valid name', () {
@@ -155,12 +173,17 @@ void main() {
           isFalse); // API implementation is disabled by default
     });
 
-    test('throws when creating observable up-down counter with empty name', () {
-      // Assert
-      expect(
-        () => meter.createObservableUpDownCounter<int>(name: ''),
-        throwsArgumentError,
-      );
+    test(
+        'accepts an empty observable up-down counter name without throwing or reporting',
+        () {
+      final reported = <Object>[];
+      OTelAPI.setErrorHandler((e, _) => reported.add(e));
+      addTearDown(() => OTelAPI.setErrorHandler(null));
+
+      final instrument = meter.createObservableUpDownCounter<int>(name: '');
+
+      expect(instrument, isNotNull);
+      expect(reported, isEmpty, reason: 'the no-op meter must not report');
     });
 
     test('creates observable gauge with valid name', () {
@@ -175,12 +198,16 @@ void main() {
           isFalse); // API implementation is disabled by default
     });
 
-    test('throws when creating observable gauge with empty name', () {
-      // Assert
-      expect(
-        () => meter.createObservableGauge<double>(name: ''),
-        throwsArgumentError,
-      );
+    test('accepts an empty observable gauge name without throwing or reporting',
+        () {
+      final reported = <Object>[];
+      OTelAPI.setErrorHandler((e, _) => reported.add(e));
+      addTearDown(() => OTelAPI.setErrorHandler(null));
+
+      final instrument = meter.createObservableGauge<double>(name: '');
+
+      expect(instrument, isNotNull);
+      expect(reported, isEmpty, reason: 'the no-op meter must not report');
     });
 
     test('equals works correctly', () {

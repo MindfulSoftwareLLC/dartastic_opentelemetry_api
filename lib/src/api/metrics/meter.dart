@@ -23,6 +23,10 @@ part 'meter_create.dart';
 /// The API prefix indicates that it's part of the API and not the SDK
 /// and generally should not be used since an API without an SDK is a noop.
 /// Use the Meter from the SDK instead.
+/// This is the no-op meter. It accepts every argument unvalidated, including
+/// an empty instrument name, and never logs or reports: metrics/noop.md says
+/// the Meter MUST NOT return a non-empty error or log any message. Name
+/// validation belongs to the SDK meter.
 class APIMeter {
   /// Gets the name of the meter, usually of a library, package or module
   final String name;
@@ -69,10 +73,6 @@ class APIMeter {
     String? description,
     InstrumentAdvisory? advisory,
   }) {
-    if (name.isEmpty) {
-      throw ArgumentError('Counter name must not be empty');
-    }
-
     return CounterCreate.create<T>(
       name: name,
       unit: unit,
@@ -95,10 +95,6 @@ class APIMeter {
     String? description,
     InstrumentAdvisory? advisory,
   }) {
-    if (name.isEmpty) {
-      throw ArgumentError('UpDownCounter name must not be empty');
-    }
-
     return UpDownCounterCreate.create<T>(
       name: name,
       unit: unit,
@@ -126,10 +122,6 @@ class APIMeter {
     List<double>? boundaries,
     InstrumentAdvisory? advisory,
   }) {
-    if (name.isEmpty) {
-      throw ArgumentError('Histogram name must not be empty');
-    }
-
     // The deprecated boundaries parameter wins over
     // advisory.explicitBucketBoundaries, so existing callers keep their
     // buckets. Everything else on the advisory is kept.
@@ -163,10 +155,6 @@ class APIMeter {
     String? description,
     InstrumentAdvisory? advisory,
   }) {
-    if (name.isEmpty) {
-      throw ArgumentError('Gauge name must not be empty');
-    }
-
     return GaugeCreate.create<T>(
       name: name,
       unit: unit,
@@ -193,10 +181,6 @@ class APIMeter {
     List<ObservableCallback<T>> callbacks = const [],
     @Deprecated('Use callbacks instead') ObservableCallback<T>? callback,
   }) {
-    if (name.isEmpty) {
-      throw ArgumentError('ObservableCounter name must not be empty');
-    }
-
     final merged = [if (callback != null) callback, ...callbacks];
 
     return ObservableCounterCreate.create<T>(
@@ -226,10 +210,6 @@ class APIMeter {
     List<ObservableCallback<T>> callbacks = const [],
     @Deprecated('Use callbacks instead') ObservableCallback<T>? callback,
   }) {
-    if (name.isEmpty) {
-      throw ArgumentError('ObservableUpDownCounter name must not be empty');
-    }
-
     final merged = [if (callback != null) callback, ...callbacks];
 
     return ObservableUpDownCounterCreate.create<T>(
@@ -259,10 +239,6 @@ class APIMeter {
     List<ObservableCallback<T>> callbacks = const [],
     @Deprecated('Use callbacks instead') ObservableCallback<T>? callback,
   }) {
-    if (name.isEmpty) {
-      throw ArgumentError('ObservableGauge name must not be empty');
-    }
-
     final merged = [if (callback != null) callback, ...callbacks];
 
     return ObservableGaugeCreate.create<T>(
