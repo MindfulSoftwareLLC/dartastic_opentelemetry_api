@@ -89,6 +89,14 @@ class Attributes {
   /// Private constructor to enforce immutability.
   Attributes._(List<Attribute> entries) {
     for (var attr in entries) {
+      // common/README.md: an attribute key MUST be a non-empty string. Every
+      // Attributes is built here, so this is the one place to drop such an
+      // attribute. error-handling.md: report it, never throw.
+      if (attr.key.isEmpty) {
+        OTelErrorHandling.report(ArgumentError(
+            'Attribute with an empty key dropped; keys must be non-empty.'));
+        continue;
+      }
       _entries[attr.key] = attr;
     }
   }

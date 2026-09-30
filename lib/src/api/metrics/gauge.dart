@@ -3,6 +3,7 @@
 
 import 'package:meta/meta.dart';
 import '../common/attributes.dart';
+import 'instrument_advisory.dart';
 import 'meter.dart';
 
 part 'gauge_create.dart';
@@ -24,6 +25,9 @@ class APIGauge<T extends num> {
   /// The meter that created this gauge instrument.
   final APIMeter _meter;
 
+  /// The optional advisory parameters for this gauge instrument.
+  final InstrumentAdvisory? _advisory;
+
   /// Creates a new [APIGauge] instrument.
   ///
   /// This constructor is typically not called directly. Instead, use [APIMeter.createGauge].
@@ -32,12 +36,9 @@ class APIGauge<T extends num> {
   /// [_description] Optional description of the gauge instrument.
   /// [_unit] Optional unit of measurement for the gauge.
   /// [_meter] The meter that created this gauge instrument.
-  APIGauge(
-    this._name,
-    this._description,
-    this._unit,
-    this._meter,
-  );
+  /// [_advisory] Optional advisory parameters for the gauge.
+  APIGauge(this._name, this._description, this._unit, this._meter,
+      [this._advisory]);
 
   /// Returns the name of this Gauge.
   String get name => _name;
@@ -58,6 +59,9 @@ class APIGauge<T extends num> {
 
   /// Returns the meter that created this gauge.
   APIMeter get meter => _meter;
+
+  /// Returns the advisory parameters of this Gauge.
+  InstrumentAdvisory? get advisory => _advisory;
 
   /// Records the current value of the gauge.
   ///

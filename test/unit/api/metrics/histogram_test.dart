@@ -5,6 +5,7 @@ import 'package:dartastic_opentelemetry_api/dartastic_opentelemetry_api.dart';
 import 'package:test/test.dart';
 
 void main() {
+  _advisoryMergeTests();
   group('APIHistogram', () {
     late APIMeter meter;
     late APIHistogram<double> histogram;
@@ -123,6 +124,37 @@ void main() {
 
       // Assert (just verify it doesn't throw)
       defaultHistogram.record(50.0);
+    });
+  });
+}
+
+void _advisoryMergeTests() {
+  group('createHistogram advisory precedence', () {
+    setUp(() => OTelAPI.initialize(
+        endpoint: 'http://localhost:4317',
+        serviceName: 'x',
+        serviceVersion: '1'));
+
+    test('a deprecated boundaries argument keeps the rest of the advisory', () {
+      final meter = OTelAPI.meterProvider().getMeter(name: 'm');
+      final h = meter.createHistogram<double>(
+        name: 'h',
+        boundaries: [1, 2],
+        advisory: const InstrumentAdvisory(attributeKeys: ['route']),
+      );
+      expect(h.advisory?.explicitBucketBoundaries, equals([1, 2]));
+      expect(h.advisory?.attributeKeys, equals(['route']),
+          reason: 'boundaries must not discard attributeKeys');
+    });
+
+    test('advisory boundaries are used when no boundaries argument is given',
+        () {
+      final meter = OTelAPI.meterProvider().getMeter(name: 'm');
+      final h = meter.createHistogram<double>(
+        name: 'h',
+        advisory: const InstrumentAdvisory(explicitBucketBoundaries: [5]),
+      );
+      expect(h.advisory?.explicitBucketBoundaries, equals([5]));
     });
   });
 }

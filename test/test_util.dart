@@ -1,8 +1,9 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
-import 'package:dartastic_opentelemetry_api/src/api/factory/otel_api_factory.dart';
-import 'package:dartastic_opentelemetry_api/src/factory/otel_factory.dart';
+import 'package:dartastic_opentelemetry_api/dartastic_opentelemetry_api.dart';
+import 'package:dartastic_opentelemetry_api/src/api/common/instrumentation_scope.dart';
+import 'package:dartastic_opentelemetry_api/src/api/trace/span.dart';
 import 'package:test/expect.dart';
 
 class IsBetween extends Matcher {
@@ -48,5 +49,26 @@ void installSdkLikeFactory() {
     apiEndpoint: 'http://localhost:4317',
     apiServiceName: 'test-service',
     apiServiceVersion: '1.0.0',
+  );
+}
+
+/// Builds an [APISpan] straight through `APISpanCreate`, bypassing
+/// [APITracer.createSpan]'s parent resolution.
+///
+/// Reaching `APISpanCreate` and `InstrumentationScopeCreate` means importing
+/// library-private `src/` files; this helper keeps those imports in one place
+/// so tests that need a hand-built span do not each reach inside the package.
+APISpan createRawApiSpan({
+  required String name,
+  required SpanContext spanContext,
+  APISpan? parentSpan,
+  String instrumentationScopeName = 'test',
+}) {
+  return APISpanCreate.create(
+    name: name,
+    spanContext: spanContext,
+    parentSpan: parentSpan,
+    instrumentationScope:
+        InstrumentationScopeCreate.create(name: instrumentationScopeName),
   );
 }

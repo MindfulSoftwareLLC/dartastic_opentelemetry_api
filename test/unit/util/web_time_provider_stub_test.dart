@@ -14,4 +14,9 @@ void main() {
   test('WebTimeProvider cannot be constructed on native targets', () {
     expect(WebTimeProvider.new, throwsUnsupportedError);
   });
+
+  test('nowDateTime throws', () {
+    final provider = WebTimeProvider(false);
+    expect(provider.nowDateTime, throwsUnsupportedError);
+  });
 }

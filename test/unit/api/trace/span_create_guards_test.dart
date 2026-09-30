@@ -35,6 +35,23 @@ void main() {
       OTelFactory.otelFactory = originalFactory;
     });
 
+    test('spanContext must be valid', () {
+      final parent = tracer.createSpan(name: 'parent');
+      expect(
+        () => APISpanCreate.create(
+          name: 'child',
+          spanContext: OTelAPI.spanContextInvalid(),
+          parentSpan: null,
+          instrumentationScope: parent.instrumentationScope,
+        ),
+        throwsA(isA<ArgumentError>().having(
+          (e) => e.message,
+          'message',
+          contains('SpanContext must be valid'),
+        )),
+      );
+    });
+
     test('child span must inherit the parent trace ID', () {
       final parent = tracer.createSpan(name: 'parent');
       final foreignTrace = OTelAPI.spanContext(

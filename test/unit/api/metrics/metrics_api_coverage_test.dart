@@ -99,8 +99,8 @@ void main() {
           .getMeter(name: 'm', version: '1.0', schemaUrl: 'https://s');
       final other = OTelAPI.meterProvider('mp-a').getMeter(name: 'different');
 
-      expect(identical(m1, m2), isFalse);
-      expect(m1, equals(m2));
+      expect(identical(m1, m2), isFalse); // No caching in API
+      expect(m1, equals(m2)); // == relies on values
       expect(m1.hashCode, equals(m2.hashCode));
       expect(m1, isNot(equals(other)));
     });

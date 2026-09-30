@@ -15,14 +15,16 @@ class ObservableCounterCreate {
     String? unit,
     String? description,
     required APIMeter meter,
-    ObservableCallback<T>? callback,
+    InstrumentAdvisory? advisory,
+    List<ObservableCallback<T>> callbacks = const [],
   }) {
     return APIObservableCounter<T>(
       name,
       description,
       unit,
       meter,
-      callback,
+      advisory,
+      callbacks,
     );
   }
 }

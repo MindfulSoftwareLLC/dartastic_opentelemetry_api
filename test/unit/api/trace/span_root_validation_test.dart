@@ -73,8 +73,7 @@ void main() {
       expect(
         () => tracer.createSpan(
           name: 'orphan-default',
-          spanContext: ctx,
-          parentSpan: null,
+          context: Context.current.copyWithSpanContext(ctx),
         ),
         returnsNormally,
       );
@@ -98,8 +97,7 @@ void main() {
       expect(
         () => tracer.createSpan(
           name: 'orphan-invalid',
-          spanContext: ctx,
-          parentSpan: null,
+          context: Context.current.copyWithSpanContext(ctx),
         ),
         returnsNormally,
       );
@@ -130,8 +128,7 @@ void main() {
       expect(
         () => tracer.createSpan(
           name: 'remote-parent',
-          spanContext: ctx,
-          parentSpan: null,
+          context: Context.current.copyWithSpanContext(ctx),
         ),
         returnsNormally,
       );

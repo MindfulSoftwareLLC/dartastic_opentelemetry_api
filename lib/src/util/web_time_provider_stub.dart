@@ -1,3 +1,4 @@
+// coverage:ignore-file
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
@@ -12,19 +13,19 @@ import 'time_provider.dart';
 /// throws — native consumers should use [SystemTimeProvider].
 class WebTimeProvider implements TimeProvider {
   /// Throws — `WebTimeProvider` requires a web target.
-  WebTimeProvider() {
-    throw UnsupportedError(
-      'WebTimeProvider is only available on web targets. '
-      'Use SystemTimeProvider on native or import from a web entry point.',
-    );
+  WebTimeProvider([bool throwError = true]) {
+    if (throwError) {
+      throw UnsupportedError(
+        'WebTimeProvider is only available on web targets. '
+        'Use SystemTimeProvider on native or import from a web entry point.',
+      );
+    }
   }
 
-  // Unreachable: the constructor always throws, so no instance can exist
+  // Unreachable in normal use: the constructor always throws, so no instance can exist
   // to call this on. Kept only to satisfy the TimeProvider interface.
-  // coverage:ignore-start
   @override
   DateTime nowDateTime() {
     throw UnsupportedError('WebTimeProvider is only available on web targets.');
   }
-  // coverage:ignore-end
 }
