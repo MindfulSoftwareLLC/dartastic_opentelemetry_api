@@ -51,9 +51,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#118](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/118)).
 - `APITracer.startSpan` now accepts an optional `startTime` parameter
   ([#118](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/118)).
+- `TraceFlags.RANDOM_FLAG`, `TraceFlags.isRandom` and `TraceFlags.withRandom`
+  expose the random-trace-id bit (`0x02`), which W3C Trace Context Level 2
+  makes a MUST to propagate unchanged across a continued trace. The byte
+  already propagated, but the bit could not be read or set
+  ([#142](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/142)).
 
 ### Changed
 
+- **BREAKING**: `TraceFlags.fromString` is now a static method that returns
+  null unless given two lowercase hex digits. Propagators must reject
+  invalid headers (context/api-propagators.md, MUST)
+  ([#114](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/114)).
 - **BREAKING**: `parentSpan` and `spanContext` parameters have been removed from
   `APITracer.startSpan` and `APITracer.createSpan`. Span creation now always
   uses the parent span or remote context stored in the provided `Context` (or
@@ -97,6 +106,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
+- **BREAKING**: `APISpan` no longer exposes `attributes`, `spanEvents`, `spanLinks`,
+  `status` or `statusDescription`. trace/api.md says implementations SHOULD NOT
+  provide access to a span's data besides its `SpanContext`. An SDK reads them
+  through `getReadableSpan`, which is not exported from the package barrel.
+  Setting attributes is unchanged. SDK users are unaffected in practice: the SDK
+  span already gates every mutator on its own recording state, so this reaches
+  API-direct users and custom SDKs
+  ([#140](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/140)).
 - **BREAKING**: the `parentSpan` and `spanContext` parameters of
   `APITracer.startSpan` and `APITracer.createSpan`. The parent now comes from
   the `Context`, so `parentSpan: parent` becomes
@@ -113,6 +130,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- The metrics API now documents that `APIMeterProvider`, `APIMeter` and the seven
+  instruments need to be safe for concurrent use, that an instrument `name` must
+  conform to the instrument name syntax, and that `Histogram.record` expects a
+  non-negative value. metrics/api.md makes the first a MUST and the other two a
+  SHOULD. Comments only, no behavior change
+  ([#141](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/141)).
 - `IdGenerator` no longer draws every ID byte from a fresh
   `Random.secure().nextInt(256)` call (one OS entropy syscall per byte), which
   made generating a span ID cost ~330 µs and a trace ID ~665 µs on macOS arm64 —
@@ -124,6 +147,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   IDs from the same isolate are predictable — generated IDs must not be used
   as secrets or security tokens
   ([#144](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/144)).
+- Integer trace flags retain only the low byte, including during
+  `SpanContext.fromJson`, so they always render as two hex digits as required
+  by the W3C Trace Context trace-flags grammar
+  ([#114](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/114)).
 - `TraceState` construction (`fromMap`, `OTelAPI`/`OTelFactory` `traceState(...)`)
   now validates keys and values against the W3C tracestate grammar, dropping
   invalid entries instead of silently accepting them

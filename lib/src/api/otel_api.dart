@@ -569,6 +569,7 @@ class OTelAPI {
   /// Creates a TraceFlags object with the specified flags.
   ///
   /// TraceFlags represents options for a trace, such as sampling decision.
+  /// Only the low eight bits of [flags] are retained.
   ///
   /// @param flags Optional integer representing the trace flags, defaults to NONE_FLAG
   /// @return A new TraceFlags instance

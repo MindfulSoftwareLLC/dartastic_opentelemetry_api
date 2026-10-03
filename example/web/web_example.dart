@@ -61,7 +61,9 @@ void main() {
             appendParagraph(outputDiv, 'Span ID: ${span.spanContext.spanId}');
             appendParagraph(outputDiv, 'Start time: ${span.startTime}');
             appendParagraph(outputDiv, 'End time: ${span.endTime}');
-            appendParagraph(outputDiv, 'Status: ${span.status}');
+            // Reading back what a span recorded is deliberately not
+            // possible: trace/api.md says implementations SHOULD NOT
+            // provide access to a Span's data besides its SpanContext.
           });
         }).toJS,
       );

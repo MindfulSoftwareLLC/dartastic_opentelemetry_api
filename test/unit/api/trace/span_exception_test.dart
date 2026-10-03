@@ -38,7 +38,7 @@ void main() {
       final exception = Exception('Test error');
       span.recordException(exception);
 
-      final events = span.spanEvents;
+      final events = getReadableSpan(span).spanEvents;
       expect(events, hasLength(1));
       expect(events?.first.name, equals('exception'));
 
@@ -55,7 +55,7 @@ void main() {
         span.recordException(e, stackTrace: stackTrace);
       }
 
-      final events = span.spanEvents;
+      final events = getReadableSpan(span).spanEvents;
       expect(events, hasLength(1));
 
       final attrs = events?.first.attributes?.toMap() ?? {};
@@ -68,7 +68,7 @@ void main() {
       final exception = Exception('Test error');
       span.recordException(exception, escaped: true);
 
-      final events = span.spanEvents;
+      final events = getReadableSpan(span).spanEvents;
       final attrs = events?.first.attributes?.toMap() ?? {};
       expect(attrs['exception.escaped']?.value, true);
     });
@@ -81,7 +81,7 @@ void main() {
 
       span.recordException(exception, attributes: additionalAttrs);
 
-      final events = span.spanEvents;
+      final events = getReadableSpan(span).spanEvents;
       final attrs = events?.first.attributes?.toMap() ?? {};
       expect(attrs['custom.attribute']?.value, equals('value'));
       expect(attrs['exception.type']?.value, contains('Exception'));
@@ -98,7 +98,7 @@ void main() {
 
       span.recordException(exception, attributes: overrideAttrs);
 
-      final events = span.spanEvents;
+      final events = getReadableSpan(span).spanEvents;
       final attrs = events?.first.attributes?.toMap() ?? {};
       expect(attrs['exception.type']?.value, equals('CustomType'));
       expect(attrs['exception.message']?.value, equals('Custom message'));
@@ -110,14 +110,14 @@ void main() {
       span.recordException(exception);
 
       // Should not record the exception since span is ended
-      expect(span.spanEvents, isNull);
+      expect(getReadableSpan(span).spanEvents, isNull);
     });
 
     test('records multiple exceptions', () {
       span.recordException(Exception('Error 1'));
       span.recordException(Exception('Error 2'));
 
-      final events = span.spanEvents;
+      final events = getReadableSpan(span).spanEvents;
       expect(events, hasLength(2));
       expect(events?[0].attributes?.toMap()['exception.message']?.value,
           equals('Exception: Error 1'));
@@ -127,14 +127,14 @@ void main() {
 
     test('handles error status with recordException', () {
       // First verify span starts with unset status
-      expect(span.status, equals(SpanStatusCode.Unset));
+      expect(getReadableSpan(span).status, equals(SpanStatusCode.Unset));
 
       final exception = Exception('Test error');
       span.recordException(exception);
 
       // recordException should not automatically set error status
       // This is left to the specific semantic conventions
-      expect(span.status, equals(SpanStatusCode.Unset));
+      expect(getReadableSpan(span).status, equals(SpanStatusCode.Unset));
     });
   });
 }
