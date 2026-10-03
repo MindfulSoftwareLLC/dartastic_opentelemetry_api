@@ -12,6 +12,11 @@ part 'up_down_counter_create.dart';
 ///
 /// See the OpenTelemetry specification for more details:
 /// https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/api.md#updowncounter
+///
+/// All methods of this class are safe for concurrent use by default:
+/// implementations must remain correct when methods are invoked from
+/// interleaved asynchronous tasks within an isolate. See
+/// [Metrics API, concurrency requirements](https://github.com/open-telemetry/opentelemetry-specification/blob/v1.60.0/specification/metrics/api.md#concurrency-requirements).
 class APIUpDownCounter<T extends num> {
   /// The name of this up-down counter instrument.
   final String _name;

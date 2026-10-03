@@ -45,6 +45,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#118](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/118)).
 - `APITracer.startSpan` now accepts an optional `startTime` parameter
   ([#118](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/118)).
+- `TraceFlags.RANDOM_FLAG`, `TraceFlags.isRandom` and `TraceFlags.withRandom`
+  expose the random-trace-id bit (`0x02`), which W3C Trace Context Level 2
+  makes a MUST to propagate unchanged across a continued trace. The byte
+  already propagated, but the bit could not be read or set
+  ([#142](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/142)).
 
 ### Changed
 
@@ -115,6 +120,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- The metrics API now documents that `APIMeterProvider`, `APIMeter` and the seven
+  instruments need to be safe for concurrent use, that an instrument `name` must
+  conform to the instrument name syntax, and that `Histogram.record` expects a
+  non-negative value. metrics/api.md makes the first a MUST and the other two a
+  SHOULD. Comments only, no behavior change
+  ([#141](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/141)).
+- `IdGenerator` no longer draws every ID byte from a fresh
+  `Random.secure().nextInt(256)` call (one OS entropy syscall per byte), which
+  made generating a span ID cost ~330 µs and a trace ID ~665 µs on macOS arm64 —
+  roughly 1 ms to start a root span. It now seeds a xorshift128 generator once
+  from the OS CSPRNG and expands it locally (~18,000–21,000× faster), keeping
+  the same 8/16-byte, non-zero, unique-ID contract, with 32-bit-masked
+  arithmetic so VM and web builds produce identical sequences. Note that a
+  locally generated trace ID exposes the full generator state, so subsequent
+  IDs from the same isolate are predictable — generated IDs must not be used
+  as secrets or security tokens
+  ([#144](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/144)).
 - `TraceState` construction (`fromMap`, `OTelAPI`/`OTelFactory` `traceState(...)`)
   now validates keys and values against the W3C tracestate grammar, dropping
   invalid entries instead of silently accepting them

@@ -53,7 +53,7 @@ class APITracer {
   late final InstrumentationScope _instrumentationScope;
 
   /// Creates a new [APITracer].
-  /// You cannot create a Tracer directly; you must use [TracerProvider]:
+  /// You cannot create a Tracer directly; you must use [APITracerProvider]:
   /// ```dart
   /// var tracer = OTelFactory.tracerProvider().get("my-library");
   /// ```
