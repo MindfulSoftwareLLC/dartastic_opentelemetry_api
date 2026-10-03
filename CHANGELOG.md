@@ -53,6 +53,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **BREAKING**: `TraceFlags.fromString` is now a static method that returns
+  null unless given two lowercase hex digits. Propagators must reject
+  invalid headers (context/api-propagators.md, MUST)
+  ([#114](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/114)).
 - **BREAKING**: `parentSpan` and `spanContext` parameters have been removed from
   `APITracer.startSpan` and `APITracer.createSpan`. Span creation now always
   uses the parent span or remote context stored in the provided `Context` (or
@@ -137,6 +141,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   IDs from the same isolate are predictable — generated IDs must not be used
   as secrets or security tokens
   ([#144](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/144)).
+- Integer trace flags retain only the low byte, including during
+  `SpanContext.fromJson`, so they always render as two hex digits as required
+  by the W3C Trace Context trace-flags grammar
+  ([#114](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/114)).
 - `TraceState` construction (`fromMap`, `OTelAPI`/`OTelFactory` `traceState(...)`)
   now validates keys and values against the W3C tracestate grammar, dropping
   invalid entries instead of silently accepting them
