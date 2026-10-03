@@ -12,6 +12,11 @@ part 'histogram_create.dart';
 ///
 /// See the OpenTelemetry specification for more details:
 /// https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/api.md#histogram
+///
+/// All methods of this class are safe for concurrent use by default:
+/// implementations must remain correct when methods are invoked from
+/// interleaved asynchronous tasks within an isolate. See
+/// [Metrics API, concurrency requirements](https://github.com/open-telemetry/opentelemetry-specification/blob/v1.60.0/specification/metrics/api.md#concurrency-requirements).
 class APIHistogram<T extends num> {
   /// The name of this histogram instrument.
   final String _name;
@@ -70,6 +75,9 @@ class APIHistogram<T extends num> {
 
   /// Records a value in the histogram.
   ///
+  /// The value is expected to be non-negative. This API does not validate
+  /// that, which the specification leaves to implementations of the API.
+  ///
   /// [value] The value to record.
   /// [attributes] The set of attributes to associate with this value.
   void record(T value, [Attributes? attributes]) {
@@ -77,6 +85,9 @@ class APIHistogram<T extends num> {
   }
 
   /// Records a value with the given map of attributes.
+  ///
+  /// The value is expected to be non-negative. This API does not validate
+  /// that, which the specification leaves to implementations of the API.
   ///
   /// [value] The value to record.
   /// [attributeMap] A map of attribute key-value pairs.

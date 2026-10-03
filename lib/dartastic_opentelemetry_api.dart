@@ -62,7 +62,8 @@ export 'src/api/semantics/http_header_attribute.dart';
 export 'src/api/semantics/semantics_base.dart';
 export 'src/api/semantics/semconv/semconv.dart';
 // Trace
-export 'src/api/trace/span.dart' hide APISpanCreate;
+export 'src/api/trace/span.dart'
+    hide APISpanCreate, ReadableSpan, getReadableSpan;
 export 'src/api/trace/span_context.dart' hide SpanContextCreate;
 export 'src/api/trace/span_event.dart' hide SpanEventCreate;
 export 'src/api/trace/span_id.dart' hide SpanIdCreate;

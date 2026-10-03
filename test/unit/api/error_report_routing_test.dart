@@ -13,6 +13,7 @@
 // coerces '' to the documented global default with nothing dropped.
 
 import 'package:dartastic_opentelemetry_api/dartastic_opentelemetry_api.dart';
+import 'package:dartastic_opentelemetry_api/src/api/trace/span.dart';
 import 'package:test/test.dart';
 import '../../test_util.dart';
 
@@ -77,7 +78,7 @@ void main() {
 
       span.addEventNow('');
 
-      expect(span.spanEvents ?? const <SpanEvent>[], isEmpty,
+      expect(getReadableSpan(span).spanEvents ?? const <SpanEvent>[], isEmpty,
           reason: 'the event is dropped');
       expect(reported, hasLength(1));
       expect(reported.single, isArgumentError);
