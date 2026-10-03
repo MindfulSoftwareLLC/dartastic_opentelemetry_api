@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import 'package:meta/meta.dart';
+import '../../util/otel_error_handler.dart';
+import '../common/any_value.dart';
 import '../common/attributes.dart';
 import '../context/context.dart';
 import 'severity.dart';
@@ -59,6 +61,18 @@ class APILogger {
 
   /// Emit a LogRecord.
   ///
+  /// [body] takes either a plain Dart object or an [AnyValue]; an SDK boxes it
+  /// with [bodyToAnyValue], and [LogRecord.body] holds the resulting
+  /// [AnyValue].
+  ///
+  /// This implementation does nothing at all, per logs/noop.md: the No-Op
+  /// Logger accepts the parameters and neither validates them nor records
+  /// anything. It deliberately does not convert [body] — no record is produced
+  /// without an SDK, so there is nothing for an unrepresentable body to
+  /// corrupt, and traversing it would charge users who installed no SDK for
+  /// work whose result is discarded. An SDK reports the unrepresentable body,
+  /// because there the record is real.
+  ///
   /// More info https://opentelemetry.io/docs/specs/otel/logs/api/#emit-a-logrecord
   void emit({
     DateTime? timeStamp,
@@ -66,10 +80,43 @@ class APILogger {
     Context? context,
     Severity? severityNumber,
     String? severityText,
-    dynamic body,
+    Object? body,
     Attributes? attributes,
     String? eventName,
   }) {
-    // Base implementation is a no-op
+    // Intentionally empty. See the dartdoc: a no-op Logger does nothing, and
+    // that includes not touching the body.
+  }
+
+  /// Boxes an [emit] body into the [AnyValue] that [LogRecord.body] holds.
+  ///
+  /// An [AnyValue] passes through unchanged, so a record read back from
+  /// [LogRecord.body] can be forwarded to [emit] without being re-wrapped.
+  /// Anything else is converted by [AnyValue.fromObject].
+  ///
+  /// Returns null when [body] is null or cannot be represented. A value the
+  /// data model cannot carry is reported through [OTelErrorHandling] and the
+  /// body dropped, never thrown: error-handling.md makes throwing on end-user
+  /// misuse a MUST NOT, and failing telemetry must not take down the caller's
+  /// logging path. This mirrors what `attrsFromMap` does for attributes.
+  ///
+  /// Static, not an instance method: SDK loggers `implement` [APILogger] and
+  /// delegate rather than extending it, so an instance member would oblige
+  /// every one of them to supply its own implementation — the opposite of
+  /// sharing this one. Call it as `APILogger.bodyToAnyValue(body)`.
+  static AnyValue? bodyToAnyValue(Object? body) {
+    if (body == null) return null;
+    // Already boxed: emit(body: record.body) is the natural way to forward a
+    // record. AnyValue.fromObject does this too, at every depth; this is the
+    // same rule applied one call earlier for the common top-level case.
+    if (body is AnyValue) return body;
+    try {
+      return AnyValue.fromObject(body);
+    } catch (e) {
+      OTelErrorHandling.report(ArgumentError(
+          'Dropping the log record body because it contains unsupported '
+          'types: $e'));
+      return null;
+    }
   }
 }
