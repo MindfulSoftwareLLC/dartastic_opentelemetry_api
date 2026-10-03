@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import 'package:dartastic_opentelemetry_api/dartastic_opentelemetry_api.dart';
+import 'package:dartastic_opentelemetry_api/src/api/trace/span.dart';
 import 'package:test/test.dart';
 
 import '../../../test_util.dart';
@@ -45,11 +46,17 @@ void main() {
         ],
       );
 
-      expect(linkedSpan.spanLinks, hasLength(2));
+      expect(getReadableSpan(linkedSpan).spanLinks, hasLength(2));
+      expect(getReadableSpan(linkedSpan).spanLinks?.first.spanContext,
+          equals(span1.spanContext));
+      expect(getReadableSpan(linkedSpan).spanLinks?.last.spanContext,
+          equals(span2.spanContext));
       expect(
-          linkedSpan.spanLinks?.first.spanContext, equals(span1.spanContext));
-      expect(linkedSpan.spanLinks?.last.spanContext, equals(span2.spanContext));
-      expect(linkedSpan.spanLinks?.first.attributes.getString('key'),
+          getReadableSpan(linkedSpan)
+              .spanLinks
+              ?.first
+              .attributes
+              .getString('key'),
           equals('value'));
     });
 
@@ -60,9 +67,15 @@ void main() {
       final attributes = {'key': 'value'}.toAttributes();
       mainSpan.addLink(span1.spanContext, attributes);
 
-      expect(mainSpan.spanLinks, hasLength(1));
-      expect(mainSpan.spanLinks?.first.spanContext, equals(span1.spanContext));
-      expect(mainSpan.spanLinks?.first.attributes.getString('key'),
+      expect(getReadableSpan(mainSpan).spanLinks, hasLength(1));
+      expect(getReadableSpan(mainSpan).spanLinks?.first.spanContext,
+          equals(span1.spanContext));
+      expect(
+          getReadableSpan(mainSpan)
+              .spanLinks
+              ?.first
+              .attributes
+              .getString('key'),
           equals('value'));
     });
 
@@ -76,10 +89,13 @@ void main() {
       mainSpan.addLink(span2.spanContext);
       mainSpan.addLink(span3.spanContext);
 
-      expect(mainSpan.spanLinks, hasLength(3));
-      expect(mainSpan.spanLinks?[0].spanContext, equals(span1.spanContext));
-      expect(mainSpan.spanLinks?[1].spanContext, equals(span2.spanContext));
-      expect(mainSpan.spanLinks?[2].spanContext, equals(span3.spanContext));
+      expect(getReadableSpan(mainSpan).spanLinks, hasLength(3));
+      expect(getReadableSpan(mainSpan).spanLinks?[0].spanContext,
+          equals(span1.spanContext));
+      expect(getReadableSpan(mainSpan).spanLinks?[1].spanContext,
+          equals(span2.spanContext));
+      expect(getReadableSpan(mainSpan).spanLinks?[2].spanContext,
+          equals(span3.spanContext));
     });
 
     test('handles links with empty trace IDs or span IDs', () {
@@ -92,10 +108,11 @@ void main() {
         links: [OTelAPI.spanLink(invalidContext, attributes)],
       );
 
-      expect(span.spanLinks, hasLength(1));
-      expect(span.spanLinks?.first.spanContext, equals(invalidContext));
-      expect(
-          span.spanLinks?.first.attributes.getString('key'), equals('value'));
+      expect(getReadableSpan(span).spanLinks, hasLength(1));
+      expect(getReadableSpan(span).spanLinks?.first.spanContext,
+          equals(invalidContext));
+      expect(getReadableSpan(span).spanLinks?.first.attributes.getString('key'),
+          equals('value'));
     });
 
     test('isRecording behavior', () {
@@ -109,8 +126,8 @@ void main() {
       // Operations after end should be ignored
       span.addEvent(OTelAPI.spanEvent('test-event'));
       span.setStatus(SpanStatusCode.Error);
-      expect(span.spanEvents, isNull);
-      expect(span.status,
+      expect(getReadableSpan(span).spanEvents, isNull);
+      expect(getReadableSpan(span).status,
           equals(SpanStatusCode.Unset)); // Status should remain unchanged
     });
 
@@ -118,26 +135,26 @@ void main() {
       final span = tracer.startSpan('test-span');
 
       // Initial status should be unset
-      expect(span.status, equals(SpanStatusCode.Unset));
+      expect(getReadableSpan(span).status, equals(SpanStatusCode.Unset));
 
       // Setting error status with description
       span.setStatus(SpanStatusCode.Error, 'Error occurred');
-      expect(span.status, equals(SpanStatusCode.Error));
-      expect(span.statusDescription, equals('Error occurred'));
+      expect(getReadableSpan(span).status, equals(SpanStatusCode.Error));
+      expect(getReadableSpan(span).statusDescription, equals('Error occurred'));
 
       // Setting OK should override error status
       span.setStatus(SpanStatusCode.Ok);
-      expect(span.status, equals(SpanStatusCode.Ok));
-      expect(span.statusDescription, isNull);
+      expect(getReadableSpan(span).status, equals(SpanStatusCode.Ok));
+      expect(getReadableSpan(span).statusDescription, isNull);
 
       // Further attempts to set error should be ignored after OK
       span.setStatus(SpanStatusCode.Error, 'Another error');
-      expect(span.status, equals(SpanStatusCode.Ok));
-      expect(span.statusDescription, isNull);
+      expect(getReadableSpan(span).status, equals(SpanStatusCode.Ok));
+      expect(getReadableSpan(span).statusDescription, isNull);
 
       // Attempt to set unset should be ignored
       span.setStatus(SpanStatusCode.Unset);
-      expect(span.status, equals(SpanStatusCode.Ok));
+      expect(getReadableSpan(span).status, equals(SpanStatusCode.Ok));
     });
 
     test('description only allowed with error status', () {
@@ -145,15 +162,16 @@ void main() {
 
       // Description should be ignored for unset status
       span.setStatus(SpanStatusCode.Unset, 'Description');
-      expect(span.statusDescription, isNull);
+      expect(getReadableSpan(span).statusDescription, isNull);
 
       // Description should be set for error status
       span.setStatus(SpanStatusCode.Error, 'Error Description');
-      expect(span.statusDescription, equals('Error Description'));
+      expect(
+          getReadableSpan(span).statusDescription, equals('Error Description'));
 
       // Description should be ignored for OK status
       span.setStatus(SpanStatusCode.Ok, 'Description');
-      expect(span.statusDescription, isNull);
+      expect(getReadableSpan(span).statusDescription, isNull);
     });
   });
 }

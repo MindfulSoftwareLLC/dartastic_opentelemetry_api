@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import 'package:dartastic_opentelemetry_api/dartastic_opentelemetry_api.dart';
+import 'package:dartastic_opentelemetry_api/src/api/trace/span.dart';
 import 'package:test/test.dart';
 import '../../../test_util.dart';
 
@@ -55,10 +56,10 @@ void main() {
       expect(span.isRecording, isTrue);
       expect(span.name, equals('test-span'));
       expect(span.kind, equals(SpanKind.internal));
-      expect(span.status, equals(SpanStatusCode.Unset));
-      expect(span.statusDescription, isNull);
+      expect(getReadableSpan(span).status, equals(SpanStatusCode.Unset));
+      expect(getReadableSpan(span).statusDescription, isNull);
       expect(span.parentSpan, isNull);
-      expect(span.attributes.length, equals(0));
+      expect(getReadableSpan(span).attributes.length, equals(0));
     });
 
     test('creates non-recording span when isRecording is false', () {
@@ -75,11 +76,11 @@ void main() {
       span.updateName('new-name');
       span.addEventNow('test-event');
 
-      expect(span.attributes.length, equals(0));
-      expect(span.status, equals(SpanStatusCode.Unset));
-      expect(span.statusDescription, isNull);
+      expect(getReadableSpan(span).attributes.length, equals(0));
+      expect(getReadableSpan(span).status, equals(SpanStatusCode.Unset));
+      expect(getReadableSpan(span).statusDescription, isNull);
       expect(span.name, equals('test-span'));
-      expect(span.spanEvents, isNull);
+      expect(getReadableSpan(span).spanEvents, isNull);
     });
 
     test('handles attribute updates correctly', () {
@@ -97,7 +98,7 @@ void main() {
 
       span.attributes = attrs;
 
-      final spanAttrs = span.attributes.toMap();
+      final spanAttrs = getReadableSpan(span).attributes.toMap();
       expect(spanAttrs['string.key']?.value, equals('value'));
       expect(spanAttrs['int.key']?.value, equals(42));
       expect(spanAttrs['bool.key']?.value, equals(true));
@@ -120,17 +121,21 @@ void main() {
       span.setDoubleListAttribute('double.list', [1.1, 2.2, 3.3]);
 
       // Verify all attributes
-      expect(span.attributes.getString('string.key'), equals('string-value'));
-      expect(span.attributes.getBool('bool.key'), equals(true));
-      expect(span.attributes.getInt('int.key'), equals(42));
-      expect(span.attributes.getDouble('double.key'), equals(3.14));
+      expect(getReadableSpan(span).attributes.getString('string.key'),
+          equals('string-value'));
+      expect(
+          getReadableSpan(span).attributes.getBool('bool.key'), equals(true));
+      expect(getReadableSpan(span).attributes.getInt('int.key'), equals(42));
+      expect(getReadableSpan(span).attributes.getDouble('double.key'),
+          equals(3.14));
 
-      expect(span.attributes.getStringList('string.list'),
+      expect(getReadableSpan(span).attributes.getStringList('string.list'),
           equals(['a', 'b', 'c']));
-      expect(span.attributes.getBoolList('bool.list'),
+      expect(getReadableSpan(span).attributes.getBoolList('bool.list'),
           equals([true, false, true]));
-      expect(span.attributes.getIntList('int.list'), equals([1, 2, 3]));
-      expect(span.attributes.getDoubleList('double.list'),
+      expect(getReadableSpan(span).attributes.getIntList('int.list'),
+          equals([1, 2, 3]));
+      expect(getReadableSpan(span).attributes.getDoubleList('double.list'),
           equals([1.1, 2.2, 3.3]));
     });
 
@@ -140,17 +145,17 @@ void main() {
         kind: SpanKind.internal,
       );
 
-      expect(span.status, equals(SpanStatusCode.Unset));
+      expect(getReadableSpan(span).status, equals(SpanStatusCode.Unset));
 
       // Create a new status with error and description
       span.setStatus(SpanStatusCode.Error, 'Error occurred');
-      expect(span.status, equals(SpanStatusCode.Error));
-      expect(span.statusDescription, equals('Error occurred'));
+      expect(getReadableSpan(span).status, equals(SpanStatusCode.Error));
+      expect(getReadableSpan(span).statusDescription, equals('Error occurred'));
 
       // Use the OK constant
       span.setStatus(SpanStatusCode.Ok);
-      expect(span.status, equals(SpanStatusCode.Ok));
-      expect(span.statusDescription, isNull);
+      expect(getReadableSpan(span).status, equals(SpanStatusCode.Ok));
+      expect(getReadableSpan(span).statusDescription, isNull);
     });
 
     test('records end time when ended', () {
@@ -202,10 +207,10 @@ void main() {
       span.setStatus(SpanStatusCode.Error, 'Error');
       span.updateName('new-name');
 
-      expect(span.attributes.length, equals(0));
+      expect(getReadableSpan(span).attributes.length, equals(0));
       // end() does not change the status; it stays Unset (trace/api.md)
-      expect(span.status, equals(SpanStatusCode.Unset));
-      expect(span.statusDescription, isNull);
+      expect(getReadableSpan(span).status, equals(SpanStatusCode.Unset));
+      expect(getReadableSpan(span).statusDescription, isNull);
       expect(span.name, equals('test-span'));
     });
 
@@ -228,7 +233,7 @@ void main() {
       );
       final afterCreation = tracer.timeProvider.nowDateTime();
 
-      final events = span.spanEvents;
+      final events = getReadableSpan(span).spanEvents;
       expect(events, hasLength(1));
 
       final event = events?.first;
@@ -248,7 +253,7 @@ void main() {
         timestamp,
       ));
 
-      final events = span.spanEvents;
+      final events = getReadableSpan(span).spanEvents;
       expect(events?.first.timestamp, equals(timestamp));
     });
 
@@ -287,9 +292,9 @@ void main() {
       span.recordException(exception);
 
       // Exceptions don't record an exception status
-      expect(span.status, equals(SpanStatusCode.Unset));
+      expect(getReadableSpan(span).status, equals(SpanStatusCode.Unset));
 
-      final events = span.spanEvents;
+      final events = getReadableSpan(span).spanEvents;
       expect(events, hasLength(1));
       expect(events?.first.name, equals('exception'));
 
@@ -310,7 +315,7 @@ void main() {
         attributes: Attributes.of({'custom': 'attribute'}),
       );
 
-      final events = span.spanEvents;
+      final events = getReadableSpan(span).spanEvents;
       final eventAttrs = events?.first.attributes?.toMap() ?? {};
 
       // Should contain both standard exception attributes and custom ones
@@ -325,7 +330,7 @@ void main() {
 
       span.recordException(exception);
 
-      final events = span.spanEvents;
+      final events = getReadableSpan(span).spanEvents;
       final eventAttrs = events?.first.attributes?.toMap() ?? {};
 
       // Should contain the full message with escaping preserved
@@ -337,32 +342,33 @@ void main() {
       final span = tracer.startSpan('test');
       span.addAttributes(OTelAPI.attributesFromMap(fullyTypesMapOfKVs));
 
-      expect(span.attributes, isNotNull);
-      expect(span.attributes.getString('str'), isNotNull);
-      expect(span.attributes.length, equals(8));
+      expect(getReadableSpan(span).attributes, isNotNull);
+      expect(getReadableSpan(span).attributes.getString('str'), isNotNull);
+      expect(getReadableSpan(span).attributes.length, equals(8));
     });
 
     test('getAttribute returns empty with no attributes', () {
       final span = tracer.startSpan('test');
-      expect(span.attributes.length, equals(0));
+      expect(getReadableSpan(span).attributes.length, equals(0));
     });
 
     test('getAttribute returns null for missing key', () {
       final span = tracer.startSpan('test',
           attributes: OTelAPI.attributesFromMap(fullyTypesMapOfKVs));
-      expect(span.attributes, isNotNull);
-      expect(span.attributes.getString('str'), 'value');
-      expect(span.attributes.getString('str-not-here'), isNull);
+      expect(getReadableSpan(span).attributes, isNotNull);
+      expect(getReadableSpan(span).attributes.getString('str'), 'value');
+      expect(
+          getReadableSpan(span).attributes.getString('str-not-here'), isNull);
     });
 
     test('addEvent\'s', () {
       final span = tracer.startSpan('test');
       span.addEvent(OTelAPI.spanEvent('something happened'));
-      expect(span.spanEvents, isNotNull);
-      expect(span.spanEvents!.length, equals(1));
+      expect(getReadableSpan(span).spanEvents, isNotNull);
+      expect(getReadableSpan(span).spanEvents!.length, equals(1));
       span.addEvent(OTelAPI.spanEvent('something else happened',
           OTelAPI.attributesFromMap({'from': 'here'})));
-      expect(span.spanEvents, isNotNull);
+      expect(getReadableSpan(span).spanEvents, isNotNull);
     });
 
     test('an event with an empty name is dropped, not thrown (api#69)', () {
@@ -375,7 +381,7 @@ void main() {
       span.addEventNow('');
       span.addEvents({'': null});
 
-      expect(span.spanEvents ?? const <SpanEvent>[], isEmpty);
+      expect(getReadableSpan(span).spanEvents ?? const <SpanEvent>[], isEmpty);
     });
 
     test('an empty event name reaches the error handler (api#69)', () {
@@ -402,7 +408,7 @@ void main() {
       expect(reported, hasLength(2),
           reason: 'once when the event is made, once when the span drops it');
 
-      expect(span.spanEvents ?? const <SpanEvent>[], isEmpty);
+      expect(getReadableSpan(span).spanEvents ?? const <SpanEvent>[], isEmpty);
       OTelAPI.setErrorHandler(null);
     });
 
@@ -411,32 +417,32 @@ void main() {
 
       span.addEvents({'': null, 'kept': null});
 
-      expect(span.spanEvents, hasLength(1));
-      expect(span.spanEvents!.single.name, equals('kept'));
+      expect(getReadableSpan(span).spanEvents, hasLength(1));
+      expect(getReadableSpan(span).spanEvents!.single.name, equals('kept'));
     });
 
     test('end() is idempotent', () {
       final span = tracer.startSpan('test');
       span.end();
       span.end(); // Should not throw
-      expect(span.status, equals(SpanStatusCode.Unset));
+      expect(getReadableSpan(span).status, equals(SpanStatusCode.Unset));
     });
 
     test('end() leaves the status Unset', () {
       // trace/api.md: End takes only an optional timestamp and never
       // changes the status; only setStatus does.
       final span = tracer.startSpan('test');
-      expect(span.status, equals(SpanStatusCode.Unset));
+      expect(getReadableSpan(span).status, equals(SpanStatusCode.Unset));
       span.end();
-      expect(span.status, equals(SpanStatusCode.Unset));
+      expect(getReadableSpan(span).status, equals(SpanStatusCode.Unset));
     });
 
     test('end() preserves a status set before ending', () {
       final span = tracer.startSpan('test');
       span.setStatus(SpanStatusCode.Error, 'boom');
       span.end();
-      expect(span.status, equals(SpanStatusCode.Error));
-      expect(span.statusDescription, equals('boom'));
+      expect(getReadableSpan(span).status, equals(SpanStatusCode.Error));
+      expect(getReadableSpan(span).statusDescription, equals('boom'));
     });
 
     test('end(spanStatus:) applies the setStatus rules, without an Ok default',
@@ -444,57 +450,57 @@ void main() {
       // The deprecated spanStatus parameter still works but goes through
       // setStatus; passing Unset is ignored per the Set Status rules.
       final okSpan = tracer.startSpan('ok')..end(spanStatus: SpanStatusCode.Ok);
-      expect(okSpan.status, equals(SpanStatusCode.Ok));
+      expect(getReadableSpan(okSpan).status, equals(SpanStatusCode.Ok));
 
       final errorSpan = tracer.startSpan('error')
         ..end(spanStatus: SpanStatusCode.Error);
-      expect(errorSpan.status, equals(SpanStatusCode.Error));
+      expect(getReadableSpan(errorSpan).status, equals(SpanStatusCode.Error));
 
       final unsetSpan = tracer.startSpan('unset')
         ..end(spanStatus: SpanStatusCode.Unset);
-      expect(unsetSpan.status, equals(SpanStatusCode.Unset));
+      expect(getReadableSpan(unsetSpan).status, equals(SpanStatusCode.Unset));
     });
 
     test('addEvent twice', () {
       final span = tracer.startSpan('test');
       span.addEventNow('first');
-      expect(span.spanEvents, isNotNull);
-      expect(span.spanEvents!.length, equals(1));
+      expect(getReadableSpan(span).spanEvents, isNotNull);
+      expect(getReadableSpan(span).spanEvents!.length, equals(1));
       span.addEventNow(
         'second',
       );
-      expect(span.spanEvents, isNotNull);
-      expect(span.spanEvents!.length, equals(2));
+      expect(getReadableSpan(span).spanEvents, isNotNull);
+      expect(getReadableSpan(span).spanEvents!.length, equals(2));
     });
 
     test('addEvent ignored after end', () {
       final span = tracer.startSpan('test');
       span.addEventNow('nice and early');
       span.end();
-      expect(span.spanEvents, isNotNull);
-      expect(span.spanEvents!.length, equals(1));
+      expect(getReadableSpan(span).spanEvents, isNotNull);
+      expect(getReadableSpan(span).spanEvents!.length, equals(1));
       span.addEventNow(
         'too late',
       );
-      expect(span.spanEvents, isNotNull);
-      expect(span.spanEvents!.length, equals(1));
+      expect(getReadableSpan(span).spanEvents, isNotNull);
+      expect(getReadableSpan(span).spanEvents!.length, equals(1));
     });
 
     test('setStatus ignored after end', () {
       final span = tracer.startSpan('test');
-      expect(span.status, equals(SpanStatusCode.Unset));
+      expect(getReadableSpan(span).status, equals(SpanStatusCode.Unset));
       span.end();
-      expect(span.status, equals(SpanStatusCode.Unset));
+      expect(getReadableSpan(span).status, equals(SpanStatusCode.Unset));
       span.setStatus(SpanStatusCode.Error);
-      expect(span.status, equals(SpanStatusCode.Unset));
+      expect(getReadableSpan(span).status, equals(SpanStatusCode.Unset));
     });
 
     test('recordException is ignored after end', () {
       final span = tracer.startSpan('test');
       span.end();
-      expect(span.spanEvents, isNull);
+      expect(getReadableSpan(span).spanEvents, isNull);
       span.recordException(Exception('test'));
-      expect(span.spanEvents, isNull);
+      expect(getReadableSpan(span).spanEvents, isNull);
     });
 
     test('updateName is ignored after end', () {
@@ -560,9 +566,10 @@ void main() {
 
       expect(span.name, equals('test-span'));
       expect(span.kind, equals(SpanKind.server));
-      expect(span.attributes.getString('key'), equals('value'));
-      expect(span.status, equals(SpanStatusCode.Unset));
-      expect(span.spanEvents?.length, equals(1));
+      expect(
+          getReadableSpan(span).attributes.getString('key'), equals('value'));
+      expect(getReadableSpan(span).status, equals(SpanStatusCode.Unset));
+      expect(getReadableSpan(span).spanEvents?.length, equals(1));
     });
   });
 }
