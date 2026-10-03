@@ -141,8 +141,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   IDs from the same isolate are predictable — generated IDs must not be used
   as secrets or security tokens
   ([#144](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/144)).
-- Trace flags hold a single byte, so they always render as two hex digits.
-- Trace flags hold a single byte, so they always render as two hex digits
 - Integer trace flags retain only the low byte, including during
   `SpanContext.fromJson`, so they always render as two hex digits as required
   by the W3C Trace Context trace-flags grammar

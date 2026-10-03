@@ -12,8 +12,8 @@ void main() {
     });
 
     test('should create TraceFlags from hex string', () {
-      expect(TraceFlags.fromString('00'), equals(TraceFlags.none));
-      expect(TraceFlags.fromString('01'), equals(TraceFlags.sampled));
+      expect(TraceFlags.fromString('00')!, equals(TraceFlags.none));
+      expect(TraceFlags.fromString('01')!, equals(TraceFlags.sampled));
       expect(TraceFlags.fromString('ff')!.asByte, equals(0xff));
       expect(TraceFlags.fromString('0f')!.asByte, equals(0x0f));
     });
@@ -128,11 +128,11 @@ void main() {
     test('isRandom should correctly report the random flag', () {
       expect(TraceFlags.none.isRandom, isFalse);
       expect(TraceFlags.sampled.isRandom, isFalse);
-      expect(TraceFlags.fromString('02').isRandom, isTrue);
-      expect(TraceFlags.fromString('03').isRandom, isTrue);
-      expect(TraceFlags.fromString('ff').isRandom, isTrue);
+      expect(TraceFlags.fromString('02')!.isRandom, isTrue);
+      expect(TraceFlags.fromString('03')!.isRandom, isTrue);
+      expect(TraceFlags.fromString('ff')!.isRandom, isTrue);
       // 0x0d is 1101, so the random bit is clear even though others are set.
-      expect(TraceFlags.fromString('0d').isRandom, isFalse);
+      expect(TraceFlags.fromString('0d')!.isRandom, isFalse);
     });
 
     test('withRandom should create new TraceFlags with correct random flag',
@@ -143,16 +143,16 @@ void main() {
       expect(randomOn.asByte, equals(0x2));
 
       // Test turning the random flag off
-      final randomOff = TraceFlags.fromString('02').withRandom(false);
+      final randomOff = TraceFlags.fromString('02')!.withRandom(false);
       expect(randomOff.isRandom, isFalse);
       expect(randomOff.asByte, equals(0x0));
 
       // Test setting the random flag to its current value
       expect(TraceFlags.none.withRandom(false).isRandom, isFalse);
-      expect(TraceFlags.fromString('02').withRandom(true).isRandom, isTrue);
+      expect(TraceFlags.fromString('02')!.withRandom(true).isRandom, isTrue);
 
       // Test with other flags set
-      final withOtherFlags = TraceFlags.fromString('0d');
+      final withOtherFlags = TraceFlags.fromString('0d')!;
       final withOtherFlagsAndRandom = withOtherFlags.withRandom(true);
       expect(withOtherFlagsAndRandom.asByte, equals(0x0f));
       expect(withOtherFlagsAndRandom.isRandom, isTrue);
@@ -164,19 +164,19 @@ void main() {
 
     test('sampled and random flags should be independent', () {
       // All four combinations of the two defined bits.
-      final neither = TraceFlags.fromString('00');
+      final neither = TraceFlags.fromString('00')!;
       expect(neither.isSampled, isFalse);
       expect(neither.isRandom, isFalse);
 
-      final sampledOnly = TraceFlags.fromString('01');
+      final sampledOnly = TraceFlags.fromString('01')!;
       expect(sampledOnly.isSampled, isTrue);
       expect(sampledOnly.isRandom, isFalse);
 
-      final randomOnly = TraceFlags.fromString('02');
+      final randomOnly = TraceFlags.fromString('02')!;
       expect(randomOnly.isSampled, isFalse);
       expect(randomOnly.isRandom, isTrue);
 
-      final both = TraceFlags.fromString('03');
+      final both = TraceFlags.fromString('03')!;
       expect(both.isSampled, isTrue);
       expect(both.isRandom, isTrue);
 
@@ -194,10 +194,10 @@ void main() {
     });
 
     test('random flag should survive a string round trip', () {
-      expect(TraceFlags.fromString('02').toString(), equals('02'));
-      expect(TraceFlags.fromString('03').toString(), equals('03'));
+      expect(TraceFlags.fromString('02')!.toString(), equals('02'));
+      expect(TraceFlags.fromString('03')!.toString(), equals('03'));
       expect(
-        TraceFlags.fromString(TraceFlags.none.withRandom(true).toString())
+        TraceFlags.fromString(TraceFlags.none.withRandom(true).toString())!
             .isRandom,
         isTrue,
       );
@@ -206,7 +206,7 @@ void main() {
     test('whole-value comparison is not a substitute for bit accessors', () {
       // Guards the bit set contract: 03 is sampled, but it is not equal to
       // the sampled-only constant.
-      final both = TraceFlags.fromString('03');
+      final both = TraceFlags.fromString('03')!;
       expect(both.isSampled, isTrue);
       expect(both == TraceFlags.sampled, isFalse);
     });
