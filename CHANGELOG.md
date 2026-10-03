@@ -107,6 +107,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- The metrics API now documents that `APIMeterProvider`, `APIMeter` and the seven
+  instruments need to be safe for concurrent use, that an instrument `name` must
+  conform to the instrument name syntax, and that `Histogram.record` expects a
+  non-negative value. metrics/api.md makes the first a MUST and the other two a
+  SHOULD. Comments only, no behavior change
+  ([#141](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/141)).
 - `IdGenerator` no longer draws every ID byte from a fresh
   `Random.secure().nextInt(256)` call (one OS entropy syscall per byte), which
   made generating a span ID cost ~330 µs and a trace ID ~665 µs on macOS arm64 —

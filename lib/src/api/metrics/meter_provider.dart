@@ -19,6 +19,11 @@ part 'meter_provider_create.dart';
 /// ```
 /// See [OTel] for creating meters in addition to the default.
 /// Use [OTelAPI] to run in no-op mode, as required by the specification.
+///
+/// All methods of this class are safe for concurrent use by default:
+/// implementations must remain correct when methods are invoked from
+/// interleaved asynchronous tasks within an isolate. See
+/// [Metrics API, concurrency requirements](https://github.com/open-telemetry/opentelemetry-specification/blob/v1.60.0/specification/metrics/api.md#concurrency-requirements).
 class APIMeterProvider {
   /// Creates a new [APIMeterProvider].
   /// You cannot create a MeterProvider directly; you must use [OTelFactory]:
