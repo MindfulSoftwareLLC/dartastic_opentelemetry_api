@@ -158,6 +158,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **BREAKING**: `IdGenerator.hexToBytes`, and so `OTelAPI.traceIdFrom` and
   `OTelAPI.spanIdFrom`, no longer accept anything outside lowercase hex
   ([#112](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/112)).
+- `OTelAPI.traceIdFrom` and `OTelAPI.spanIdFrom` no longer throw a
+  `FormatException` on malformed or wrong-length input: the error is reported
+  through `OTelErrorHandling` and an invalid (all-zero) id is returned, since
+  error-handling.md says API methods MUST NOT throw on incorrect use
+  ([#137](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/137)).
 - `APISpan.addLink` and `APISpan.addSpanLink` now document that a link given at
   span creation is preferred to a later call. The trace/api.md spec makes this
   a MUST, because head sampling can only use the information present at span
