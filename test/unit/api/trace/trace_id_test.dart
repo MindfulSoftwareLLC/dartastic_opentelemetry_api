@@ -4,6 +4,7 @@
 import 'dart:typed_data';
 
 import 'package:dartastic_opentelemetry_api/src/api/otel_api.dart';
+import 'package:dartastic_opentelemetry_api/src/util/otel_error_handler.dart';
 import 'package:test/test.dart';
 
 void main() {
@@ -40,37 +41,67 @@ void main() {
     });
 
     test('handles invalid hex string', () {
-      expect(
-        () => OTelAPI.traceIdFrom('invalid'),
-        throwsA(isA<FormatException>()),
-      );
+      final received = <Object>[];
+      OTelErrorHandling.handler = (error, _) => received.add(error);
+      addTearDown(OTelErrorHandling.resetToDefault);
+
+      final id = OTelAPI.traceIdFrom('invalid');
+
+      expect(id.isValid, isFalse);
+      expect(id.toString(), equals('00000000000000000000000000000000'));
+      expect(received.single, isA<FormatException>());
+    });
+
+    test('handles wrong-length hex string', () {
+      final received = <Object>[];
+      OTelErrorHandling.handler = (error, _) => received.add(error);
+      addTearDown(OTelErrorHandling.resetToDefault);
+
+      final id = OTelAPI.traceIdFrom('a1b2c3');
+
+      expect(id.isValid, isFalse);
+      expect(received.single, isA<FormatException>());
     });
 
     test('rejects a correctly sized uppercase hex string', () {
-      expect(
-        () => OTelAPI.traceIdFrom('4BF92F3577B34DA6A3CE929D0E0E4736'),
-        throwsA(isA<FormatException>()),
-      );
+      final received = <Object>[];
+      OTelErrorHandling.handler = (error, _) => received.add(error);
+      addTearDown(OTelErrorHandling.resetToDefault);
+
+      final id = OTelAPI.traceIdFrom('4BF92F3577B34DA6A3CE929D0E0E4736');
+
+      expect(id.isValid, isFalse);
+      expect(id.toString(), equals('00000000000000000000000000000000'));
+      expect(received.single, isA<FormatException>());
     });
 
     test('rejects a signed hex string instead of corrupting the id', () {
-      // '-b' parsed to -11 and wrapped to 0xf5, so this returned an id that
-      // did not match the string it was built from.
-      expect(
-        () => OTelAPI.traceIdFrom('-bf92f3577b34da6a3ce929d0e0e4736'),
-        throwsA(isA<FormatException>()),
-      );
+      // '-b' parsed to -11 and wrapped to 0xf5, so this once returned an id
+      // that did not match the string it was built from. The id is not
+      // corrupted now: the input is reported and an invalid id returned.
+      final received = <Object>[];
+      OTelErrorHandling.handler = (error, _) => received.add(error);
+      addTearDown(OTelErrorHandling.resetToDefault);
+
+      final id = OTelAPI.traceIdFrom('-bf92f3577b34da6a3ce929d0e0e4736');
+
+      expect(id.isValid, isFalse);
+      expect(id.toString(), equals('00000000000000000000000000000000'));
+      expect(received.single, isA<FormatException>());
     });
 
     test('rejects lowercase hex that is not 32 characters', () {
-      expect(
-        () => OTelAPI.traceIdFrom('a1b2c3d4e5f67890a1b2c3d4e5f678'),
-        throwsA(isA<FormatException>()),
-      );
-      expect(
-        () => OTelAPI.traceIdFrom('a1b2c3d4e5f67890a1b2c3d4e5f6789012'),
-        throwsA(isA<FormatException>()),
-      );
+      final received = <Object>[];
+      OTelErrorHandling.handler = (error, _) => received.add(error);
+      addTearDown(OTelErrorHandling.resetToDefault);
+
+      final short = OTelAPI.traceIdFrom('a1b2c3d4e5f67890a1b2c3d4e5f678');
+      final long = OTelAPI.traceIdFrom('a1b2c3d4e5f67890a1b2c3d4e5f6789012');
+
+      expect(short.isValid, isFalse);
+      expect(long.isValid, isFalse);
+      expect(received, hasLength(2));
+      expect(received, everyElement(isA<FormatException>()));
     });
 
     test('provides access to raw bytes', () {
@@ -110,15 +141,25 @@ void main() {
     });
 
     test('traceIdFrom handles invalid hex strings', () {
-      expect(() {
-        OTelAPI.traceIdFrom('invalid-hex');
-      }, throwsFormatException);
+      final received = <Object>[];
+      OTelErrorHandling.handler = (error, _) => received.add(error);
+      addTearDown(OTelErrorHandling.resetToDefault);
+
+      final id = OTelAPI.traceIdFrom('invalid-hex');
+
+      expect(id.isValid, isFalse);
+      expect(received.single, isA<FormatException>());
     });
 
     test('spanIdFrom handles invalid hex strings', () {
-      expect(() {
-        OTelAPI.spanIdFrom('invalid-hex');
-      }, throwsFormatException);
+      final received = <Object>[];
+      OTelErrorHandling.handler = (error, _) => received.add(error);
+      addTearDown(OTelErrorHandling.resetToDefault);
+
+      final id = OTelAPI.spanIdFrom('invalid-hex');
+
+      expect(id.isValid, isFalse);
+      expect(received.single, isA<FormatException>());
     });
   });
 }

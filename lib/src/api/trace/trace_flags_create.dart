@@ -7,7 +7,9 @@ part of 'trace_flags.dart';
 @internal
 class TraceFlagsCreate {
   /// Creates a TraceFlags, only accessible within library
+  ///
+  /// [flags] The flags byte, defaults to NONE_FLAG. Only the low byte is kept.
   static TraceFlags create([int? flags]) {
-    return TraceFlags._(flags ?? TraceFlags.NONE_FLAG);
+    return TraceFlags._((flags ?? TraceFlags.NONE_FLAG) & 0xff);
   }
 }
