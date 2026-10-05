@@ -123,27 +123,30 @@ sealed class AnyValue {
   /// Creates the null AnyValue.
   factory AnyValue.nullValue() = AnyValueNull;
 
-  /// Creates an AnyValue by recursively converting a standard Dart object.
+  /// Converts a Dart object to an [AnyValue], recursively, following the
+  /// specification's "Mapping Arbitrary Data to OTLP AnyValue"
+  /// (common/attribute-type-mapping.md).
   ///
-  /// [Uint8List] is converted to [AnyValueBytes]; other lists become an
-  /// [AnyValueArray] of converted elements. [DateTime] is converted to a UTC
-  /// ISO-8601 string.
+  /// - `null` becomes [AnyValueNull]. String, bool, int and double become the
+  ///   matching leaf.
+  /// - [Uint8List] becomes [AnyValueBytes] ("Byte Sequences").
+  /// - Any other [List] becomes an [AnyValueArray] with each element converted
+  ///   by these same rules ("Array Values"). Elements need not share a type,
+  ///   and `null` elements are kept, per "an array of AnyValue" and the `null`
+  ///   rule in common/README.md.
+  /// - A [Map] becomes an [AnyValueMap] ("Associative Arrays With Unique
+  ///   Keys"). A non-String key is converted with `toString()`.
+  /// - [DateTime] becomes an ISO 8601 UTC string, see
+  ///   [Timestamp.dateTimeToString]. The specification has no rule for dates,
+  ///   so this is "Other Values" with a fixed format instead of
+  ///   [DateTime.toString].
+  /// - An [AnyValue] is returned as is.
+  /// - Anything else becomes a String via `toString()` ("Other Values"). If
+  ///   `toString()` throws, the failure is reported through
+  ///   [OTelErrorHandling] and the result is [AnyValueNull].
   ///
-  /// An [AnyValue] passes through unchanged, at any nesting depth, so a value
-  /// read off an existing [Attribute] can be handed straight back in.
-  ///
-  /// Any other type falls back to its `toString()`, per "Mapping Arbitrary
-  /// Data to OTLP AnyValue", Other Values. If that `toString()` throws, the
-  /// failure is reported through `OTelErrorHandling` and the value becomes an
-  /// empty [AnyValueNull], which is the last resort the same section
-  /// prescribes. Note that a class without its own `toString()` stringifies to
-  /// `Instance of 'MyClass'`, which is rarely the telemetry you wanted — give
-  /// a type you log a meaningful `toString()`, or convert it yourself.
-  ///
-  /// Throws [ArgumentError] only for a non-String map key or a structure
-  /// nested more than 32 levels deep. Callers that must not throw —
-  /// `Attributes.of`, `Attributes.fromJson`, `APILogger.bodyToAnyValue` —
-  /// catch those, drop the value and report it.
+  /// Never throws. Nesting deeper than 32 levels is reported through
+  /// [OTelErrorHandling] and that subtree becomes [AnyValueNull].
   factory AnyValue.fromObject(Object? obj) => _fromObject(obj, 0);
 
   static AnyValue _fromObject(Object? obj, int depth) {
@@ -151,11 +154,8 @@ sealed class AnyValue {
       throw ArgumentError(
           'AnyValue nesting exceeds the maximum depth of $_maxDepth');
     }
-    // Already converted: return it untouched. This runs at every depth, so a
-    // wrapped value nested in a list or a map survives too. Without it the
-    // type ladder below misses an AnyValue and the Other Values fallback
-    // stringifies it, turning AnyValueInt(42) into '42' and, worse,
-    // AnyValueBytes([1, 2]) into its '<2 bytes>' rendering.
+    // An AnyValue at any depth passes through; the fallback below would
+    // stringify it.
     if (obj is AnyValue) {
       return obj;
     }
@@ -166,11 +166,10 @@ sealed class AnyValue {
     } else if (obj is bool) {
       return AnyValueBool(obj);
     } else if (obj is int) {
-      // On the web every number is a double, so `2.0 is int` is true and a
-      // whole-valued double arrives here as an AnyValueInt. Attributes'
-      // getDouble and getDoubleList promote an int, so a caller reading the
-      // value back gets 2.0 on both platforms; only the stored subtype, and
-      // so `is AnyValueInt`, differs.
+      // dart2js and DDC share one JS number type for int and double, so there
+      // `2.0 is int` is true and a whole-valued double lands here. The VM and
+      // dart2wasm keep them distinct. getDouble and getDoubleList promote an
+      // int on read, so only `is AnyValueInt` differs between compilers.
       return AnyValueInt(obj);
     } else if (obj is double) {
       return AnyValueDouble(obj);
