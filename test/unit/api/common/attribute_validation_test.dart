@@ -4,6 +4,8 @@
 // Coverage for Attribute value validation, Attribute.toString, and the
 // dynamic-list conversion paths in Attributes.of.
 
+import 'dart:typed_data';
+
 import 'package:dartastic_opentelemetry_api/dartastic_opentelemetry_api.dart';
 import 'package:test/test.dart';
 
@@ -18,21 +20,55 @@ void main() {
       );
     });
 
-    test('empty string value is stored', () {
-      final attr = OTelAPI.attributeString('k', '');
-      expect(attr.value, equals(''));
-      expect(attr.key, equals('k'));
-    });
-
-    test('empty list value is stored', () {
-      final attr = OTelAPI.attributeStringList('k', <String>[]);
-      expect(attr.value, equals(<String>[]));
-      expect(attr.key, equals('k'));
-    });
-
     test('toString includes the value', () {
       expect(OTelAPI.attributeString('k', 'v').toString(),
           equals('AttributeValue(v)'));
+    });
+
+    // error-handling.md makes it a MUST NOT for an API method to throw on
+    // end-user misuse, so the factories accept an empty key and Attributes
+    // drops it; see the "empty attribute keys" group in attributes_test.dart.
+    test('an empty key does not throw at the factory', () {
+      expect(() => OTelAPI.attributeString('', 'v'), returnsNormally);
+      expect(() => OTelAPI.attributeInt('', 1), returnsNormally);
+      expect(() => OTelAPI.attributeStringList('', ['v']), returnsNormally);
+    });
+
+    test('Attributes.of drops an empty key rather than throwing', () {
+      final attrs = Attributes.of({'': 'dropped', 'good': 'kept'});
+      expect(attrs.getString('good'), equals('kept'));
+      expect(attrs.toMap().containsKey(''), isFalse);
+    });
+
+    // The OpenTelemetry specification constrains attribute keys, not attribute
+    // values. Empty values are stored per #103; these pin that the AnyValue
+    // representation did not reintroduce a rejection.
+    test('an empty String value is stored', () {
+      final attr = OTelAPI.attributeString('k', '');
+      expect((attr.value as AnyValueString).value, isEmpty);
+      expect(attr.key, equals('k'));
+      expect(Attributes.of({'k': ''}).getString('k'), isEmpty);
+    });
+
+    test('empty list values are stored', () {
+      expect(OTelAPI.attributeStringList('k', []).key, equals('k'));
+      expect(
+          (OTelAPI.attributeStringList('k', []).value as AnyValueArray).value,
+          isEmpty);
+      expect((OTelAPI.attributeIntList('k', []).value as AnyValueArray).value,
+          isEmpty);
+      expect((OTelAPI.attributeBoolList('k', []).value as AnyValueArray).value,
+          isEmpty);
+      expect(
+          (OTelAPI.attributeDoubleList('k', []).value as AnyValueArray).value,
+          isEmpty);
+    });
+
+    test('a list containing empty Strings is allowed', () {
+      final attrs = Attributes.of({
+        'names': <String>['', 'b'],
+      });
+      expect(attrs.getStringList('names'), equals(['', 'b']));
     });
 
     test('Attributes.of converts untyped bool lists', () {
@@ -49,20 +85,57 @@ void main() {
       expect(attrs.getIntList('counts'), equals([1, 2, 3]));
     });
 
-    test('Attributes.of converts mixed numeric lists to double', () {
+    // Promotion is one way: an int reads as a double, never the reverse.
+    // It also absorbs the web's single number type, where a whole-valued
+    // double is stored as an AnyValueInt.
+    test('getDouble promotes a stored int', () {
+      final attrs = Attributes.of({'n': 2});
+      expect(attrs.getDouble('n'), equals(2.0));
+      expect(attrs.getInt('n'), equals(2));
+    });
+
+    test('getDoubleList promotes an all-int array', () {
+      final attrs = Attributes.of({
+        'nums': <int>[1, 2, 3],
+      });
+      expect(attrs.getDoubleList('nums'), equals([1.0, 2.0, 3.0]));
+      expect(attrs.getIntList('nums'), equals([1, 2, 3]));
+    });
+
+    test('getInt does not demote a stored double', () {
+      final attrs = Attributes.of({'d': 2.5});
+      expect(attrs.getInt('d'), isNull);
+      expect(attrs.getDouble('d'), equals(2.5));
+    });
+
+    test('getIntList does not demote a double array', () {
+      final attrs = Attributes.of({
+        'nums': <double>[1.5, 2.5],
+      });
+      expect(attrs.getIntList('nums'), isNull);
+      expect(attrs.getDoubleList('nums'), equals([1.5, 2.5]));
+    });
+
+    test('Attributes.of promotes mixed numeric lists to double', () {
       final attrs = Attributes.of({
         'nums': <Object>[1, 2.5]
       });
+      // Mixed int/double lists read back as List<double>, as they did before
+      // AnyValue (#103). The stored array keeps each element's own type, so
+      // the promotion happens in the getter rather than at storage.
       expect(attrs.getDoubleList('nums'), equals([1.0, 2.5]));
+      expect(attrs.getIntList('nums'), isNull);
     });
 
-    test('Attributes.of ignores lists of unsupported types', () {
+    test('Attributes.of stringifies unmapped types inside a list', () {
       final attrs = Attributes.of({
-        'bad': <Object>[Duration.zero],
+        'durations': <Object>[Duration.zero],
         'good': 'kept',
       });
       expect(attrs.getString('good'), equals('kept'));
-      expect(attrs.getStringList('bad'), isNull);
+      // Other Values applies recursively to array elements.
+      expect(
+          attrs.getStringList('durations'), equals([Duration.zero.toString()]));
     });
 
     test(
@@ -72,12 +145,10 @@ void main() {
         'names': <dynamic>['a', 'b'],
         'flags': <dynamic>[true, false],
         'counts': <dynamic>[1, 2],
-        'nums': <dynamic>[1, 2.5],
       });
       expect(attrs.getStringList('names'), equals(['a', 'b']));
       expect(attrs.getBoolList('flags'), equals([true, false]));
       expect(attrs.getIntList('counts'), equals([1, 2]));
-      expect(attrs.getDoubleList('nums'), equals([1.0, 2.5]));
     });
 
     test('Attributes.of preserves empty string', () {
@@ -111,6 +182,284 @@ void main() {
       final b = OTelAPI.attributeString('k', '');
       expect(a, equals(b));
       expect(a.hashCode, equals(b.hashCode));
+    });
+  });
+
+  _attributeValueDataModelTests();
+}
+
+/// A type whose `toString()` throws, to exercise the last resort in
+/// "Mapping Arbitrary Data to OTLP AnyValue", Other Values.
+class _ThrowingToString {
+  @override
+  String toString() => throw StateError('no string for you');
+}
+
+/// common.md, Attribute: "The attribute value MUST be one of types defined in
+/// AnyValue", which covers a map, a nested array, a byte array and null. This
+/// package previously supported only a primitive or a homogeneous list of
+/// primitives, which is what #95 was filed about, so these pin that each of
+/// those shapes now survives storage and reads back.
+void _attributeValueDataModelTests() {
+  group('attribute value data model', () {
+    late List<Object> reported;
+
+    setUp(() {
+      OTelAPI.reset();
+      OTelAPI.initialize(
+        endpoint: 'http://localhost:4317',
+        serviceName: 'test-service',
+        serviceVersion: '1.0.0',
+      );
+      reported = <Object>[];
+      OTelAPI.setErrorHandler((e, _) => reported.add(e));
+    });
+
+    tearDown(() => OTelAPI.setErrorHandler(null));
+
+    // common.md, Attribute: "The attribute value MUST be one of types defined
+    // in AnyValue", which covers a map, a nested array, a byte array and null.
+    // Issue #95 was filed because this package supported only a primitive and
+    // a homogeneous list of primitives, so each of these must now survive
+    // storage and be readable back.
+    void expectStoredByBothPaths(
+      String label,
+      Object? value,
+      Matcher anyValueMatcher,
+    ) {
+      final fromMap = Attributes.of({'v': value, 'other': 'kept'});
+      expect(fromMap.keys, containsAll(['v', 'other']),
+          reason: '$label via Attributes.of');
+      expect(fromMap.toMap()['v']!.value, anyValueMatcher,
+          reason: '$label round-trips via Attributes.of');
+
+      final fromJson = Attributes.fromJson({'v': value, 'other': 'kept'});
+      expect(fromJson.keys, containsAll(['v', 'other']),
+          reason: '$label via fromJson');
+      expect(fromJson.toMap()['v']!.value, anyValueMatcher,
+          reason: '$label round-trips via fromJson');
+
+      expect(reported, isEmpty, reason: '$label is legal, nothing to report');
+    }
+
+    test('a map value is stored and readable', () {
+      expectStoredByBothPaths('map', {'nested': true}, isA<AnyValueMap>());
+
+      final attrs = Attributes.of({
+        'context': {'nested': true},
+      });
+      final value = attrs.toMap()['context']!.value as AnyValueMap;
+      expect(value.value['nested'], equals(const AnyValueBool(true)));
+      expect(value.unwrap(), equals({'nested': true}));
+    });
+
+    test('a bytes value is stored and readable', () {
+      expectStoredByBothPaths(
+          'bytes', Uint8List.fromList([1, 2, 3]), isA<AnyValueBytes>());
+
+      final attrs = Attributes.of({
+        'b': Uint8List.fromList([1, 2, 3])
+      });
+      expect(attrs.toMap()['b']!.value.unwrap(), equals([1, 2, 3]));
+    });
+
+    test('a nested array value is stored and readable', () {
+      expectStoredByBothPaths(
+          'nested array',
+          [
+            [1, 2],
+          ],
+          isA<AnyValueArray>());
+
+      final attrs = Attributes.of({
+        'matrix': [
+          [1, 2],
+          [3],
+        ],
+      });
+      expect(
+          attrs.toMap()['matrix']!.value.unwrap(),
+          equals([
+            [1, 2],
+            [3],
+          ]));
+    });
+
+    test('a heterogeneous array value is stored and readable', () {
+      expectStoredByBothPaths(
+          'mixed scalars', [1, 'two'], isA<AnyValueArray>());
+
+      final attrs = Attributes.of({
+        'mixed': [1, 'two', true],
+      });
+      expect(attrs.toMap()['mixed']!.value.unwrap(), equals([1, 'two', true]));
+    });
+
+    test('an array containing null is stored, preserving the null', () {
+      // common/README.md: a null within an array MUST be preserved where it
+      // cannot be prevented at compile time.
+      expectStoredByBothPaths(
+          'array with null', <Object?>[1, null], isA<AnyValueArray>());
+
+      final attrs = Attributes.of({
+        'sparse': <Object?>['a', null, 'c'],
+      });
+      expect(attrs.toMap()['sparse']!.value.unwrap(), equals(['a', null, 'c']));
+    });
+
+    test('a null value is stored as AnyValueNull by both paths', () {
+      expectStoredByBothPaths('null', null, isA<AnyValueNull>());
+
+      expect(Attributes.of({'n': null}).toMap()['n']!.value.unwrap(), isNull);
+      expect(Attributes.fromJson({'n': null}).toMap()['n']!.value.unwrap(),
+          isNull);
+    });
+
+    // "Mapping Arbitrary Data to OTLP AnyValue", Other Values: a type with no
+    // dedicated mapping is stringified rather than dropped.
+    test('an unmapped type is stringified, not dropped', () {
+      final attrs = Attributes.of({'obj': Duration.zero, 'good': 'kept'});
+      expect(attrs.keys, containsAll(['obj', 'good']));
+      expect(attrs.getString('obj'), equals(Duration.zero.toString()));
+      expect(reported, isEmpty);
+    });
+
+    test('an unmapped type nested inside a map is stringified', () {
+      final attrs = Attributes.of({
+        'wrapper': {'inner': Duration.zero},
+      });
+      final value = attrs.toMap()['wrapper']!.value as AnyValueMap;
+      expect(value.value['inner'],
+          equals(AnyValueString(Duration.zero.toString())));
+      expect(reported, isEmpty);
+    });
+
+    // An AnyValue handed back in must survive untouched. Without the
+    // passthrough the type ladder misses it and Other Values stringifies it,
+    // so AnyValueInt(42) would store as '42' and AnyValueBytes would store as
+    // its '<N bytes>' rendering, losing the payload outright.
+    test('an attribute value can be reinserted under a new key', () {
+      final original = OTelAPI.attributeInt('old', 42);
+      final attrs = Attributes.of({'renamed': original.value});
+
+      expect(attrs.getInt('renamed'), equals(42));
+      expect(attrs.toMap()['renamed']!.value, isA<AnyValueInt>());
+      expect(reported, isEmpty);
+    });
+
+    test('a wrapped value nested in a map keeps its type', () {
+      final bytes = AnyValueBytes([1, 2]);
+      final attrs = Attributes.of({
+        'wrapper': {'payload': bytes, 'n': const AnyValueInt(7)},
+      });
+
+      final map = attrs.toMap()['wrapper']!.value as AnyValueMap;
+      expect(identical(map.value['payload'], bytes), isTrue);
+      expect(map.value['payload']!.unwrap(), equals([1, 2]));
+      expect(map.value['n'], equals(const AnyValueInt(7)));
+      expect(reported, isEmpty);
+    });
+
+    test('a wrapped value nested in a list keeps its type', () {
+      final attrs = Attributes.of({
+        'items': [const AnyValueInt(1), 'plain', const AnyValueBool(true)],
+      });
+
+      final array = attrs.toMap()['items']!.value as AnyValueArray;
+      expect(array.value[0], equals(const AnyValueInt(1)));
+      expect(array.value[1], equals(const AnyValueString('plain')));
+      expect(array.value[2], equals(const AnyValueBool(true)));
+      expect(reported, isEmpty);
+    });
+
+    test('fromObject returns an AnyValue unchanged', () {
+      final value = AnyValueMap({'k': const AnyValueString('v')});
+      expect(identical(AnyValue.fromObject(value), value), isTrue);
+
+      const scalar = AnyValueInt(42);
+      expect(identical(AnyValue.fromObject(scalar), scalar), isTrue);
+
+      const nullValue = AnyValueNull();
+      expect(identical(AnyValue.fromObject(nullValue), nullValue), isTrue);
+    });
+
+    test('a throwing toString is reported and becomes an empty value', () {
+      final attrs = Attributes.of({'bad': _ThrowingToString(), 'good': 'kept'});
+
+      // Other Values' last resort: an empty AnyValue, never a thrown error.
+      expect(attrs.keys, containsAll(['bad', 'good']));
+      expect(attrs.toMap()['bad']!.value, isA<AnyValueNull>());
+      expect(reported, hasLength(1));
+      expect(reported.single, isA<ArgumentError>());
+    });
+
+    test('legal scalars are stored by both paths', () {
+      const values = <String, Object>{
+        'str': 'v',
+        'bool': true,
+        'int': 1,
+        'double': 1.5,
+      };
+
+      final fromMap = Attributes.of(values);
+      expect(fromMap.getString('str'), equals('v'));
+      expect(fromMap.getBool('bool'), isTrue);
+      expect(fromMap.getInt('int'), equals(1));
+      expect(fromMap.getDouble('double'), equals(1.5));
+
+      final fromJson = Attributes.fromJson(values);
+      expect(fromJson.getString('str'), equals('v'));
+      expect(fromJson.getBool('bool'), isTrue);
+      expect(fromJson.getInt('int'), equals(1));
+      expect(fromJson.getDouble('double'), equals(1.5));
+
+      expect(reported, isEmpty);
+    });
+
+    test('legal homogeneous arrays are stored by both paths', () {
+      const values = <String, Object>{
+        'strs': ['a', 'b'],
+        'bools': [true, false],
+        'ints': [1, 2],
+        'doubles': [1.5, 2.5],
+      };
+
+      final fromMap = Attributes.of(values);
+      expect(fromMap.getStringList('strs'), equals(['a', 'b']));
+      expect(fromMap.getBoolList('bools'), equals([true, false]));
+      expect(fromMap.getIntList('ints'), equals([1, 2]));
+      expect(fromMap.getDoubleList('doubles'), equals([1.5, 2.5]));
+
+      final fromJson = Attributes.fromJson(values);
+      expect(fromJson.getStringList('strs'), equals(['a', 'b']));
+      expect(fromJson.getBoolList('bools'), equals([true, false]));
+      expect(fromJson.getIntList('ints'), equals([1, 2]));
+      expect(fromJson.getDoubleList('doubles'), equals([1.5, 2.5]));
+
+      expect(reported, isEmpty);
+    });
+
+    test('an empty array is legal on both paths', () {
+      expect(Attributes.of({'k': <Object>[]}).keys, equals(['k']));
+      expect(Attributes.fromJson({'k': <dynamic>[]}).keys, equals(['k']));
+      expect(reported, isEmpty);
+    });
+
+    // A mixed int/double array stays legal: JSON has one number type, so
+    // [1, 2.5] is routine, and _getTyped promotes it to List<double>, so it
+    // reads back rather than being the write-only value the check rejects.
+    test('a mixed int/double array stays legal and reads back as doubles', () {
+      final fromMap = Attributes.of({
+        'nums': [1, 2.5, 3],
+      });
+      expect(fromMap.getDoubleList('nums'), equals([1.0, 2.5, 3.0]));
+
+      final fromJson = Attributes.fromJson({
+        'nums': [1, 2.5, 3],
+      });
+      expect(fromJson.getDoubleList('nums'), equals([1.0, 2.5, 3.0]));
+
+      expect(reported, isEmpty);
     });
   });
 }

@@ -15,6 +15,7 @@ library;
 export 'src/api/baggage/baggage.dart' hide BaggageCreate;
 export 'src/api/baggage/baggage_entry.dart';
 // Common
+export 'src/api/common/any_value.dart';
 export 'src/api/common/attribute.dart' hide AttributeCreate;
 export 'src/api/common/attributes.dart' hide AttributesCreate;
 export 'src/api/common/instrumentation_scope.dart'

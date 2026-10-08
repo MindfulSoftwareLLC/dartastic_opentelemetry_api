@@ -42,29 +42,44 @@ void main() {
       OTelLog.currentLevel = LogLevel.info;
     });
 
-    test('a dropped attribute (unsupported value type) is reported', () {
-      // Attributes.of stringifies unknown scalar types by design; fromJson
-      // drops them — the drop must reach the handler.
+    test('a map key collision during stringification is reported', () {
       final attrs = Attributes.fromJson({
-        'unsupported': {'nested': 'map'}
+        'collision': {1: 'v', '1': 'w'},
       });
 
-      expect(attrs.toList(), isEmpty, reason: 'the attribute is dropped');
+      expect(attrs.toList(), isNotEmpty, reason: 'the attribute is kept');
       expect(reported, hasLength(1));
       expect(reported.single, isArgumentError);
-      expect('${reported.single}', contains('unsupported'));
+      expect('${reported.single}', contains('collision'));
       expect(logged, isEmpty,
           reason: 'the report replaces the warn-level log line');
     });
 
-    test('a dropped attribute (unsupported list element type) is reported', () {
+    test('an over-deep structure is reported and truncated', () {
+      Object deep = 'leaf';
+      for (var i = 0; i < 40; i++) {
+        deep = <Object>[deep];
+      }
+      final attrs = Attributes.of({'deep': deep});
+
+      expect(attrs.toList(), isNotEmpty,
+          reason: 'the attribute is kept but truncated');
+      expect(reported, hasLength(1));
+      expect(reported.single, isArgumentError);
+    });
+
+    test('a heterogeneous list is stored, not reported', () {
+      // [1, 'two'] converts cleanly to an AnyValueArray. common.md defines an
+      // attribute value as any AnyValue type, so this is legal and nothing is
+      // reported. Only a value AnyValue cannot represent at all is dropped,
+      // which the two tests above cover.
       final attrs = Attributes.of({
         'mixed': [1, 'two']
       });
 
-      expect(attrs.toList(), isEmpty, reason: 'the attribute is dropped');
-      expect(reported, hasLength(1));
-      expect(reported.single, isArgumentError);
+      expect(attrs.keys, equals(['mixed']));
+      expect(attrs.toMap()['mixed']!.value.unwrap(), equals([1, 'two']));
+      expect(reported, isEmpty);
     });
 
     test('a dropped span event (empty name) is reported (api#69)', () {

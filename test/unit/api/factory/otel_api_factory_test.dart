@@ -208,52 +208,52 @@ void main() {
     test('creates attribute with string value', () {
       final attribute = factory.attributeString('string-key', 'string-value');
       expect(attribute.key, equals('string-key'));
-      expect(attribute.value, equals('string-value'));
+      expect(attribute.value.unwrap(), equals('string-value'));
     });
 
     test('creates attribute with boolean value', () {
       final attribute = factory.attributeBool('bool-key', true);
       expect(attribute.key, equals('bool-key'));
-      expect(attribute.value, equals(true));
+      expect(attribute.value.unwrap(), equals(true));
     });
 
     test('creates attribute with integer value', () {
       final attribute = factory.attributeInt('int-key', 42);
       expect(attribute.key, equals('int-key'));
-      expect(attribute.value, equals(42));
+      expect(attribute.value.unwrap(), equals(42));
     });
 
     test('creates attribute with double value', () {
       final attribute = factory.attributeDouble('double-key', 3.14);
       expect(attribute.key, equals('double-key'));
-      expect(attribute.value, equals(3.14));
+      expect(attribute.value.unwrap(), equals(3.14));
     });
 
     test('creates attribute with string list value', () {
       final attribute =
           factory.attributeStringList('string-list-key', ['value1', 'value2']);
       expect(attribute.key, equals('string-list-key'));
-      expect(attribute.value, equals(['value1', 'value2']));
+      expect(attribute.value.unwrap(), equals(['value1', 'value2']));
     });
 
     test('creates attribute with boolean list value', () {
       final attribute =
           factory.attributeBoolList('bool-list-key', [true, false]);
       expect(attribute.key, equals('bool-list-key'));
-      expect(attribute.value, equals([true, false]));
+      expect(attribute.value.unwrap(), equals([true, false]));
     });
 
     test('creates attribute with integer list value', () {
       final attribute = factory.attributeIntList('int-list-key', [1, 2, 3]);
       expect(attribute.key, equals('int-list-key'));
-      expect(attribute.value, equals([1, 2, 3]));
+      expect(attribute.value.unwrap(), equals([1, 2, 3]));
     });
 
     test('creates attribute with double list value', () {
       final attribute =
           factory.attributeDoubleList('double-list-key', [1.1, 2.2, 3.3]);
       expect(attribute.key, equals('double-list-key'));
-      expect(attribute.value, equals([1.1, 2.2, 3.3]));
+      expect(attribute.value.unwrap(), equals([1.1, 2.2, 3.3]));
     });
 
     test('creates trace ID', () {

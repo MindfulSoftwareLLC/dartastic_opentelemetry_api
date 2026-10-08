@@ -3,6 +3,7 @@
 
 import 'package:fixnum/fixnum.dart';
 
+import '../common/any_value.dart';
 import '../common/attributes.dart';
 import '../context/context.dart';
 import 'severity.dart';
@@ -31,7 +32,7 @@ abstract class LogRecord {
 
   String? get severityText;
 
-  dynamic get body;
+  AnyValue? get body;
 
   Attributes? get attributes;
 

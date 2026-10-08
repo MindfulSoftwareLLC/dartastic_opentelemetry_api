@@ -440,52 +440,49 @@ class OTelAPI {
   }
 
   /// Create a string attribute key
-  static Attribute<String> attributeString(String name, String value) {
+  static Attribute attributeString(String name, String value) {
     _getAndCacheOtelFactory();
     return OTelFactory.otelFactory!.attributeString(name, value);
   }
 
   /// Create a boolean attribute key
-  static Attribute<bool> attributeBool(String name, bool value) {
+  static Attribute attributeBool(String name, bool value) {
     _getAndCacheOtelFactory();
     return OTelFactory.otelFactory!.attributeBool(name, value);
   }
 
   /// Create an integer attribute key
-  static Attribute<int> attributeInt(String name, int value) {
+  static Attribute attributeInt(String name, int value) {
     _getAndCacheOtelFactory();
     return OTelFactory.otelFactory!.attributeInt(name, value);
   }
 
   /// Create a double attribute key
-  static Attribute<double> attributeDouble(String name, double value) {
+  static Attribute attributeDouble(String name, double value) {
     _getAndCacheOtelFactory();
     return OTelFactory.otelFactory!.attributeDouble(name, value);
   }
 
   /// Create a string list attribute key
-  static Attribute<List<String>> attributeStringList(
-      String name, List<String> value) {
+  static Attribute attributeStringList(String name, List<String> value) {
     _getAndCacheOtelFactory();
     return OTelFactory.otelFactory!.attributeStringList(name, value);
   }
 
   /// Create a boolean list attribute key
-  static Attribute<List<bool>> attributeBoolList(
-      String name, List<bool> value) {
+  static Attribute attributeBoolList(String name, List<bool> value) {
     _getAndCacheOtelFactory();
     return OTelFactory.otelFactory!.attributeBoolList(name, value);
   }
 
   /// Create an integer list attribute key
-  static Attribute<List<int>> attributeIntList(String name, List<int> value) {
+  static Attribute attributeIntList(String name, List<int> value) {
     _getAndCacheOtelFactory();
     return OTelFactory.otelFactory!.attributeIntList(name, value);
   }
 
   /// Create a double list attribute key
-  static Attribute<List<double>> attributeDoubleList(
-      String name, List<double> value) {
+  static Attribute attributeDoubleList(String name, List<double> value) {
     _getAndCacheOtelFactory();
     return OTelFactory.otelFactory!.attributeDoubleList(name, value);
   }
@@ -533,13 +530,17 @@ class OTelAPI {
   ) =>
       attributesFromSemanticMap(typedMap.cast<OTelSemantic, Object>());
 
-  /// Creates an empty `Attributes` collection from a named set of values.
-  /// String, bool, int and double or Lists of those types get turned into
-  /// the matching typed attribute.
-  /// DateTime gets converted to an Attribute\<String> with the UTC time string.
-  /// Attributes get added as-is (note - that would be unnecessary code)
-  /// Anything else gets converted to an Attribute\<String> via its toString.
-  static Attributes attributesFromMap(Map<String, Object> namedMap) {
+  /// Creates an `Attributes` collection from a named set of values.
+  ///
+  /// Every type [AnyValue.fromObject] converts is accepted: String, bool, int
+  /// and double, lists of those, maps, nested arrays, `Uint8List` (as a byte
+  /// array) and null, per common.md's definition of an attribute value.
+  /// DateTime is converted to a UTC time String, and `Attribute` values pass
+  /// through as-is.
+  ///
+  /// A value that cannot be converted is dropped and reported through the
+  /// error handler; there is no `toString()` fallback.
+  static Attributes attributesFromMap(Map<String, Object?> namedMap) {
     _getAndCacheOtelFactory();
     return OTelFactory.otelFactory!.attributesFromMap(namedMap);
   }
