@@ -21,6 +21,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
      drop it. The audit findings are tracked under the spec-compliance label.
 -->
 
+## [1.0.0-rc.5-wip]
+
 ## [1.0.0-rc.4] - 2026-10-08
 
 ### Added
