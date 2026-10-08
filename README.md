@@ -10,40 +10,99 @@ A Dart implementation of the [OpenTelemetry](https://opentelemetry.io/) API that
 OpenTelemetry (OTel) specification. This package provides a vendor-neutral, implementation-agnostic API for 
 observability instrumentation in Dart and Flutter applications.
 
-## Overview
+---
+## Dartastic.io: AI Code Healing and Real User Monitoring for Flutter
 
-Developers generally do not code with the API, they code with the SDK via the OTel class. This OpenTelemetry API for Dart exists as a standalone library to strictly adhere to the OpenTelemetry specification 
-which separates API and SDK concerns. The specification requires that the API can be dropped into an app without an SDK 
+**See what your users experience. Find problems with Flutter apps in production. Fix them with AI.**
+
+[Dartastic.io](https://dartastic.io) brings AI code healing, real user monitoring, and OpenTelemetry observability together in one platform built for Dart and Flutter. (Patents pending)
+
+![Dartastic AI answering "Why did crashes jump after the last release?" over a Flutter App Health
+dashboard](doc/img/HomePageCrashesQuestion.png)
+
+### Dartastic AI — From Production Problems to Code Fixes
+
+Dartastic AI analyzes production telemetry alongside your application source code to diagnose problems and propose fixes. 
+
+- **Investigate production issues** using crashes, errors, traces, metrics, and real user telemetry.
+- **Find the offending code** by connecting observed problems with your application's source in Dartastic Pub or your source code repos.
+- **Generate code patches** that address the underlying problems.
+- **Create actionable issues** in your issue tracker, complete with findings and the proposed code patch.
+
+### Dartastic RUM — See What Your Users See
+
+Understand how people actually experience your Flutter application.
+
+- **Replay user sessions** in the Dartastic Observatory session player.
+- **Choose your replay fidelity**, from privacy-preserving widget outlines to pixel-level reproductions of the user experience.
+- **Investigate real user problems** using session replay and production observability data.
+![Dartastic RUM Session Replay](doc/img/session-replay.png)
+
+### Dartastic Observatory — Observability Built for Flutter
+
+A complete observability backend where Flutter and Dart are first-class citizens.
+
+- **Flutter-specific dashboards** for application performance, health, and reliability.
+- **Alerts and notifications** through email, Slack, and PagerDuty.
+- **Dartastic Cloud Observatory** — Start with a 30-day free trial on isolated, shared infrastructure, as low as $39/mo.
+- **Dartastic Hosted Observatory** — Run the observability stack in a private managed environment, sized from Mini to Enterprise XL.
+- **Dartastic Self-Hosted Observatory** — The whole platform inside your own network. Your keys, your cluster, with nothing leaving your perimeter.
+
+### Dartastic Pro OTel Runtime — Native OpenTelemetry Performance
+
+Collect production telemetry without burdening Flutter's main isolate.
+
+- **Native OpenTelemetry runtime** that moves telemetry processing off the main isolate.
+- **Native crash reporting** for problems that Dart can't catch.
+- **Widget performance diagnostics** to identify janky widgets.
+- **On-device PII filtering** before sensitive data leaves your application.
+- **Source-level error diagnostics** powered by the Dartastic Symbolizer API.
+- **Platform-native metrics** for iOS, Android, and Linux, including iOS MetricKit and Android Vitals.
+- **OpenTelemetry compatibility** — Send telemetry to Dartastic Observatory or any OpenTelemetry platform.
+
+### Dartastic Labs — OpenTelemetry Integrations
+
+Instrument more of your application without writing everything yourself.
+
+- **50+ open-source integrations** for Dart and Flutter libraries including Dio, Shelf, and Logger. Look for otel_* in pub.dev.
+- **600+ Pro integrations** for services and libraries including Anthropic, AWS, Azure, and Stripe.
+
+### More Dartastic Tools
+
+**[Dartastic Pub](https://dartastic.io/pub)**
+
+A private Dart package registry for sharing packages and plugins with your team, partners, and customers.
+
+**[Dartastic Symbolizer](https://dartastic.io/symbolizer)**
+
+Turn production errors into lines of source code through a web API, while keeping your source code artifacts private.
+
+### Professional Support and Training
+
+Dartastic.io offers commercial support for the open-source `dartastic_opentelemetry` and `dartastic_opentelemetry_api` packages and the complete Dartastic product suite.
+
+- **Professional support** with available around-the-clock coverage and response times under four hours on qualifying plans.
+- **OpenTelemetry training** for teams instrumenting Dart, Flutter, mobile, and web applications.
+
+### Open Standards. No Mandatory Backend.
+
+The Dartastic OpenTelemetry API and SDK are open source and standards-based. You can use them independently of Dartastic's commercial services and send telemetry to any compatible OpenTelemetry backend.
+
+Dartastic's commercial products add native performance, advanced diagnostics, session replay, AI-assisted remediation, and managed observability services.
+
+**[Explore Dartastic.io](https://dartastic.io)**
+
+---
+
+## API Overview
+
+Developers generally do not code with the API, they code with the SDK via the OTel class. This OpenTelemetry API for Dart exists as a standalone library to strictly adhere to the OpenTelemetry specification
+which separates API and SDK concerns. The specification requires that the API can be dropped into an app without an SDK
 and it will work in a no-op fashion.
 
-This API is rarely used without an SDK. The SDK for this API is implemented by 
+This API is rarely used without an SDK. The SDK for this API is implemented by
 `dartastic_opentelemetry`, the [Dartastic OpenTelemetry SDK](https://pub.dev/packages/dartastic_opentelemetry).
 To instrument Dart and Flutter apps, include the latest `dartastic_opentelemetry` and use its `OTel` class.
-
-## Commercial Support
-
-[Dartastic.io](https://dartastic.io) offers tools and services for Dart and Flutter teams.
-* **Dartastic Pro OTel Runtime**
-  * Native OTel runtime that takes OTel off the main isolate.
-    * Reports native crashes.
-    * Identifies janky widgets.
-    * Strips PII out of your data on the fly.
-    * Converts production errors into source code lines with the Dartastic Symbolizer API.
-    * Metrics from iOS, Android and Linux, standard metrics plus all of iOS MetricKit and Android Vitals.
-    * Compatible with any observability backend that supports OpenTelemetry.
-  * Professionally supported version of the dartastic_opentelemetry package and dartastic_opentelemetry_api - and their future CNCF equivalents.
-  * Over 50 OSS OpenTelemetry integration libraries for Dart and Flutter - dio, shelf, logger...
-  * Over 600 Pro OpenTelemetry integration libraries for Dart and Flutter - anthropic, aws, azure, stripe...
-* **Dartastic Pub** [https://dartastic.io/pub](https://dartastic.io/pub) Privately share your packages and plugins with your team,
-  partners and customers.
-* **Dartastic Symbolizer** [https://dartastic.io/symbolizer](https://dartastic.io/symbolizer) Turn production errors into
-  source code lines with a Web API call. Squash Dart and Flutter bugs fast and keep your source code artifacts private.
-* **Dartastic Observatory** - An observability backend specialized for Flutter and Dart
-  * Custom dashboards for Dart and Flutter
-  * Private Pub server
-  * Symbolizer
-  * 7-day free trial for Dartastic Cloud Observatory on isolated shared infrastructure.
-  * Dartastic Hosted Observatory runs the stack in your own private box.
 
 ## About the API - use the SDK
 
