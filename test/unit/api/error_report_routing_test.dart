@@ -42,29 +42,28 @@ void main() {
       OTelLog.currentLevel = LogLevel.info;
     });
 
-    test('a dropped attribute (non-String map key) is reported', () {
-      // A non-String map key is one of the two conditions AnyValue.fromObject
-      // still refuses; fromJson catches it, drops the attribute and reports.
+    test('a map key collision during stringification is reported', () {
       final attrs = Attributes.fromJson({
-        'unsupported': {1: 'v'},
+        'collision': {1: 'v', '1': 'w'},
       });
 
-      expect(attrs.toList(), isEmpty, reason: 'the attribute is dropped');
+      expect(attrs.toList(), isNotEmpty, reason: 'the attribute is kept');
       expect(reported, hasLength(1));
       expect(reported.single, isArgumentError);
-      expect('${reported.single}', contains('unsupported'));
+      expect('${reported.single}', contains('collision'));
       expect(logged, isEmpty,
           reason: 'the report replaces the warn-level log line');
     });
 
-    test('a dropped attribute (over-deep structure) is reported', () {
+    test('an over-deep structure is reported and truncated', () {
       Object deep = 'leaf';
       for (var i = 0; i < 40; i++) {
         deep = <Object>[deep];
       }
       final attrs = Attributes.of({'deep': deep});
 
-      expect(attrs.toList(), isEmpty, reason: 'the attribute is dropped');
+      expect(attrs.toList(), isNotEmpty,
+          reason: 'the attribute is kept but truncated');
       expect(reported, hasLength(1));
       expect(reported.single, isArgumentError);
     });

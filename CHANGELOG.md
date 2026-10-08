@@ -72,7 +72,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `AnyValue.toJson` return plain Dart objects, bytes included; the tagged OTLP
   wire encoding is the SDK exporters' job. `AnyValueBytes` rejects elements
   outside 0-255 rather than masking them, and conversion is depth limited to 32
-  levels
+  levels. Mixed numeric lists like `[1, 2.5]` previously became a homogeneous `List<double>` on write; they are now stored as an array of `int` and `double`
   ([#123](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/123)).
 
 ### Changed
@@ -128,10 +128,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   rules; if `toString()` itself throws, the failure is reported through
   `OTelErrorHandling` and the value becomes an empty `AnyValue`, the last
   resort the same section prescribes. `DateTime` is natively supported,
-  converted with `Timestamp.dateTimeToString` as elsewhere in the API.
-  Conversion is depth limited to 32 levels, and a non-String map key is still
-  refused; either throws an `ArgumentError` that `attrsFromMap` routes to
-  `OTelErrorHandling`, dropping that attribute
+  converted to a UTC string using its full-precision `toIso8601String()`.
+  Conversion is depth limited to 32 levels; overflow is reported through
+  `OTelErrorHandling` and yields an empty value. Non-String map keys are
+  stringified, and collisions after stringification are reported. Neither
+  case throws
+  ([#123](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/123)).
+- `Span.setDateTimeAsStringAttribute` now emits full-precision UTC `toIso8601String()`
+  strings instead of millisecond-precision, aligning with `AnyValue`
+  ([#123](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/123)).
+- **BREAKING**: The `value` getter was removed from the base `AnyValue` class.
+  Read values by pattern matching or casting to the specific subclass (e.g. `(e as AnyValueString).value`)
   ([#123](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/123)).
 - **BREAKING**: `LogRecord.body` is an `AnyValue?` rather than an `Object?`, so
   a reader gets the typed model. `APILogger.emit(body: ...)` still takes a

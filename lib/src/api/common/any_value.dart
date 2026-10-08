@@ -10,24 +10,19 @@ import 'package:collection/collection.dart' show DeepCollectionEquality;
 import 'package:meta/meta.dart';
 
 import '../../util/otel_error_handler.dart';
-import 'timestamp.dart';
 
 /// Represents a value of any type supported by the OpenTelemetry specification.
 @immutable
 sealed class AnyValue {
-  // The maximum nesting depth allowed when converting to or from plain Dart
-  // objects. Conversion is recursive, so an excessively nested (or
-  // caller-constructed cyclic) structure would otherwise overflow the stack.
-  // Structures deeper than this are rejected with an ArgumentError, which
-  // callers such as attrsFromMap route to OTelErrorHandling like any other
-  // unsupported value.
+  // The spec allows arbitrary nesting; this is a guard against cyclic or
+  // runaway structures, not a spec value. A nested map costs three protobuf
+  // messages per level (AnyValue, KeyValueList, KeyValue), and the Java and
+  // C++ protobuf runtimes reject messages nested past 100, so 32 is about
+  // the deepest map such a backend can decode.
   static const int _maxDepth = 32;
 
   /// Const constructor for subclasses.
   const AnyValue();
-
-  /// Returns the underlying Dart object (not recursively unwrapped).
-  Object? get value;
 
   /// Recursively converts this value back into plain Dart objects.
   ///
@@ -40,8 +35,9 @@ sealed class AnyValue {
 
   Object? _unwrap(int depth) {
     if (depth >= _maxDepth) {
-      throw ArgumentError(
-          'AnyValue nesting exceeds the maximum depth of $_maxDepth');
+      OTelErrorHandling.report(ArgumentError(
+          'AnyValue nesting exceeds the maximum depth of $_maxDepth'));
+      return null;
     }
     return switch (this) {
       AnyValueNull() => null,
@@ -135,9 +131,10 @@ sealed class AnyValue {
   ///   and `null` elements are kept, per "an array of AnyValue" and the `null`
   ///   rule in common/README.md.
   /// - A [Map] becomes an [AnyValueMap] ("Associative Arrays With Unique
-  ///   Keys"). A non-String key is converted with `toString()`.
-  /// - [DateTime] becomes an ISO 8601 UTC string, see
-  ///   [Timestamp.dateTimeToString]. The specification has no rule for dates,
+  ///   Keys"). A non-String key is converted with `toString()`; if that throws,
+  ///   the entry is skipped. Key collisions after stringification are reported.
+  /// - [DateTime] becomes an ISO 8601 UTC string via
+  ///   `toUtc().toIso8601String()`. The specification has no rule for dates,
   ///   so this is "Other Values" with a fixed format instead of
   ///   [DateTime.toString].
   /// - An [AnyValue] is returned as is.
@@ -151,8 +148,9 @@ sealed class AnyValue {
 
   static AnyValue _fromObject(Object? obj, int depth) {
     if (depth >= _maxDepth) {
-      throw ArgumentError(
-          'AnyValue nesting exceeds the maximum depth of $_maxDepth');
+      OTelErrorHandling.report(ArgumentError(
+          'AnyValue nesting exceeds the maximum depth of $_maxDepth'));
+      return const AnyValueNull();
     }
     // An AnyValue at any depth passes through; the fallback below would
     // stringify it.
@@ -173,6 +171,8 @@ sealed class AnyValue {
       return AnyValueInt(obj);
     } else if (obj is double) {
       return AnyValueDouble(obj);
+    } else if (obj is DateTime) {
+      return AnyValueString(obj.toUtc().toIso8601String());
     } else if (obj is Uint8List) {
       // Must precede the List check: Uint8List implements List<int>, so it
       // would otherwise become an array of AnyValueInt.
@@ -181,35 +181,44 @@ sealed class AnyValue {
       return AnyValueArray(obj.map((e) => _fromObject(e, depth + 1)).toList());
     } else if (obj is Map) {
       final map = <String, AnyValue>{};
-      obj.forEach((key, val) {
-        if (key is! String) {
-          throw ArgumentError(
-              'AnyValue map keys must be Strings, got ${key.runtimeType}');
+      for (final entry in obj.entries) {
+        final keyObj = entry.key;
+        final String key;
+        if (keyObj is! String) {
+          final str = OTelErrorHandling.safeToString(keyObj);
+          if (str == null) {
+            OTelErrorHandling.report(ArgumentError(
+                'toString() threw while converting a ${keyObj.runtimeType} map '
+                'key to a String; skipping entry.'));
+            continue;
+          }
+          key = str;
+        } else {
+          key = keyObj;
         }
-        map[key] = _fromObject(val, depth + 1);
-      });
+        if (map.containsKey(key)) {
+          OTelErrorHandling.report(ArgumentError(
+              'AnyValue map key collision after stringification: $key'));
+        }
+        map[key] = _fromObject(entry.value, depth + 1);
+      }
       return AnyValueMap(map);
-    } else if (obj is DateTime) {
-      // Timestamp.dateTimeToString, not toIso8601String: it is what
-      // attrsFromMap and Span.setDateTimeAttribute already emit, and it pins
-      // the fractional part to milliseconds instead of widening to
-      // microseconds whenever the DateTime happens to carry them.
-      return AnyValueString(Timestamp.dateTimeToString(obj));
     } else {
       // "Mapping Arbitrary Data to OTLP AnyValue", Other Values: anything not
       // listed above SHOULD be converted to a string via toString(), and to an
       // empty AnyValue if that is not possible. Dart offers no general way to
       // serialize an arbitrary object to bytes, so the spec's intermediate
       // bytes_value step has nothing to implement and is skipped.
-      try {
-        return AnyValueString(obj.toString());
-      } catch (e) {
+      final str = OTelErrorHandling.safeToString(obj);
+      if (str != null) {
+        return AnyValueString(str);
+      } else {
         // A user-defined toString() can throw. error-handling.md: report it,
         // never propagate, and fall through to the empty value the mapping
         // doc prescribes as the last resort.
         OTelErrorHandling.report(ArgumentError(
             'toString() threw while converting a ${obj.runtimeType} to an '
-            'AnyValue; using an empty value instead: $e'));
+            'AnyValue; using an empty value instead.'));
         return const AnyValueNull();
       }
     }
@@ -221,7 +230,6 @@ class AnyValueNull extends AnyValue {
   /// Creates the null AnyValue.
   const AnyValueNull();
 
-  @override
   Object? get value => null;
 
   @override
@@ -234,7 +242,6 @@ class AnyValueNull extends AnyValue {
 /// An [AnyValue] holding a String.
 class AnyValueString extends AnyValue {
   /// The wrapped String.
-  @override
   final String value;
 
   /// Creates an AnyValue holding [value].
@@ -251,7 +258,6 @@ class AnyValueString extends AnyValue {
 /// An [AnyValue] holding a boolean.
 class AnyValueBool extends AnyValue {
   /// The wrapped boolean.
-  @override
   final bool value;
 
   /// Creates an AnyValue holding [value].
@@ -268,7 +274,6 @@ class AnyValueBool extends AnyValue {
 /// An [AnyValue] holding an integer.
 class AnyValueInt extends AnyValue {
   /// The wrapped integer.
-  @override
   final int value;
 
   /// Creates an AnyValue holding [value].
@@ -285,7 +290,6 @@ class AnyValueInt extends AnyValue {
 /// An [AnyValue] holding a double.
 class AnyValueDouble extends AnyValue {
   /// The wrapped double.
-  @override
   final double value;
 
   /// Creates an AnyValue holding [value].
@@ -302,7 +306,6 @@ class AnyValueDouble extends AnyValue {
 /// An [AnyValue] holding an ordered list of [AnyValue]s.
 class AnyValueArray extends AnyValue {
   /// The wrapped list, which is unmodifiable.
-  @override
   final List<AnyValue> value;
 
   /// Creates an AnyValue holding a defensive, unmodifiable copy of [value].
@@ -328,7 +331,6 @@ class AnyValueArray extends AnyValue {
 /// An [AnyValue] holding a map of String keys to [AnyValue]s.
 class AnyValueMap extends AnyValue {
   /// The wrapped map, which is unmodifiable.
-  @override
   final Map<String, AnyValue> value;
 
   /// Creates an AnyValue holding a defensive, unmodifiable copy of [value].
@@ -366,7 +368,6 @@ class AnyValueBytes extends AnyValue {
   /// else. Backed by a [Uint8List] rather than `List.unmodifiable`, which
   /// would box every element: bytes carry blobs, so a 1 MB payload would
   /// otherwise become a million boxed ints.
-  @override
   final List<int> value;
 
   /// Creates an AnyValue holding a defensive, unmodifiable copy of [value].

@@ -49,8 +49,10 @@ class Attributes {
       try {
         anyValue = AnyValue.fromObject(entry.value);
       } catch (e) {
+        final errorMsg =
+            OTelErrorHandling.safeToString(e) ?? e.runtimeType.toString();
         OTelErrorHandling.report(ArgumentError(
-            'Ignoring attribute ${entry.key} because it contains unsupported types: $e'));
+            'Ignoring attribute ${entry.key} because it contains unsupported types: $errorMsg'));
         continue;
       }
 
@@ -181,15 +183,16 @@ class Attributes {
       }
 
       if (elements.every((e) => e is AnyValueString)) {
-        final result = elements.map((e) => e.value as String).toList();
+        final result =
+            elements.map((e) => (e as AnyValueString).value).toList();
         if (result is T) return result as T;
       }
       if (elements.every((e) => e is AnyValueBool)) {
-        final result = elements.map((e) => e.value as bool).toList();
+        final result = elements.map((e) => (e as AnyValueBool).value).toList();
         if (result is T) return result as T;
       }
       if (elements.every((e) => e is AnyValueInt)) {
-        final result = elements.map((e) => e.value as int).toList();
+        final result = elements.map((e) => (e as AnyValueInt).value).toList();
         if (result is T) return result as T;
       }
       // Any all-numeric array reads back as List<double>, promoting ints.

@@ -27,7 +27,7 @@ void main() {
       attributes = attributes.copyWithStringAttribute(name, value);
 
       expect(attributes.getString(name), equals(value));
-      expect(attributes.toMap()[name]!.value.value, equals(value));
+      expect(attributes.toMap()[name]!.value.unwrap(), equals(value));
     });
 
     test('should store and retrieve bool attributes', () {
@@ -36,7 +36,7 @@ void main() {
       attributes = attributes.copyWithBoolAttribute(name, value);
 
       expect(attributes.getBool(name), equals(value));
-      expect(attributes.toMap()[name]!.value.value, equals(value));
+      expect(attributes.toMap()[name]!.value.unwrap(), equals(value));
     });
 
     test('should store and retrieve int attributes', () {
@@ -45,7 +45,7 @@ void main() {
       attributes = attributes.copyWithIntAttribute(name, value);
 
       expect(attributes.getInt(name), equals(value));
-      expect(attributes.toMap()[name]!.value.value, equals(value));
+      expect(attributes.toMap()[name]!.value.unwrap(), equals(value));
     });
 
     test('should store and retrieve double attributes', () {
@@ -54,7 +54,7 @@ void main() {
       attributes = attributes.copyWithDoubleAttribute(name, value);
 
       expect(attributes.getDouble(name), equals(value));
-      expect(attributes.toMap()[name]!.value.value, equals(value));
+      expect(attributes.toMap()[name]!.value.unwrap(), equals(value));
     });
 
     test('should store and retrieve string list attributes', () {
@@ -66,7 +66,7 @@ void main() {
       expect(
           (attributes.toMap()[name]!.value as AnyValueArray)
               .value
-              .map((e) => e.value as String)
+              .map((e) => e.unwrap() as String)
               .toList(),
           equals(value));
     });
@@ -80,7 +80,7 @@ void main() {
       expect(
           (attributes.toMap()[name]!.value as AnyValueArray)
               .value
-              .map((e) => e.value as bool)
+              .map((e) => e.unwrap() as bool)
               .toList(),
           equals(value));
     });
@@ -94,7 +94,7 @@ void main() {
       expect(
           (attributes.toMap()[name]!.value as AnyValueArray)
               .value
-              .map((e) => e.value as int)
+              .map((e) => e.unwrap() as int)
               .toList(),
           equals(value));
     });
@@ -108,7 +108,7 @@ void main() {
       expect(
           (attributes.toMap()[name]!.value as AnyValueArray)
               .value
-              .map((e) => e.value as double)
+              .map((e) => e.unwrap() as double)
               .toList(),
           equals(value));
     });
@@ -122,7 +122,7 @@ void main() {
       expect(
           (attributes.toMap()[name]!.value as AnyValueArray)
               .value
-              .map((e) => e.value as String)
+              .map((e) => e.unwrap() as String)
               .toList(),
           equals(value));
     });
@@ -177,13 +177,13 @@ void main() {
           .copyWithAttributes(OTelAPI.attributesFromList(attributeList));
 
       expect(attributes.getString(stringAttribute.key),
-          equals(stringAttribute.value.value));
+          equals(stringAttribute.value.unwrap()));
       expect(attributes.getInt(intAttribute.key),
-          equals(intAttribute.value.value));
+          equals(intAttribute.value.unwrap()));
       expect(attributes.getBool(boolAttribute.key),
-          equals(boolAttribute.value.value));
+          equals(boolAttribute.value.unwrap()));
       expect(attributes.getDouble(doubleAttribute.key),
-          equals(doubleAttribute.value.value));
+          equals(doubleAttribute.value.unwrap()));
       expect(attributes.getStringList(stringListAttribute.key),
           equals(['a', 'b', 'c']));
       expect(attributes.getBoolList(boolListAttribute.key),
@@ -205,20 +205,20 @@ void main() {
 
       final attrs = map.toAttributes();
       final attrAsMap = attrs.toMap();
-      expect(attrAsMap['string.key']!.value.value, equals('string-value'));
-      expect(attrAsMap['int.key']!.value.value, equals(42));
-      expect(attrAsMap['bool.key']!.value.value, equals(true));
-      expect(attrAsMap['double.key']!.value.value, equals(42.5));
+      expect(attrAsMap['string.key']!.value.unwrap(), equals('string-value'));
+      expect(attrAsMap['int.key']!.value.unwrap(), equals(42));
+      expect(attrAsMap['bool.key']!.value.unwrap(), equals(true));
+      expect(attrAsMap['double.key']!.value.unwrap(), equals(42.5));
       expect(
           (attrAsMap['string.list']!.value as AnyValueArray)
               .value
-              .map((e) => e.value as String)
+              .map((e) => e.unwrap() as String)
               .toList(),
           equals(['a', 'b', 'c']));
       expect(
           (attrAsMap['int.list']!.value as AnyValueArray)
               .value
-              .map((e) => e.value as int)
+              .map((e) => e.unwrap() as int)
               .toList(),
           equals([1, 2, 3]));
     });
@@ -235,11 +235,11 @@ void main() {
 
     test('should convert from Map<String, Object> with DateTime to ISO string',
         () {
-      final now = DateTime.utc(2023, 1, 1, 12, 0, 0);
+      final now = DateTime.utc(2023, 1, 1, 12, 0, 0, 123, 456);
       final attrs = OTelAPI.attributesFromMap({
         'ts': now,
       });
-      expect(attrs.getString('ts'), equals('2023-01-01T12:00:00.000Z'));
+      expect(attrs.getString('ts'), equals('2023-01-01T12:00:00.123456Z'));
     });
 
     test('stringifies an enum value in Map<String, Object>', () {

@@ -38,9 +38,54 @@ void main() {
         expect(anyVal.toJson(), equals({'k': 1}));
       });
 
-      test('fromObject throws on invalid map key', () {
-        expect(() => AnyValue.fromObject({1: 'val'}),
-            throwsA(isA<ArgumentError>()));
+      test('fromObject stringifies non-String map keys', () {
+        final val = AnyValue.fromObject({1: 'val'}) as AnyValueMap;
+        expect(val.value.keys.first, equals('1'));
+        expect(val.value['1']!.unwrap(), equals('val'));
+      });
+
+      test('fromObject reports map key collisions after stringification', () {
+        final reported = <Object>[];
+        OTelAPI.setErrorHandler((error, stackTrace) => reported.add(error));
+        addTearDown(() => OTelAPI.setErrorHandler(null));
+
+        final val = AnyValue.fromObject({1: 'a', '1': 'b'}) as AnyValueMap;
+        expect(reported, hasLength(1));
+        expect(reported.single, isA<ArgumentError>());
+        // The second entry overwrites the first.
+        expect(val.value['1']!.unwrap(), equals('b'));
+        expect(val.value, hasLength(1));
+      });
+
+      test('fromObject handles mixed numeric lists as separate types', () {
+        final val = AnyValue.fromObject([1, 2.5]) as AnyValueArray;
+        expect(val.value, hasLength(2));
+        expect(val.value[0], isA<AnyValueInt>());
+        expect(val.value[1], isA<AnyValueDouble>());
+      });
+
+      test('fromObject handles objects whose toString throws', () {
+        final reported = <Object>[];
+        OTelAPI.setErrorHandler((error, stackTrace) => reported.add(error));
+        addTearDown(() => OTelAPI.setErrorHandler(null));
+
+        final result = AnyValue.fromObject(_ThrowingToString());
+        expect(result, isA<AnyValueNull>());
+        expect(reported, hasLength(1));
+        expect(reported.single, isA<ArgumentError>());
+
+        reported.clear();
+        final mapResult =
+            AnyValue.fromObject({_ThrowingToString(): 'val'}) as AnyValueMap;
+        expect(mapResult.value, isEmpty);
+        expect(reported, hasLength(1));
+
+        reported.clear();
+        final attrs =
+            Attributes.fromJson({'bad': _ThrowingToString(), 'good': 'kept'});
+        expect(attrs.getString('good'), equals('kept'));
+        expect(attrs.toMap()['bad']?.value, isA<AnyValueNull>());
+        expect(reported, hasLength(1));
       });
 
       test('equality and hashCode', () {
@@ -48,7 +93,7 @@ void main() {
         final nullVal2 = AnyValue.fromObject(null);
         expect(nullVal1, equals(nullVal2));
         expect(nullVal1.hashCode, equals(nullVal2.hashCode));
-        expect(nullVal1.value, isNull);
+        expect((nullVal1 as AnyValueNull).value, isNull);
 
         final mapVal1 = AnyValue.fromMap({'a': AnyValue.fromInt(1)});
         final mapVal2 = AnyValue.fromObject({'a': 1});
@@ -277,26 +322,60 @@ void main() {
             () => AnyValue.fromObject(nestedList(maxDepth)), returnsNormally);
       });
 
-      test('fromObject throws at maxDepth + 1 levels of lists', () {
-        expect(() => AnyValue.fromObject(nestedList(maxDepth + 1)),
-            throwsA(isA<ArgumentError>()));
+      test('fromObject reports at maxDepth + 1 levels of lists', () {
+        final reported = <Object>[];
+        OTelAPI.setErrorHandler((error, stackTrace) => reported.add(error));
+        addTearDown(() => OTelAPI.setErrorHandler(null));
+
+        final result = AnyValue.fromObject(nestedList(maxDepth + 1));
+
+        expect(reported, hasLength(1));
+        expect(reported.single, isA<ArgumentError>());
+        var curr = result;
+        for (var i = 0; i < maxDepth; i++) {
+          curr = (curr as AnyValueArray).value.first;
+        }
+        expect(curr, isA<AnyValueNull>());
       });
 
       test('fromObject accepts exactly maxDepth levels of maps', () {
         expect(() => AnyValue.fromObject(nestedMap(maxDepth)), returnsNormally);
       });
 
-      test('fromObject throws at maxDepth + 1 levels of maps', () {
-        expect(() => AnyValue.fromObject(nestedMap(maxDepth + 1)),
-            throwsA(isA<ArgumentError>()));
+      test('fromObject reports at maxDepth + 1 levels of maps', () {
+        final reported = <Object>[];
+        OTelAPI.setErrorHandler((error, stackTrace) => reported.add(error));
+        addTearDown(() => OTelAPI.setErrorHandler(null));
+
+        final result = AnyValue.fromObject(nestedMap(maxDepth + 1));
+
+        expect(reported, hasLength(1));
+        expect(reported.single, isA<ArgumentError>());
+        var curr = result;
+        for (var i = 0; i < maxDepth; i++) {
+          curr = (curr as AnyValueMap).value['k']!;
+        }
+        expect(curr, isA<AnyValueNull>());
       });
 
       test('unwrap accepts exactly maxDepth levels', () {
         expect(nestedArray(maxDepth).unwrap, returnsNormally);
       });
 
-      test('unwrap throws at maxDepth + 1 levels', () {
-        expect(nestedArray(maxDepth + 1).unwrap, throwsA(isA<ArgumentError>()));
+      test('unwrap reports at maxDepth + 1 levels', () {
+        final reported = <Object>[];
+        OTelAPI.setErrorHandler((error, stackTrace) => reported.add(error));
+        addTearDown(() => OTelAPI.setErrorHandler(null));
+
+        final unwrapped = nestedArray(maxDepth + 1).unwrap();
+
+        expect(reported, hasLength(1));
+        expect(reported.single, isA<ArgumentError>());
+        var curr = unwrapped;
+        for (var i = 0; i < maxDepth; i++) {
+          curr = (curr as List).first;
+        }
+        expect(curr, isNull);
       });
 
       // toString must never throw: it runs in debuggers and error messages,
@@ -358,7 +437,8 @@ void main() {
           'good': 'kept',
         });
         expect(attrs.getString('good'), equals('kept'));
-        expect(attrs.toMap().containsKey('deep'), isFalse);
+        expect(attrs.toMap().containsKey('deep'), isTrue,
+            reason: 'attribute is kept but truncated');
       });
     });
 
@@ -429,4 +509,9 @@ void main() {
       });
     });
   });
+}
+
+class _ThrowingToString {
+  @override
+  String toString() => throw StateError('user toString threw');
 }

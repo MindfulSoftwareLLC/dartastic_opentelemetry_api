@@ -292,16 +292,10 @@ void main() {
       expect(reported, isEmpty);
     });
 
-    test('bodyToAnyValue reports and drops a body it cannot convert', () {
-      final reported = <Object>[];
-      OTelAPI.setErrorHandler((e, _) => reported.add(e));
-      addTearDown(() => OTelAPI.setErrorHandler(null));
-
-      // A non-String map key is still refused; the helper reports and drops,
-      // because with an SDK installed the record is real.
-      expect(APILogger.bodyToAnyValue({1: 'v'}), isNull);
-      expect(reported, hasLength(1));
-      expect(reported.single, isA<ArgumentError>());
+    test('bodyToAnyValue stringifies a non-String map key', () {
+      final val = APILogger.bodyToAnyValue({1: 'v'}) as AnyValueMap;
+      expect(val.value.keys.first, equals('1'));
+      expect(val.value['1']!.unwrap(), equals('v'));
     });
 
     test('bodyToAnyValue converts a plain value', () {

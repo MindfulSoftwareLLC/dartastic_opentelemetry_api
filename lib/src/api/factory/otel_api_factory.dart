@@ -182,8 +182,10 @@ class OTelAPIFactory extends OTelFactory {
       try {
         anyValue = AnyValue.fromObject(value);
       } catch (e) {
+        final errorMsg =
+            OTelErrorHandling.safeToString(e) ?? e.runtimeType.toString();
         OTelErrorHandling.report(ArgumentError(
-            'Ignoring attribute "$key" because it contains unsupported types: $e'));
+            'Ignoring attribute "$key" because it contains unsupported types: $errorMsg'));
         return;
       }
 

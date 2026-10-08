@@ -113,9 +113,11 @@ class APILogger {
     try {
       return AnyValue.fromObject(body);
     } catch (e) {
+      final errorMsg =
+          OTelErrorHandling.safeToString(e) ?? e.runtimeType.toString();
       OTelErrorHandling.report(ArgumentError(
           'Dropping the log record body because it contains unsupported '
-          'types: $e'));
+          'types: $errorMsg'));
       return null;
     }
   }

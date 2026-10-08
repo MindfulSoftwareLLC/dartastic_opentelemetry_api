@@ -99,10 +99,10 @@ void main() {
       span.attributes = attrs;
 
       final spanAttrs = getReadableSpan(span).attributes.toMap();
-      expect(spanAttrs['string.key']?.value.value, equals('value'));
-      expect(spanAttrs['int.key']?.value.value, equals(42));
-      expect(spanAttrs['bool.key']?.value.value, equals(true));
-      expect(spanAttrs['double.key']?.value.value, equals(3.14));
+      expect(spanAttrs['string.key']?.value.unwrap(), equals('value'));
+      expect(spanAttrs['int.key']?.value.unwrap(), equals(42));
+      expect(spanAttrs['bool.key']?.value.unwrap(), equals(true));
+      expect(spanAttrs['double.key']?.value.unwrap(), equals(3.14));
     });
 
     test('handles attribute type-specific setters', () {
@@ -239,7 +239,7 @@ void main() {
       final event = events?.first;
       expect(event?.name, equals('test-event'));
 
-      expect(event?.attributes?.toMap()['event.key']?.value.value,
+      expect(event?.attributes?.toMap()['event.key']?.value.unwrap(),
           equals('value'));
       expect(event?.timestamp, IsBetween(beforeCreation, afterCreation));
     });
@@ -573,5 +573,36 @@ void main() {
       expect(getReadableSpan(span).status, equals(SpanStatusCode.Unset));
       expect(getReadableSpan(span).spanEvents?.length, equals(1));
     });
+
+    test('setDateTimeAsStringAttribute formats to full-precision UTC ISO-8601',
+        () {
+      final span = tracer.startSpan('test-span');
+      final dt = DateTime.utc(2023, 1, 1, 12, 0, 0, 123, 456);
+      span.setDateTimeAsStringAttribute('time', dt);
+
+      expect(getReadableSpan(span).attributes.getString('time'),
+          equals('2023-01-01T12:00:00.123456Z'));
+    });
+
+    test('recordException handles throwing toString gracefully', () {
+      final span = tracer.startSpan('test-span');
+      span.recordException(_ThrowingToString());
+
+      final events = getReadableSpan(span).spanEvents;
+      expect(events, isNotNull);
+      expect(events, hasLength(1));
+
+      final attrs = events!.first.attributes;
+      expect(attrs!.getString('exception.type'), equals('_ThrowingToString'));
+      expect(
+          attrs.getString('exception.message'),
+          equals(
+              'Exception when calling toString of span exception: Bad state: throw'));
+    });
   });
+}
+
+class _ThrowingToString {
+  @override
+  String toString() => throw StateError('throw');
 }
