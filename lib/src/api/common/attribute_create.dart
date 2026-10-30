@@ -13,7 +13,7 @@ class AttributeCreate {
   /// @param name The name of the attribute
   /// @param value The value of the attribute
   /// @return A new Attribute instance
-  static Attribute<T> create<T extends Object>(String name, T value) {
+  static Attribute create(String name, AnyValue value) {
     return Attribute._(name, value);
   }
 }

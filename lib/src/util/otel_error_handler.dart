@@ -133,4 +133,15 @@ abstract class OTelErrorHandling {
       }
     }
   }
+
+  /// Safely extracts a string representation of an object, catching any thrown
+  /// exception from a user-defined [toString] method. Returns null if it throws.
+  @internal
+  static String? safeToString(Object? object) {
+    try {
+      return object.toString();
+    } catch (_) {
+      return null;
+    }
+  }
 }

@@ -90,8 +90,8 @@ class APIHistogram<T extends num> {
   /// that, which the specification leaves to implementations of the API.
   ///
   /// [value] The value to record.
-  /// [attributeMap] A map of attribute key-value pairs.
-  void recordWithMap(T value, Map<String, Object> attributeMap) {
+  /// [attributeMap] A map of attribute key-value pairs, including null values.
+  void recordWithMap(T value, Map<String, Object?> attributeMap) {
     // Convert map to Attributes and delegate to record
     final attributes =
         attributeMap.isEmpty ? null : attributeMap.toAttributes();

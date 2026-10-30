@@ -359,29 +359,29 @@ abstract class OTelFactory {
   /// are converted into `BaggageEntry`s without metadata.
   Baggage baggageForMap(Map<String, String> keyValuePairs);
 
-  /// Creates an `AttributeValue` for the given String.
-  Attribute<String> attributeString(String key, String value);
+  /// Creates an `Attribute` for the given String.
+  Attribute attributeString(String key, String value);
 
-  /// Creates an `AttributeValue` for the given boolean.
-  Attribute<bool> attributeBool(String key, bool value);
+  /// Creates an `Attribute` for the given boolean.
+  Attribute attributeBool(String key, bool value);
 
-  /// Creates an `AttributeValue` for the given int.
-  Attribute<int> attributeInt(String key, int value);
+  /// Creates an `Attribute` for the given int.
+  Attribute attributeInt(String key, int value);
 
-  /// Creates an `AttributeValue` for the given double.
-  Attribute<double> attributeDouble(String key, double value);
+  /// Creates an `Attribute` for the given double.
+  Attribute attributeDouble(String key, double value);
 
-  /// Creates an `AttributeValue` for the given String.
-  Attribute<List<String>> attributeStringList(String key, List<String> value);
+  /// Creates an `Attribute` for the given String.
+  Attribute attributeStringList(String key, List<String> value);
 
-  /// Creates an `AttributeValue` for the given boolean.
-  Attribute<List<bool>> attributeBoolList(String key, List<bool> value);
+  /// Creates an `Attribute` for the given boolean.
+  Attribute attributeBoolList(String key, List<bool> value);
 
-  /// Creates an `AttributeValue` for the given int.
-  Attribute<List<int>> attributeIntList(String key, List<int> value);
+  /// Creates an `Attribute` for the given int.
+  Attribute attributeIntList(String key, List<int> value);
 
-  /// Creates an `AttributeValue` for the given double.
-  Attribute<List<double>> attributeDoubleList(String key, List<double> value);
+  /// Creates an `Attribute` for the given double.
+  Attribute attributeDoubleList(String key, List<double> value);
 
   /// Creates an `Attributes` collection.
   Attributes attributes([List<Attribute>? entries]);
@@ -391,7 +391,7 @@ abstract class OTelFactory {
   /// List\<String>, List\<bool>, List\<int> or List\<double> are used
   /// directly, DateTime is converted to the UTC formatted String,
   /// other values have their toString() used
-  Attributes attributesFromMap(Map<String, Object> namedMap);
+  Attributes attributesFromMap(Map<String, Object?> namedMap);
 
   /// Creates an `Attributes` from a list of values;
   Attributes attributesFromList(List<Attribute> attributeList);

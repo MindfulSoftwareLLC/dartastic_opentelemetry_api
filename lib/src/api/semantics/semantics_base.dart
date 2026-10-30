@@ -28,7 +28,7 @@ abstract class OTelSemantic {
 /// Extension on [OTelSemantic] to provide utility methods.
 extension OTelSemanticExtension on OTelSemantic {
   /// Converts this semantic attribute and its value to a `MapEntry`.
-  MapEntry<String, Object> toMapEntry(Object value) => MapEntry(key, value);
+  MapEntry<String, Object?> toMapEntry(Object? value) => MapEntry(key, value);
 }
 
 /// Marker on every string-valued value enum — exposes the on-wire string
