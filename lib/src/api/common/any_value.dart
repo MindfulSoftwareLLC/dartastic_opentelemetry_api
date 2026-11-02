@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import 'dart:collection';
+import 'dart:convert';
 import 'dart:typed_data';
 
 // UnmodifiableListView comes from dart:collection above; package:collection is
@@ -59,8 +60,63 @@ sealed class AnyValue {
 
   /// Converts this value to plain Dart objects for debugging and in-process use.
   ///
-  /// This delegates to [unwrap].
+  /// This delegates to [unwrap]. For JSON-compatible non-OTLP encoding,
+  /// including bytes and non-finite doubles, use [toJsonValue].
   Object? toJson() => unwrap();
+
+  /// Returns a JSON-compatible value for non-OTLP protocols.
+  ///
+  /// Bytes become base64 strings, non-finite doubles become `NaN`, `Infinity`,
+  /// or `-Infinity` strings, and empty values become null. Arrays and maps
+  /// apply these rules recursively. Unlike [toJson], the result can be passed
+  /// directly to [jsonEncode]. This is not the tagged OTLP/JSON encoding.
+  ///
+  /// This representation is lossy: decoding cannot distinguish bytes from
+  /// strings, and a receiver may lose precision for large numbers.
+  /// Values at depth 32 (root depth 0) are replaced with null, with one report
+  /// through [OTelErrorHandling] per call. A throwing error handler propagates.
+  /// See https://opentelemetry.io/docs/specs/otel/common/#arrays.
+  Object? toJsonValue() {
+    var depthReported = false;
+    Object? convert(AnyValue value, int depth) {
+      if (depth >= _maxDepth && value is! AnyValueNull) {
+        if (!depthReported) {
+          depthReported = true;
+          OTelErrorHandling.report(ArgumentError(
+              'AnyValue JSON nesting exceeds the maximum depth of $_maxDepth'));
+        }
+        return null;
+      }
+      return switch (value) {
+        AnyValueNull() => null,
+        AnyValueString(value: final v) => v,
+        AnyValueBool(value: final v) => v,
+        AnyValueInt(value: final v) => v,
+        AnyValueDouble(value: final v) => v.isFinite ? v : v.toString(),
+        AnyValueBytes(value: final v) => base64Encode(v),
+        AnyValueArray(value: final v) =>
+          v.map((item) => convert(item, depth + 1)).toList(),
+        AnyValueMap(value: final v) =>
+          v.map((key, item) => MapEntry(key, convert(item, depth + 1))),
+      };
+    }
+
+    return convert(this, 0);
+  }
+
+  /// Encodes this value as a string for non-OTLP protocols.
+  ///
+  /// Standalone strings, base64 bytes and non-finite numbers are unquoted;
+  /// an empty value becomes the empty string. Arrays and maps are JSON,
+  /// using [toJsonValue] for their elements. The same depth guard applies.
+  /// This is not necessarily valid standalone JSON and is not OTLP/JSON.
+  /// See https://opentelemetry.io/docs/specs/otel/common/#anyvalue-representation-for-non-otlp-protocols.
+  String toNonOtlpString() {
+    final converted = toJsonValue();
+    if (converted == null) return '';
+    if (converted is String) return converted;
+    return jsonEncode(converted);
+  }
 
   /// A readable rendering of this value, for debuggers and error messages.
   ///

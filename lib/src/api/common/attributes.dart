@@ -359,8 +359,9 @@ class Attributes {
     }
   }
 
-  /// Converts the attributes to a JSON-serializable map.
-  /// This is useful for logging or debugging.
+  /// Converts the attributes to plain Dart values for logging or debugging.
+  /// Bytes remain lists and non-finite doubles remain doubles. For a map
+  /// that can be passed to [jsonEncode], use [toJsonValue].
   Map<String, dynamic> toJson() {
     final result = <String, dynamic>{};
     for (final entry in _entries.entries) {
@@ -368,6 +369,19 @@ class Attributes {
     }
     return result;
   }
+
+  /// Returns a JSON-compatible object for non-OTLP protocols.
+  ///
+  /// Each attribute uses [AnyValue.toJsonValue], including base64 bytes and
+  /// string representations of non-finite doubles. Null values are retained.
+  /// Depth is counted from each attribute value, with at most one depth
+  /// report per attribute. This lossy representation is not OTLP/JSON.
+  Map<String, Object?> toJsonValue() => _entries
+      .map((key, attribute) => MapEntry(key, attribute.value.toJsonValue()));
+
+  /// Encodes this collection as a JSON object for non-OTLP protocols.
+  /// See [toJsonValue] for encoding rules and the depth guard.
+  String toNonOtlpString() => jsonEncode(toJsonValue());
 
   @override
   bool operator ==(Object other) {

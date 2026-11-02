@@ -1,6 +1,8 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
+import 'dart:convert';
+
 import 'package:meta/meta.dart';
 
 import 'any_value.dart';
@@ -32,6 +34,14 @@ class Attribute {
 
   /// Gets the value of this attribute.
   AnyValue get value => _value;
+
+  /// Returns a single-member JSON-compatible object for non-OTLP protocols.
+  /// See [AnyValue.toJsonValue] for encoding rules and the depth guard.
+  Map<String, Object?> toJsonValue() => {key: value.toJsonValue()};
+
+  /// Encodes this attribute as a JSON object for non-OTLP protocols.
+  /// Unlike a standalone value, null is preserved as JSON null.
+  String toNonOtlpString() => jsonEncode(toJsonValue());
 
   @override
   String toString() {

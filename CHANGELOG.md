@@ -25,6 +25,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `toJsonValue()` and `toNonOtlpString()` on `AnyValue`, `Attribute`, and
+  `Attributes` implement the non-OTLP representation from
+  [common.md](https://opentelemetry.io/docs/specs/otel/common/#anyvalue-representation-for-non-otlp-protocols),
+  including base64 bytes and non-finite floating-point strings. Existing
+  `toJson()` and debug rendering are unchanged. Encoding retains the 32-level
+  safety guard and reports truncation once per value conversion.
+
 - `AnyValue`, a sealed hierarchy (`AnyValueString`, `AnyValueBool`,
   `AnyValueInt`, `AnyValueDouble`, `AnyValueArray`, `AnyValueMap`,
   `AnyValueBytes`, `AnyValueNull`) representing any OpenTelemetry attribute
