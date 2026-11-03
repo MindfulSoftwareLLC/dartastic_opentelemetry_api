@@ -54,29 +54,8 @@ class Attributes {
       } else if (value is List<double>) {
         attributes.add(AttributeCreate.create<List<double>>(key, value));
       } else if (value is List) {
-        // Untyped lists (List<Object> / List<dynamic>): element-check
-        // rather than hard-cast.  Empty untyped lists take the
-        // List<String> fallback because .every() is vacuously true.
-        if (value.every((e) => e is String)) {
-          attributes.add(
-              AttributeCreate.create<List<String>>(key, value.cast<String>()));
-        } else if (value.every((e) => e is bool)) {
-          attributes
-              .add(AttributeCreate.create<List<bool>>(key, value.cast<bool>()));
-        } else if (value.every((e) => e is int)) {
-          attributes
-              .add(AttributeCreate.create<List<int>>(key, value.cast<int>()));
-        } else if (value.every((e) => e is double || e is int)) {
-          // Convert all to double
-          attributes.add(AttributeCreate.create<List<double>>(
-              key,
-              value
-                  .map((e) => e is int ? e.toDouble() : e as double)
-                  .toList()));
-        } else {
-          OTelErrorHandling.report(ArgumentError(
-              'Ignoring attribute $key because the list contains unsupported types. Only lists of Strings, bools, ints and doubles are allowed by the OTel specification.'));
-        }
+        final attribute = AttributeCreate.createFromUntypedList(key, value);
+        if (attribute != null) attributes.add(attribute);
       } else {
         OTelErrorHandling.report(ArgumentError(
             'Ignoring attribute $key because the value is not a valid attribute type. Only String, bool, int, double and Lists of those types are allowed by the OTel specification.'));
