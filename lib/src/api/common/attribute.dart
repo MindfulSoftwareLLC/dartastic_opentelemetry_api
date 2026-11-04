@@ -4,6 +4,8 @@
 import 'package:collection/collection.dart';
 import 'package:meta/meta.dart';
 
+import '../../util/otel_error_handler.dart';
+
 part 'attribute_create.dart';
 
 /// Represents a value for an attribute, associated with an attribute key.

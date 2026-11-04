@@ -4,7 +4,6 @@
 import 'dart:typed_data';
 
 import '../../factory/otel_factory.dart';
-import '../../util/otel_error_handler.dart';
 import '../baggage/baggage.dart';
 import '../baggage/baggage_entry.dart';
 import '../common/attribute.dart';
@@ -190,29 +189,8 @@ class OTelAPIFactory extends OTelFactory {
       } else if (value is List<double>) {
         attributes.add(AttributeCreate.create<List<double>>(key, value));
       } else if (value is List) {
-        // Untyped lists (List<Object> / List<dynamic>): element-check
-        // rather than hard-cast.  Empty untyped lists take the
-        // List<String> fallback because .every() is vacuously true.
-        if (value.every((e) => e is String)) {
-          attributes.add(
-              AttributeCreate.create<List<String>>(key, value.cast<String>()));
-        } else if (value.every((e) => e is bool)) {
-          attributes
-              .add(AttributeCreate.create<List<bool>>(key, value.cast<bool>()));
-        } else if (value.every((e) => e is int)) {
-          attributes
-              .add(AttributeCreate.create<List<int>>(key, value.cast<int>()));
-        } else if (value.every((e) => e is double || e is int)) {
-          // Mixed numeric lists are promoted to double.
-          attributes.add(AttributeCreate.create<List<double>>(
-              key,
-              value
-                  .map((e) => e is int ? e.toDouble() : e as double)
-                  .toList()));
-        } else {
-          OTelErrorHandling.report(ArgumentError(
-              'Ignoring attribute $key because the list contains unsupported types. Only String, bool, int, double lists are allowed by the OTel specification.'));
-        }
+        final attribute = AttributeCreate.createFromUntypedList(key, value);
+        if (attribute != null) attributes.add(attribute);
       } else {
         attributes.add(AttributeCreate.create<String>(key, '$value'));
       }
