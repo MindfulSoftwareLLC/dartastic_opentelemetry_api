@@ -79,8 +79,8 @@ class APIGauge<T extends num> {
   /// Records a value with the given map of attributes.
   ///
   /// [value] The current value to record.
-  /// [attributeMap] A map of attribute key-value pairs.
-  void recordWithMap(T value, Map<String, Object> attributeMap) {
+  /// [attributeMap] A map of attribute key-value pairs, including null values.
+  void recordWithMap(T value, Map<String, Object?> attributeMap) {
     // Convert map to Attributes and delegate to record
     final attributes =
         attributeMap.isEmpty ? null : attributeMap.toAttributes();

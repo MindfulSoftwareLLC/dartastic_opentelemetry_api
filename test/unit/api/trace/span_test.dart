@@ -99,10 +99,10 @@ void main() {
       span.attributes = attrs;
 
       final spanAttrs = getReadableSpan(span).attributes.toMap();
-      expect(spanAttrs['string.key']?.value, equals('value'));
-      expect(spanAttrs['int.key']?.value, equals(42));
-      expect(spanAttrs['bool.key']?.value, equals(true));
-      expect(spanAttrs['double.key']?.value, equals(3.14));
+      expect(spanAttrs['string.key']?.value.unwrap(), equals('value'));
+      expect(spanAttrs['int.key']?.value.unwrap(), equals(42));
+      expect(spanAttrs['bool.key']?.value.unwrap(), equals(true));
+      expect(spanAttrs['double.key']?.value.unwrap(), equals(3.14));
     });
 
     test('handles attribute type-specific setters', () {
@@ -239,7 +239,8 @@ void main() {
       final event = events?.first;
       expect(event?.name, equals('test-event'));
 
-      expect(event?.attributes?.toMap()['event.key']?.value, equals('value'));
+      expect(event?.attributes?.toMap()['event.key']?.value.unwrap(),
+          equals('value'));
       expect(event?.timestamp, IsBetween(beforeCreation, afterCreation));
     });
 
@@ -302,8 +303,8 @@ void main() {
       final typeKey = 'exception.type';
       final msgKey = 'exception.message';
 
-      expect(eventAttrs[typeKey]?.value, contains('Exception'));
-      expect(eventAttrs[msgKey]?.value, equals(exception.toString()));
+      expect(eventAttrs[typeKey]?.value.unwrap(), contains('Exception'));
+      expect(eventAttrs[msgKey]?.value.unwrap(), equals(exception.toString()));
     });
 
     test('recordException with custom attributes', () {
@@ -319,8 +320,9 @@ void main() {
       final eventAttrs = events?.first.attributes?.toMap() ?? {};
 
       // Should contain both standard exception attributes and custom ones
-      expect(eventAttrs['exception.type']?.value, contains('Exception'));
-      expect(eventAttrs['custom']?.value, equals('attribute'));
+      expect(
+          eventAttrs['exception.type']?.value.unwrap(), contains('Exception'));
+      expect(eventAttrs['custom']?.value.unwrap(), equals('attribute'));
     });
 
     test('recordException with escaped string', () {
@@ -334,8 +336,8 @@ void main() {
       final eventAttrs = events?.first.attributes?.toMap() ?? {};
 
       // Should contain the full message with escaping preserved
-      expect(
-          eventAttrs['exception.message']?.value, equals(exception.toString()));
+      expect(eventAttrs['exception.message']?.value.unwrap(),
+          equals(exception.toString()));
     });
 
     test('setAttributes with mixed types', () {
@@ -571,5 +573,36 @@ void main() {
       expect(getReadableSpan(span).status, equals(SpanStatusCode.Unset));
       expect(getReadableSpan(span).spanEvents?.length, equals(1));
     });
+
+    test('setDateTimeAsStringAttribute formats to full-precision UTC ISO-8601',
+        () {
+      final span = tracer.startSpan('test-span');
+      final dt = DateTime.utc(2023, 1, 1, 12, 0, 0, 123, 456);
+      span.setDateTimeAsStringAttribute('time', dt);
+
+      expect(getReadableSpan(span).attributes.getString('time'),
+          equals('2023-01-01T12:00:00.123456Z'));
+    });
+
+    test('recordException handles throwing toString gracefully', () {
+      final span = tracer.startSpan('test-span');
+      span.recordException(_ThrowingToString());
+
+      final events = getReadableSpan(span).spanEvents;
+      expect(events, isNotNull);
+      expect(events, hasLength(1));
+
+      final attrs = events!.first.attributes;
+      expect(attrs!.getString('exception.type'), equals('_ThrowingToString'));
+      expect(
+          attrs.getString('exception.message'),
+          equals(
+              'Exception when calling toString of span exception: Bad state: throw'));
+    });
   });
+}
+
+class _ThrowingToString {
+  @override
+  String toString() => throw StateError('throw');
 }

@@ -14,7 +14,8 @@ abstract class APIObservableResult<T extends num> {
   void observe(T value, [Attributes? attributes]);
 
   /// Records a measurement with the given value and attributes as a map.
-  void observeWithMap(T value, Map<String, Object> attributes);
+  /// Attribute values may be null.
+  void observeWithMap(T value, Map<String, Object?> attributes);
 
   /// Get all recorded measurements
   List<Measurement<T>> get measurements;

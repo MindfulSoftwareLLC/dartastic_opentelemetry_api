@@ -54,7 +54,7 @@ class _CountingFactory extends OTelAPIFactory {
   });
 
   @override
-  Attributes attributesFromMap(Map<String, Object> namedMap) {
+  Attributes attributesFromMap(Map<String, Object?> namedMap) {
     attributesFromMapCalls++;
     return super.attributesFromMap(namedMap);
   }

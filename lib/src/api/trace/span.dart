@@ -8,7 +8,6 @@ import '../../util/otel_error_handler.dart';
 import '../../util/time_provider.dart';
 import '../common/attributes.dart';
 import '../common/instrumentation_scope.dart';
-import '../common/timestamp.dart';
 import 'span_context.dart';
 import 'span_event.dart';
 import 'span_id.dart';
@@ -219,7 +218,7 @@ class APISpan {
   void setDateTimeAsStringAttribute(String name, DateTime value) {
     if (_modifiable) {
       _attributes = _attributes.copyWithStringAttribute(
-          name, Timestamp.dateTimeToString(value));
+          name, value.toUtc().toIso8601String());
     }
   }
 
@@ -423,8 +422,10 @@ class APISpan {
     try {
       exceptionMessage = exception.toString();
     } catch (e) {
+      final errorMsg =
+          OTelErrorHandling.safeToString(e) ?? e.runtimeType.toString();
       exceptionMessage =
-          'Exception when calling toString of span exception: $e';
+          'Exception when calling toString of span exception: $errorMsg';
     }
 
     exceptionAttributeMap['exception.message'] = exceptionMessage;

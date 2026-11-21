@@ -112,7 +112,7 @@ class TestObservableResult<T extends num> implements APIObservableResult<T> {
   }
 
   @override
-  void observeWithMap(T value, Map<String, Object> attributeMap) {
+  void observeWithMap(T value, Map<String, Object?> attributeMap) {
     final attributes =
         attributeMap.isEmpty ? null : attributeMap.toAttributes();
     observe(value, attributes);

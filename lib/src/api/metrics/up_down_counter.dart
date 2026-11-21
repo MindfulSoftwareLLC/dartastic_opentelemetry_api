@@ -81,8 +81,8 @@ class APIUpDownCounter<T extends num> {
   /// Adds a value to the counter's sum using a map of attributes.
   ///
   /// [value] The increment amount, can be positive or negative.
-  /// [attributeMap] A map of attribute key-value pairs.
-  void addWithMap(T value, Map<String, Object> attributeMap) {
+  /// [attributeMap] A map of attribute key-value pairs, including null values.
+  void addWithMap(T value, Map<String, Object?> attributeMap) {
     // Convert map to Attributes and delegate to add
     final attributes =
         attributeMap.isEmpty ? null : attributeMap.toAttributes();
