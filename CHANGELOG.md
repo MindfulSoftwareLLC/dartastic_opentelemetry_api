@@ -30,7 +30,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   [common.md](https://opentelemetry.io/docs/specs/otel/common/#anyvalue-representation-for-non-otlp-protocols),
   including base64 bytes and non-finite floating-point strings. Existing
   `toJson()` and debug rendering are unchanged. Encoding retains the 32-level
-  safety guard and reports truncation once per value conversion.
+  safety guard and reports truncation once per value conversion
+  ([#148](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/148)).
 
 - `AnyValue`, a sealed hierarchy (`AnyValueString`, `AnyValueBool`,
   `AnyValueInt`, `AnyValueDouble`, `AnyValueArray`, `AnyValueMap`,
