@@ -162,13 +162,13 @@ void main() {
       expect(events, hasLength(1));
 
       final eventAttrs = events![0].attributes!.toMap();
-      expect(
-          eventAttrs['exception.type']?.value.unwrap(), contains('Exception'));
-      expect(eventAttrs['exception.message']?.value.unwrap(),
+      expect(eventAttrs['exception.type']?.value.toObject(),
+          contains('Exception'));
+      expect(eventAttrs['exception.message']?.value.toObject(),
           contains('Test error'));
-      expect(eventAttrs['exception.stacktrace']?.value.unwrap(), isNotNull);
-      expect(eventAttrs['exception.escaped']?.value.unwrap(), isTrue);
-      expect(eventAttrs['custom']?.value.unwrap(), equals('attribute'));
+      expect(eventAttrs['exception.stacktrace']?.value.toObject(), isNotNull);
+      expect(eventAttrs['exception.escaped']?.value.toObject(), isTrue);
+      expect(eventAttrs['custom']?.value.toObject(), equals('attribute'));
     });
   });
 }

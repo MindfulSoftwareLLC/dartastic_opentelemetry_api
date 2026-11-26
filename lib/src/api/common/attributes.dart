@@ -36,6 +36,8 @@ class Attributes {
 
   /// Creates an Attributes instance from a JSON map.
   /// This is a utility method for deserialization from logs or exports.
+  /// [toJson] is lossy: base64 bytes and non-finite numbers encoded as
+  /// strings are read back as strings.
   ///
   /// Values that cannot be converted are reported via [OTelErrorHandling]
   /// and stored as [AnyValueNull]. Maps, nested arrays and null convert fine
@@ -353,35 +355,22 @@ class Attributes {
   @override
   String toString() {
     try {
-      return const JsonEncoder.withIndent('  ').convert(toJson());
+      return const JsonEncoder.withIndent('  ').convert(_entries
+          .map((key, attribute) => MapEntry(key, attribute.value.toObject())));
     } catch (_) {
       return '{${_entries.entries.map((e) => '${e.key}: ${e.value.value}').join(', ')}}';
     }
   }
 
-  /// Converts the attributes to plain Dart values for logging or debugging.
-  /// Bytes remain lists and non-finite doubles remain doubles. For a map
-  /// that can be passed to [jsonEncode], use [toJsonValue].
-  Map<String, dynamic> toJson() {
-    final result = <String, dynamic>{};
-    for (final entry in _entries.entries) {
-      result[entry.key] = entry.value.value.unwrap();
-    }
-    return result;
-  }
-
   /// Returns a JSON-compatible object for non-OTLP protocols.
   ///
-  /// Each attribute uses [AnyValue.toJsonValue], including base64 bytes and
+  /// Each attribute uses [AnyValue.toJson], including base64 bytes and
   /// string representations of non-finite doubles. Null values are retained.
   /// Depth is counted from each attribute value, with at most one depth
-  /// report per attribute. This lossy representation is not OTLP/JSON.
-  Map<String, Object?> toJsonValue() => _entries
-      .map((key, attribute) => MapEntry(key, attribute.value.toJsonValue()));
-
-  /// Encodes this collection as a JSON object for non-OTLP protocols.
-  /// See [toJsonValue] for encoding rules and the depth guard.
-  String toNonOtlpString() => jsonEncode(toJsonValue());
+  /// report per attribute. This lossy representation is not OTLP/JSON. [fromJson] reads encoded
+  /// bytes and non-finite doubles back as strings.
+  Map<String, Object?> toJson() =>
+      _entries.map((key, attribute) => MapEntry(key, attribute.value.toJson()));
 
   @override
   bool operator ==(Object other) {

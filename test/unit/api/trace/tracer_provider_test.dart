@@ -55,9 +55,9 @@ void main() {
       );
 
       expect(tracer, isNotNull);
-      expect(tracer.attributes?.toMap()['library.name']?.value.unwrap(),
+      expect(tracer.attributes?.toMap()['library.name']?.value.toObject(),
           equals('test-lib'));
-      expect(tracer.attributes?.toMap()['library.version']?.value.unwrap(),
+      expect(tracer.attributes?.toMap()['library.version']?.value.toObject(),
           equals('1.0.0'));
     });
 

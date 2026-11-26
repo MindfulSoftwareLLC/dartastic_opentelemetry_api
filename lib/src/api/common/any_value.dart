@@ -5,8 +5,6 @@ import 'dart:collection';
 import 'dart:convert';
 import 'dart:typed_data';
 
-// UnmodifiableListView comes from dart:collection above; package:collection is
-// narrowed so it is not silently supplied by that package's re-export.
 import 'package:collection/collection.dart' show DeepCollectionEquality;
 import 'package:meta/meta.dart';
 
@@ -15,12 +13,8 @@ import '../../util/otel_error_handler.dart';
 /// Represents a value of any type supported by the OpenTelemetry specification.
 @immutable
 sealed class AnyValue {
-  // The spec allows arbitrary nesting; this is a guard against cyclic or
-  // runaway structures, not a spec value. A nested map costs three protobuf
-  // messages per level (AnyValue, KeyValueList, KeyValue), and the Java and
-  // C++ protobuf runtimes reject messages nested past 100, so 32 is about
-  // the deepest map such a backend can decode.
-  static const int _maxDepth = 32;
+  // API safety guard for runaway nesting. The SDK owns configurable limits.
+  static const int _maxDepth = 128;
 
   // Stored in the per-conversion identity set to report a depth failure once.
   static final Object _depthReported = Object();
@@ -28,62 +22,35 @@ sealed class AnyValue {
   /// Const constructor for subclasses.
   const AnyValue();
 
-  /// Recursively converts this value back into plain Dart objects.
+  /// Converts this value to plain Dart objects, retaining raw bytes and doubles.
   ///
-  /// Arrays become `List<Object?>` and maps become `Map<String, Object?>`,
-  /// with every nested [AnyValue] unwrapped in turn. Bytes are returned as the
-  /// raw `List<int>`.
-  ///
-  /// Reports via [OTelErrorHandling] and returns null if the value nests more
-  /// than 32 levels deep.
-  Object? unwrap() => _unwrap(0);
-
-  Object? _unwrap(int depth) {
-    if (depth >= _maxDepth && this is! AnyValueNull) {
-      OTelErrorHandling.report(ArgumentError(
-          'AnyValue nesting exceeds the maximum depth of $_maxDepth'));
-      return null;
-    }
-    return switch (this) {
-      AnyValueNull() => null,
-      AnyValueString(value: final v) => v,
-      AnyValueBool(value: final v) => v,
-      AnyValueInt(value: final v) => v,
-      AnyValueDouble(value: final v) => v,
-      AnyValueArray(value: final v) =>
-        v.map((e) => e._unwrap(depth + 1)).toList(),
-      AnyValueMap(value: final v) =>
-        v.map((k, val) => MapEntry(k, val._unwrap(depth + 1))),
-      AnyValueBytes(value: final v) => v,
-    };
-  }
-
-  /// Converts this value to plain Dart objects for debugging and in-process use.
-  ///
-  /// This delegates to [unwrap]. For JSON-compatible non-OTLP encoding,
-  /// including bytes and non-finite doubles, use [toJsonValue].
-  Object? toJson() => unwrap();
+  /// Containers beyond the safety limit are replaced with null. Reports once
+  /// per call through [OTelErrorHandling]. A custom handler may throw.
+  Object? toObject() => _convert(json: false);
 
   /// Returns a JSON-compatible value for non-OTLP protocols.
   ///
   /// Bytes become base64 strings, non-finite doubles become `NaN`, `Infinity`,
   /// or `-Infinity` strings, and empty values become null. Arrays and maps
-  /// apply these rules recursively. Unlike [toJson], the result can be passed
+  /// apply these rules recursively. The result can be passed
   /// directly to [jsonEncode]. This is not the tagged OTLP/JSON encoding.
   ///
   /// This representation is lossy: decoding cannot distinguish bytes from
   /// strings, and a receiver may lose precision for large numbers.
-  /// Values at depth 32 (root depth 0) are replaced with null, with one report
+  /// Containers beyond 128 levels are replaced with null, with one report
   /// through [OTelErrorHandling] per call. A throwing error handler propagates.
   /// See https://opentelemetry.io/docs/specs/otel/common/#arrays.
-  Object? toJsonValue() {
+  Object? toJson() => _convert(json: true);
+
+  Object? _convert({required bool json}) {
     var depthReported = false;
     Object? convert(AnyValue value, int depth) {
-      if (depth >= _maxDepth && value is! AnyValueNull) {
+      if (depth >= _maxDepth &&
+          (value is AnyValueArray || value is AnyValueMap)) {
         if (!depthReported) {
           depthReported = true;
           OTelErrorHandling.report(ArgumentError(
-              'AnyValue JSON nesting exceeds the maximum depth of $_maxDepth'));
+              'AnyValue nesting exceeds the maximum depth of $_maxDepth'));
         }
         return null;
       }
@@ -92,8 +59,9 @@ sealed class AnyValue {
         AnyValueString(value: final v) => v,
         AnyValueBool(value: final v) => v,
         AnyValueInt(value: final v) => v,
-        AnyValueDouble(value: final v) => v.isFinite ? v : v.toString(),
-        AnyValueBytes(value: final v) => base64Encode(v),
+        AnyValueDouble(value: final v) =>
+          json && !v.isFinite ? v.toString() : v,
+        AnyValueBytes(value: final v) => json ? base64Encode(v) : v,
         AnyValueArray(value: final v) =>
           v.map((item) => convert(item, depth + 1)).toList(),
         AnyValueMap(value: final v) =>
@@ -104,25 +72,11 @@ sealed class AnyValue {
     return convert(this, 0);
   }
 
-  /// Encodes this value as a string for non-OTLP protocols.
-  ///
-  /// Standalone strings, base64 bytes and non-finite numbers are unquoted;
-  /// an empty value becomes the empty string. Arrays and maps are JSON,
-  /// using [toJsonValue] for their elements. The same depth guard applies.
-  /// This is not necessarily valid standalone JSON and is not OTLP/JSON.
-  /// See https://opentelemetry.io/docs/specs/otel/common/#anyvalue-representation-for-non-otlp-protocols.
-  String toNonOtlpString() {
-    final converted = toJsonValue();
-    if (converted == null) return '';
-    if (converted is String) return converted;
-    return jsonEncode(converted);
-  }
-
   /// A readable rendering of this value, for debuggers and error messages.
   ///
   /// Bounded in both directions, because `toString` runs in exactly the places
   /// (a debugger, an error message) where an exception or a megabyte of
-  /// output is least welcome. Unlike [unwrap] it never throws: nesting past 32
+  /// output is least welcome. This rendering does not report errors: nesting past 128
   /// levels renders as `...`. Bytes render as `<N bytes>` rather than their
   /// contents, since the length is what you want when debugging and the
   /// individual values almost never are.
@@ -169,44 +123,8 @@ sealed class AnyValue {
   /// Creates an AnyValue from a Map of String to AnyValue.
   factory AnyValue.fromMap(Map<String, AnyValue> value) = AnyValueMap;
 
-  /// Creates an AnyValue from a byte array.
-  ///
-  /// Every element must be in the range 0-255. If an element is out of range,
-  /// or the list cannot be read, the error is reported via [OTelErrorHandling]
-  /// and [AnyValueNull] is returned.
-  factory AnyValue.fromBytes(List<int> value) {
-    var hasInvalidElement = false;
-    AnyValueBytes? result;
-    try {
-      if (value is Uint8List) {
-        result = AnyValueBytes._(value);
-      } else {
-        final validated = <int>[];
-        for (final byte in value) {
-          if (byte < 0 || byte > 255) {
-            hasInvalidElement = true;
-            break;
-          }
-          validated.add(byte);
-        }
-        if (!hasInvalidElement) {
-          // Copy from the values that were validated, rather than iterating a
-          // caller-defined List twice and allowing it to change between reads.
-          result = AnyValueBytes._(validated);
-        }
-      }
-    } catch (_) {
-      OTelErrorHandling.report(ArgumentError(
-          'AnyValue.fromBytes could not read the byte list; using an empty value.'));
-      return const AnyValueNull();
-    }
-    if (hasInvalidElement) {
-      OTelErrorHandling.report(ArgumentError(
-          'AnyValue.fromBytes elements must be in the range 0-255; using an empty value.'));
-      return const AnyValueNull();
-    }
-    return result!;
-  }
+  /// Creates an immutable byte value by copying the supplied bytes.
+  static AnyValueBytes fromBytes(Uint8List value) => AnyValueBytes._(value);
 
   /// Creates the null AnyValue.
   factory AnyValue.nullValue() = AnyValueNull;
@@ -239,7 +157,7 @@ sealed class AnyValue {
   ///
   /// Reports failures without throwing under the default error handler. A
   /// user-installed error handler may deliberately throw. Nesting deeper than
-  /// 32 levels (reported once per conversion) or cyclic collection
+  /// 128 levels (reported once per conversion) or cyclic collection
   /// references are reported through [OTelErrorHandling] and that subtree
   /// becomes [AnyValueNull].
   factory AnyValue.fromObject(Object? obj) =>
@@ -253,7 +171,8 @@ sealed class AnyValue {
 
   static AnyValue _fromObject(Object? obj, int depth, Set<Object> path,
       {bool preserveDouble = false}) {
-    if (depth >= _maxDepth) {
+    if (depth >= _maxDepth &&
+        (obj is Map || (obj is Iterable && obj is! Uint8List))) {
       if (path.add(_depthReported)) {
         OTelErrorHandling.report(ArgumentError(
             'AnyValue nesting exceeds the maximum depth of $_maxDepth'));
@@ -493,28 +412,15 @@ class AnyValueMap extends AnyValue {
       const DeepCollectionEquality().equals(value, other.value);
 }
 
-/// An [AnyValue] holding raw bytes.
+/// An [AnyValue] holding an immutable copy of raw bytes.
 ///
-/// [value], [unwrap] and [toJson] all return the raw `List<int>`; encoding it
-/// for a wire format is the exporter's job.
-///
-/// Note that [value] is an unmodifiable view rather than a [Uint8List], so
-/// `AnyValue.fromObject(bytes.unwrap())` yields an [AnyValueArray] of
-/// [AnyValueInt] rather than an [AnyValueBytes].
+/// [toObject] retains the byte type. [toJson] encodes the bytes as base64.
 class AnyValueBytes extends AnyValue {
   /// The wrapped bytes, which are unmodifiable.
-  ///
-  /// Every element is in the range 0-255. Backed by a [Uint8List] rather than
-  /// `List.unmodifiable`, which
-  /// would box every element: bytes carry blobs, so a 1 MB payload would
-  /// otherwise become a million boxed ints.
-  final List<int> value;
+  final Uint8List value;
 
-  // Byte construction is routed through AnyValue.fromBytes so invalid input
-  // can be reported and degraded without exposing a throwing constructor.
-  AnyValueBytes._(List<int> value)
-      : value = UnmodifiableListView<int>(Uint8List.fromList(value));
-
+  AnyValueBytes._(Uint8List value)
+      : value = Uint8List.fromList(value).asUnmodifiableView();
   // Deep hashing walks the whole payload, which for bytes may be large, and
   // this value is immutable, so compute it once on first use.
   late final int _hashCode = const DeepCollectionEquality().hash(value);

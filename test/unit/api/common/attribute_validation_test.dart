@@ -257,7 +257,7 @@ void _attributeValueDataModelTests() {
       });
       final value = attrs.toMap()['context']!.value as AnyValueMap;
       expect(value.value['nested'], equals(const AnyValueBool(true)));
-      expect(value.unwrap(), equals({'nested': true}));
+      expect(value.toObject(), equals({'nested': true}));
     });
 
     test('a bytes value is stored and readable', () {
@@ -267,7 +267,7 @@ void _attributeValueDataModelTests() {
       final attrs = Attributes.of({
         'b': Uint8List.fromList([1, 2, 3])
       });
-      expect(attrs.toMap()['b']!.value.unwrap(), equals([1, 2, 3]));
+      expect(attrs.toMap()['b']!.value.toObject(), equals([1, 2, 3]));
     });
 
     test('a nested array value is stored and readable', () {
@@ -285,7 +285,7 @@ void _attributeValueDataModelTests() {
         ],
       });
       expect(
-          attrs.toMap()['matrix']!.value.unwrap(),
+          attrs.toMap()['matrix']!.value.toObject(),
           equals([
             [1, 2],
             [3],
@@ -299,7 +299,8 @@ void _attributeValueDataModelTests() {
       final attrs = Attributes.of({
         'mixed': [1, 'two', true],
       });
-      expect(attrs.toMap()['mixed']!.value.unwrap(), equals([1, 'two', true]));
+      expect(
+          attrs.toMap()['mixed']!.value.toObject(), equals([1, 'two', true]));
     });
 
     test('an array containing null is stored, preserving the null', () {
@@ -311,14 +312,15 @@ void _attributeValueDataModelTests() {
       final attrs = Attributes.of({
         'sparse': <Object?>['a', null, 'c'],
       });
-      expect(attrs.toMap()['sparse']!.value.unwrap(), equals(['a', null, 'c']));
+      expect(
+          attrs.toMap()['sparse']!.value.toObject(), equals(['a', null, 'c']));
     });
 
     test('a null value is stored as AnyValueNull by both paths', () {
       expectStoredByBothPaths('null', null, isA<AnyValueNull>());
 
-      expect(Attributes.of({'n': null}).toMap()['n']!.value.unwrap(), isNull);
-      expect(Attributes.fromJson({'n': null}).toMap()['n']!.value.unwrap(),
+      expect(Attributes.of({'n': null}).toMap()['n']!.value.toObject(), isNull);
+      expect(Attributes.fromJson({'n': null}).toMap()['n']!.value.toObject(),
           isNull);
     });
 
@@ -355,14 +357,14 @@ void _attributeValueDataModelTests() {
     });
 
     test('a wrapped value nested in a map keeps its type', () {
-      final bytes = AnyValue.fromBytes([1, 2]) as AnyValueBytes;
+      final bytes = AnyValue.fromBytes(Uint8List.fromList([1, 2]));
       final attrs = Attributes.of({
         'wrapper': {'payload': bytes, 'n': const AnyValueInt(7)},
       });
 
       final map = attrs.toMap()['wrapper']!.value as AnyValueMap;
       expect(identical(map.value['payload'], bytes), isTrue);
-      expect(map.value['payload']!.unwrap(), equals([1, 2]));
+      expect(map.value['payload']!.toObject(), equals([1, 2]));
       expect(map.value['n'], equals(const AnyValueInt(7)));
       expect(reported, isEmpty);
     });

@@ -11,7 +11,7 @@ import 'package:dartastic_opentelemetry_api/src/api/otel_api.dart';
 import 'package:test/test.dart';
 
 AnyValueBytes _bytes(List<int> value) =>
-    AnyValue.fromBytes(value) as AnyValueBytes;
+    AnyValue.fromBytes(Uint8List.fromList(value));
 
 void main() {
   group('attribute', () {
@@ -25,17 +25,18 @@ void main() {
     });
 
     group('AnyValue tests', () {
-      test('unwrap handles all AnyValue types', () {
-        expect(AnyValue.nullValue().unwrap(), isNull);
-        expect(AnyValue.fromString('test').unwrap(), equals('test'));
-        expect(AnyValue.fromBool(true).unwrap(), equals(true));
-        expect(AnyValue.fromInt(42).unwrap(), equals(42));
-        expect(AnyValue.fromDouble(3.14).unwrap(), equals(3.14));
-        expect(AnyValue.fromList([AnyValue.fromString('x')]).unwrap(),
+      test('toObject handles all AnyValue types', () {
+        expect(AnyValue.nullValue().toObject(), isNull);
+        expect(AnyValue.fromString('test').toObject(), equals('test'));
+        expect(AnyValue.fromBool(true).toObject(), equals(true));
+        expect(AnyValue.fromInt(42).toObject(), equals(42));
+        expect(AnyValue.fromDouble(3.14).toObject(), equals(3.14));
+        expect(AnyValue.fromList([AnyValue.fromString('x')]).toObject(),
             equals(['x']));
-        expect(AnyValue.fromMap({'k': AnyValue.fromInt(1)}).unwrap(),
+        expect(AnyValue.fromMap({'k': AnyValue.fromInt(1)}).toObject(),
             equals({'k': 1}));
-        expect(AnyValue.fromBytes([0, 1]).unwrap(), equals([0, 1]));
+        expect(AnyValue.fromBytes(Uint8List.fromList([0, 1])).toObject(),
+            equals([0, 1]));
       });
 
       test('toJson is implemented', () {
@@ -46,7 +47,7 @@ void main() {
       test('fromObject stringifies non-String map keys', () {
         final val = AnyValue.fromObject({1: 'val'}) as AnyValueMap;
         expect(val.value.keys.first, equals('1'));
-        expect(val.value['1']!.unwrap(), equals('val'));
+        expect(val.value['1']!.toObject(), equals('val'));
       });
 
       test('fromObject reports map key collisions after stringification', () {
@@ -58,7 +59,7 @@ void main() {
         expect(reported, hasLength(1));
         expect(reported.single, isA<ArgumentError>());
         // The second entry overwrites the first.
-        expect(val.value['1']!.unwrap(), equals('b'));
+        expect(val.value['1']!.toObject(), equals('b'));
         expect(val.value, hasLength(1));
       });
 
@@ -105,8 +106,8 @@ void main() {
         expect(mapVal1, equals(mapVal2));
         expect(mapVal1.hashCode, equals(mapVal2.hashCode));
 
-        final bytesVal1 = AnyValue.fromBytes([1, 2]);
-        final bytesVal2 = AnyValue.fromBytes([1, 2]);
+        final bytesVal1 = AnyValue.fromBytes(Uint8List.fromList([1, 2]));
+        final bytesVal2 = AnyValue.fromBytes(Uint8List.fromList([1, 2]));
         expect(bytesVal1, equals(bytesVal2));
         expect(bytesVal1.hashCode, equals(bytesVal2.hashCode));
 
@@ -121,7 +122,7 @@ void main() {
       test('fromObject maps Uint8List to AnyValueBytes, not an int array', () {
         final value = AnyValue.fromObject(Uint8List.fromList([1, 2, 3]));
         expect(value, isA<AnyValueBytes>());
-        expect(value.unwrap(), equals([1, 2, 3]));
+        expect(value.toObject(), equals([1, 2, 3]));
       });
 
       test('fromObject still maps a plain List<int> to an array', () {
@@ -138,36 +139,34 @@ void main() {
         expect(value.value['payload'], isA<AnyValueBytes>());
       });
 
-      test('unwrap still returns the raw bytes', () {
-        expect(AnyValue.fromBytes([1, 2, 3]).unwrap(), equals([1, 2, 3]));
+      test('toObject still returns the raw bytes', () {
+        expect(AnyValue.fromBytes(Uint8List.fromList([1, 2, 3])).toObject(),
+            equals([1, 2, 3]));
       });
 
-      test('toJson returns the raw bytes, same as unwrap', () {
-        // Not base64: toJson emits plain Dart objects and List<int> is
-        // JSON-encodable. The tagged OTLP wire encoding is the exporter's.
+      test('toJson encodes bytes as base64', () {
         final bytes = [0, 1, 2, 250, 255];
-        final value = AnyValue.fromBytes(bytes);
-        expect(value.toJson(), equals(bytes));
-        expect(value.toJson(), equals(value.unwrap()));
+        final value = AnyValue.fromBytes(Uint8List.fromList(bytes));
+        expect(value.toJson(), 'AAEC+v8=');
       });
 
-      test('toJson returns raw bytes when nested too', () {
+      test('toJson encodes nested bytes as base64', () {
         final value = AnyValueMap({
           'payload': _bytes([1, 2, 3])
         });
         expect(
             value.toJson(),
             equals({
-              'payload': [1, 2, 3],
+              'payload': 'AQID',
             }));
       });
 
-      test('unwrap returns raw bytes at every nesting depth', () {
+      test('toObject returns raw bytes at every nesting depth', () {
         final map = AnyValueMap({
           'payload': _bytes([1, 2, 3])
         });
         expect(
-            map.unwrap(),
+            map.toObject(),
             equals({
               'payload': [1, 2, 3],
             }));
@@ -176,7 +175,7 @@ void main() {
           _bytes([1, 2, 3]),
         ]);
         expect(
-            array.unwrap(),
+            array.toObject(),
             equals([
               [1, 2, 3],
             ]));
@@ -187,7 +186,7 @@ void main() {
           }),
         ]);
         expect(
-            nested.unwrap(),
+            nested.toObject(),
             equals([
               {
                 'payload': [1, 2, 3],
@@ -195,46 +194,10 @@ void main() {
             ]));
       });
 
-      test(
-          'fromBytes rejects out-of-range elements with a report and returns AnyValueNull',
-          () {
-        final reported = <Object>[];
-        OTelAPI.setErrorHandler((error, _) => reported.add(error));
-        addTearDown(() => OTelAPI.setErrorHandler(null));
-
-        final result256 = AnyValue.fromBytes([256]);
-        expect(result256, isA<AnyValueNull>());
-        expect(reported, hasLength(1));
-        expect(reported.first, isA<ArgumentError>());
-
-        final resultNeg = AnyValue.fromBytes([-1]);
-        expect(resultNeg, isA<AnyValueNull>());
-        expect(reported, hasLength(2));
-        expect(reported.last, isA<ArgumentError>());
-      });
-
-      test('fromBytes reports an unreadable list and returns AnyValueNull', () {
-        final reported = <Object>[];
-        OTelAPI.setErrorHandler((error, _) => reported.add(error));
-        addTearDown(() => OTelAPI.setErrorHandler(null));
-
-        final result = AnyValue.fromBytes(_ThrowingByteList());
-
-        expect(result, isA<AnyValueNull>());
-        expect(reported, hasLength(1));
-        expect(reported.single, isA<ArgumentError>());
-      });
-
-      test('fromBytes copies the same values it validates', () {
-        final result = AnyValue.fromBytes(_ChangingByteList());
-
-        expect(result, isA<AnyValueBytes>());
-        expect(result.unwrap(), equals([1]));
-      });
-
       test('the boundary values 0 and 255 are accepted', () {
         expect(_bytes([0, 255]).value, equals([0, 255]));
-        expect(AnyValue.fromBytes([0, 255]), isA<AnyValueBytes>());
+        expect(AnyValue.fromBytes(Uint8List.fromList([0, 255])),
+            isA<AnyValueBytes>());
       });
 
       test('a Uint8List is accepted', () {
@@ -258,12 +221,12 @@ void main() {
         expect(attrs.getString('good'), equals('kept'));
       });
 
-      test('toJson leaves non-bytes values identical to unwrap', () {
+      test('toJson leaves non-bytes values identical to toObject', () {
         final value = AnyValueMap({
           'a': const AnyValueInt(1),
           'b': AnyValueArray([const AnyValueString('x')]),
         });
-        expect(value.toJson(), equals(value.unwrap()));
+        expect(value.toJson(), equals(value.toObject()));
       });
     });
 
@@ -295,15 +258,15 @@ void main() {
       });
 
       test('AnyValueBytes copies the caller list and is unmodifiable', () {
-        final source = <int>[1, 2];
-        final value = _bytes(source);
+        final source = Uint8List.fromList([1, 2]);
+        final value = AnyValue.fromBytes(source);
         final hashBefore = value.hashCode;
 
-        source.add(3);
+        source[0] = 3;
 
         expect(value.value, equals([1, 2]));
         expect(value.hashCode, equals(hashBefore));
-        expect(() => value.value.add(4), throwsUnsupportedError);
+        expect(() => value.value[0] = 4, throwsUnsupportedError);
       });
 
       test('a mutated source list does not corrupt Set membership', () {
@@ -320,7 +283,7 @@ void main() {
 
     group('AnyValue depth guard', () {
       // Mirrors AnyValue._maxDepth, which is private.
-      const maxDepth = 32;
+      const maxDepth = 128;
 
       // Each helper builds a spine of exactly [levels] values: `levels - 1`
       // nested containers wrapped around a leaf, so the boundary can be
@@ -354,12 +317,12 @@ void main() {
             () => AnyValue.fromObject(nestedList(maxDepth)), returnsNormally);
       });
 
-      test('fromObject reports at maxDepth + 1 levels of lists', () {
+      test('fromObject reports at maxDepth + 2 levels of lists', () {
         final reported = <Object>[];
         OTelAPI.setErrorHandler((error, stackTrace) => reported.add(error));
         addTearDown(() => OTelAPI.setErrorHandler(null));
 
-        final result = AnyValue.fromObject(nestedList(maxDepth + 1));
+        final result = AnyValue.fromObject(nestedList(maxDepth + 2));
 
         expect(reported, hasLength(1));
         expect(reported.single, isA<ArgumentError>());
@@ -374,12 +337,12 @@ void main() {
         expect(() => AnyValue.fromObject(nestedMap(maxDepth)), returnsNormally);
       });
 
-      test('fromObject reports at maxDepth + 1 levels of maps', () {
+      test('fromObject reports at maxDepth + 2 levels of maps', () {
         final reported = <Object>[];
         OTelAPI.setErrorHandler((error, stackTrace) => reported.add(error));
         addTearDown(() => OTelAPI.setErrorHandler(null));
 
-        final result = AnyValue.fromObject(nestedMap(maxDepth + 1));
+        final result = AnyValue.fromObject(nestedMap(maxDepth + 2));
 
         expect(reported, hasLength(1));
         expect(reported.single, isA<ArgumentError>());
@@ -390,16 +353,16 @@ void main() {
         expect(curr, isA<AnyValueNull>());
       });
 
-      test('unwrap accepts exactly maxDepth levels', () {
-        expect(nestedArray(maxDepth).unwrap, returnsNormally);
+      test('toObject accepts exactly maxDepth levels', () {
+        expect(nestedArray(maxDepth).toObject, returnsNormally);
       });
 
-      test('unwrap reports at maxDepth + 1 levels', () {
+      test('toObject reports at maxDepth + 2 levels', () {
         final reported = <Object>[];
         OTelAPI.setErrorHandler((error, stackTrace) => reported.add(error));
         addTearDown(() => OTelAPI.setErrorHandler(null));
 
-        final unwrapped = nestedArray(maxDepth + 1).unwrap();
+        final unwrapped = nestedArray(maxDepth + 2).toObject();
 
         expect(reported, hasLength(1));
         expect(reported.single, isA<ArgumentError>());
@@ -413,7 +376,7 @@ void main() {
       // toString must never throw: it runs in debuggers and error messages,
       // where an exception is worse than a truncated rendering.
       test('toString truncates instead of throwing on a deep value', () {
-        final deep = nestedArray(100);
+        final deep = nestedArray(130);
         expect(deep.toString, returnsNormally);
         expect(deep.toString(), contains('...'));
       });
@@ -465,7 +428,7 @@ void main() {
 
       test('attrsFromMap reports rather than throws on excessive nesting', () {
         final attrs = Attributes.of({
-          'deep': nestedList(maxDepth + 1),
+          'deep': nestedList(maxDepth + 2),
           'good': 'kept',
         });
         expect(attrs.getString('good'), equals('kept'));
@@ -599,13 +562,13 @@ void main() {
         expect(reported, isEmpty);
       });
 
-      test('depth 33 nesting still gives exactly one report', () {
+      test('depth 130 nesting still gives exactly one report', () {
         final reported = <Object>[];
         OTelAPI.setErrorHandler((error, _) => reported.add(error));
         addTearDown(() => OTelAPI.setErrorHandler(null));
 
         Object current = 'leaf';
-        for (var i = 1; i < 33; i++) {
+        for (var i = 1; i < 130; i++) {
           current = <Object>[current];
         }
 
@@ -617,14 +580,14 @@ void main() {
 
     group('AnyValue _unwrap depth guard re-report fix (Item 2)', () {
       test(
-          'Attributes.of nested(33) then create + toJson + toString + toJson produces 1 report in total',
+          'Attributes.of nested(130) then create + toJson + toString + toJson produces 1 report in total',
           () {
         final reported = <Object>[];
         OTelAPI.setErrorHandler((error, _) => reported.add(error));
         addTearDown(() => OTelAPI.setErrorHandler(null));
 
         Object current = 'leaf';
-        for (var i = 1; i < 33; i++) {
+        for (var i = 1; i < 130; i++) {
           current = <Object>[current];
         }
 
@@ -646,14 +609,15 @@ void main() {
       test('Set becomes AnyValueArray', () {
         final result = AnyValue.fromObject({'a', 'b'});
         expect(result, isA<AnyValueArray>());
-        expect((result as AnyValueArray).value.map((e) => e.unwrap()).toSet(),
+        expect((result as AnyValueArray).value.map((e) => e.toObject()).toSet(),
             equals({'a', 'b'}));
       });
 
       test('lazy map(...) iterable becomes AnyValueArray', () {
         final result = AnyValue.fromObject([1, 2].map((e) => e * 2));
         expect(result, isA<AnyValueArray>());
-        expect((result as AnyValueArray).value.map((e) => e.unwrap()).toList(),
+        expect(
+            (result as AnyValueArray).value.map((e) => e.toObject()).toList(),
             equals([2, 4]));
       });
 
@@ -667,7 +631,7 @@ void main() {
         expect(
             (map.value['s'] as AnyValueArray)
                 .value
-                .map((e) => e.unwrap())
+                .map((e) => e.toObject())
                 .toSet(),
             equals({1, 2}));
       });
@@ -694,7 +658,7 @@ void main() {
       test('Map still gives AnyValueMap', () {
         final result = AnyValue.fromObject({'k': 'v'});
         expect(result, isA<AnyValueMap>());
-        expect((result as AnyValueMap).value['k']?.unwrap(), equals('v'));
+        expect((result as AnyValueMap).value['k']?.toObject(), equals('v'));
       });
 
       test('sync* generator that throws returns AnyValueNull and reports once',
@@ -911,38 +875,6 @@ class _ThrowingIterable extends Iterable<int> {
 
   @override
   String toString() => throw StateError('toString error');
-}
-
-class _ThrowingByteList extends ListBase<int> {
-  @override
-  int get length => throw StateError('length error');
-
-  @override
-  set length(int value) => throw UnsupportedError('read only');
-
-  @override
-  int operator [](int index) => throw StateError('index error');
-
-  @override
-  void operator []=(int index, int value) =>
-      throw UnsupportedError('read only');
-}
-
-class _ChangingByteList extends ListBase<int> {
-  var _reads = 0;
-
-  @override
-  int get length => 1;
-
-  @override
-  set length(int value) => throw UnsupportedError('read only');
-
-  @override
-  int operator [](int index) => _reads++ == 0 ? 1 : 300;
-
-  @override
-  void operator []=(int index, int value) =>
-      throw UnsupportedError('read only');
 }
 
 class _ThrowingMap extends MapBase<String, Object?> {

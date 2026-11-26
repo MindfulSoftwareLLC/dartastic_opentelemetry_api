@@ -96,9 +96,9 @@ void main() {
 
       expect(logger, isNotNull);
       expect(logger.attributes, isNotNull);
-      expect(logger.attributes?.toMap()['library.name']?.value.unwrap(),
+      expect(logger.attributes?.toMap()['library.name']?.value.toObject(),
           equals('test-logger'));
-      expect(logger.attributes?.toMap()['library.language']?.value.unwrap(),
+      expect(logger.attributes?.toMap()['library.language']?.value.toObject(),
           equals('dart'));
     });
 
@@ -295,7 +295,7 @@ void main() {
     test('bodyToAnyValue stringifies a non-String map key', () {
       final val = APILogger.bodyToAnyValue({1: 'v'}) as AnyValueMap;
       expect(val.value.keys.first, equals('1'));
-      expect(val.value['1']!.unwrap(), equals('v'));
+      expect(val.value['1']!.toObject(), equals('v'));
     });
 
     test('bodyToAnyValue converts a plain value', () {

@@ -99,10 +99,10 @@ void main() {
       span.attributes = attrs;
 
       final spanAttrs = getReadableSpan(span).attributes.toMap();
-      expect(spanAttrs['string.key']?.value.unwrap(), equals('value'));
-      expect(spanAttrs['int.key']?.value.unwrap(), equals(42));
-      expect(spanAttrs['bool.key']?.value.unwrap(), equals(true));
-      expect(spanAttrs['double.key']?.value.unwrap(), equals(3.14));
+      expect(spanAttrs['string.key']?.value.toObject(), equals('value'));
+      expect(spanAttrs['int.key']?.value.toObject(), equals(42));
+      expect(spanAttrs['bool.key']?.value.toObject(), equals(true));
+      expect(spanAttrs['double.key']?.value.toObject(), equals(3.14));
     });
 
     test('handles attribute type-specific setters', () {
@@ -224,7 +224,7 @@ void main() {
       // bracketing assertion is exact on every platform. On Dart-on-JS /
       // Wasm, `tracer.timeProvider` is `WebTimeProvider` (sub-ms via
       // `performance.now`) while `DateTime.now` is `Date.now` (ms-
-      // truncated) — bracketing with `DateTime.now` would let the event
+      // truncated) â€” bracketing with `DateTime.now` would let the event
       // timestamp fall up to ~1ms past `afterCreation`.
       final beforeCreation = tracer.timeProvider.nowDateTime();
       span.addEventNow(
@@ -239,7 +239,7 @@ void main() {
       final event = events?.first;
       expect(event?.name, equals('test-event'));
 
-      expect(event?.attributes?.toMap()['event.key']?.value.unwrap(),
+      expect(event?.attributes?.toMap()['event.key']?.value.toObject(),
           equals('value'));
       expect(event?.timestamp, IsBetween(beforeCreation, afterCreation));
     });
@@ -303,8 +303,9 @@ void main() {
       final typeKey = 'exception.type';
       final msgKey = 'exception.message';
 
-      expect(eventAttrs[typeKey]?.value.unwrap(), contains('Exception'));
-      expect(eventAttrs[msgKey]?.value.unwrap(), equals(exception.toString()));
+      expect(eventAttrs[typeKey]?.value.toObject(), contains('Exception'));
+      expect(
+          eventAttrs[msgKey]?.value.toObject(), equals(exception.toString()));
     });
 
     test('recordException with custom attributes', () {
@@ -320,9 +321,9 @@ void main() {
       final eventAttrs = events?.first.attributes?.toMap() ?? {};
 
       // Should contain both standard exception attributes and custom ones
-      expect(
-          eventAttrs['exception.type']?.value.unwrap(), contains('Exception'));
-      expect(eventAttrs['custom']?.value.unwrap(), equals('attribute'));
+      expect(eventAttrs['exception.type']?.value.toObject(),
+          contains('Exception'));
+      expect(eventAttrs['custom']?.value.toObject(), equals('attribute'));
     });
 
     test('recordException with escaped string', () {
@@ -336,7 +337,7 @@ void main() {
       final eventAttrs = events?.first.attributes?.toMap() ?? {};
 
       // Should contain the full message with escaping preserved
-      expect(eventAttrs['exception.message']?.value.unwrap(),
+      expect(eventAttrs['exception.message']?.value.toObject(),
           equals(exception.toString()));
     });
 

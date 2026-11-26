@@ -11,30 +11,6 @@ void main() {
   setUp(OTelAPI.reset);
   tearDown(OTelAPI.reset);
 
-  test('standalone values follow non-OTLP rules without JSON quoting', () {
-    final cases = <AnyValue, String>{
-      const AnyValueString('hello "world"\n'): 'hello "world"\n',
-      const AnyValueString(''): '',
-      const AnyValueNull(): '',
-      const AnyValueBool(true): 'true',
-      const AnyValueBool(false): 'false',
-      const AnyValueInt(-123): '-123',
-      const AnyValueInt(0): '0',
-      const AnyValueDouble(2.5): '2.5',
-      const AnyValueDouble(double.nan): 'NaN',
-      const AnyValueDouble(double.infinity): 'Infinity',
-      const AnyValueDouble(double.negativeInfinity): '-Infinity',
-      AnyValue.fromBytes([104, 105]): 'aGk=',
-      AnyValue.fromBytes([]): '',
-      AnyValueArray([]): '[]',
-      AnyValueMap({}): '{}',
-    };
-    for (final entry in cases.entries) {
-      expect(entry.key.toNonOtlpString(), entry.value);
-      expect(() => jsonEncode(entry.key.toJsonValue()), returnsNormally);
-    }
-  });
-
   test('nested values and escaped keys produce valid JSON', () {
     final input = <String, Object?>{
       'key"\\\n': ['a"b\\c\n\t', true, false, 0, -123, 2.5, null],
@@ -51,56 +27,61 @@ void main() {
     };
     final value = AnyValue.fromObject(input);
     final attributes = OTelAPI.attributesFromMap(input);
-    expect(value.toJsonValue(), expected);
-    expect(jsonDecode(value.toNonOtlpString()), expected);
-    expect(attributes.toJsonValue(), expected);
-    expect(jsonDecode(attributes.toNonOtlpString()), expected);
-    expect(attributes.toMap()['bytes']!.toNonOtlpString(), '{"bytes":"aGk="}');
-    expect(attributes.toMap()['special']!.toJsonValue(), {
+    expect(value.toJson(), expected);
+    expect(jsonDecode(jsonEncode(value)), expected);
+    expect(attributes.toJson(), expected);
+    expect(jsonDecode(jsonEncode(attributes)), expected);
+    expect(jsonEncode(attributes.toMap()['bytes']!), '{"bytes":"aGk="}');
+    expect(attributes.toMap()['special']!.toJson(), {
       'special': ['NaN', 'Infinity', '-Infinity']
     });
   });
 
   test('null attributes and empty collections are preserved', () {
     final attributes = OTelAPI.attributesFromMap({'null': null});
-    expect(attributes.toNonOtlpString(), '{"null":null}');
-    expect(attributes.toList().single.toNonOtlpString(), '{"null":null}');
-    expect(OTelAPI.attributesFromMap({}).toNonOtlpString(), '{}');
+    expect(jsonEncode(attributes), '{"null":null}');
+    expect(jsonEncode(attributes.toList().single), '{"null":null}');
+    expect(jsonEncode(OTelAPI.attributesFromMap({})), '{}');
   });
 
-  test('plain Dart unwrap behavior stays unchanged', () {
-    final value = AnyValue.fromBytes([104, 105]);
-    expect(value.toJson(), [104, 105]);
-    expect(value.toJsonValue(), 'aGk=');
-    final attributes = OTelAPI.attributesFromMap({'b': value, 'x': double.nan});
-    expect(attributes.toJson()['b'], [104, 105]);
-    expect((attributes.toJson()['x'] as double).isNaN, isTrue);
-    expect(attributes.toJsonValue(), {'b': 'aGk=', 'x': 'NaN'});
+  test('toObject retains native data while toJson encodes it', () {
+    final bytes = AnyValue.fromBytes(Uint8List.fromList([104, 105]));
+    const nan = AnyValueDouble(double.nan);
+    expect(bytes.toObject(), isA<Uint8List>());
+    expect(bytes.toObject(), [104, 105]);
+    expect(AnyValue.fromObject(bytes.toObject()), bytes);
+    expect((nan.toObject() as double).isNaN, isTrue);
+    final attributes = OTelAPI.attributesFromMap({'b': bytes, 'x': nan});
+    expect(jsonDecode(jsonEncode(attributes)), {'b': 'aGk=', 'x': 'NaN'});
+    final restored = Attributes.fromJson(attributes.toJson());
+    expect(restored.getString('b'), 'aGk=');
+    expect(restored.getString('x'), 'NaN');
   });
 
   for (final maps in [false, true]) {
-    for (final wrappers in [30, 31, 32]) {
+    for (final wrappers in [127, 128]) {
       test('depth $wrappers, maps=$maps reports once and resets per call', () {
         final errors = <Object>[];
         OTelAPI.setErrorHandler((error, stack) => errors.add(error));
-        AnyValue value = AnyValueArray(List.filled(1000, const AnyValueInt(1)));
+        final child = AnyValueArray([const AnyValueInt(2)]);
+        AnyValue value = AnyValueArray([
+          const AnyValueInt(1),
+          ...List.filled(1000, child),
+        ]);
         for (var i = 0; i < wrappers; i++) {
           value = maps ? AnyValueMap({'v': value}) : AnyValueArray([value]);
         }
-        Object? decoded = jsonDecode(value.toNonOtlpString());
+        Object? decoded = jsonDecode(jsonEncode(value));
         for (var i = 0; i < wrappers; i++) {
           decoded = maps
               ? (decoded as Map<String, Object?>)['v']
               : (decoded as List<Object?>)[0];
         }
-        expect(
-            decoded,
-            wrappers == 32
-                ? isNull
-                : List<Object?>.filled(1000, wrappers == 30 ? 1 : null));
-        expect(errors, hasLength(wrappers == 30 ? 0 : 1));
-        value.toJsonValue();
-        expect(errors, hasLength(wrappers == 30 ? 0 : 2));
+        expect(decoded,
+            wrappers == 128 ? isNull : [1, ...List.filled(1000, null)]);
+        expect(errors, hasLength(1));
+        expect(jsonEncode(value.toObject()), jsonEncode(value.toJson()));
+        expect(errors, hasLength(3));
       });
     }
   }
@@ -112,11 +93,11 @@ void main() {
       reports++;
       throw sentinel;
     });
-    AnyValue value = const AnyValueInt(1);
-    for (var i = 0; i < 32; i++) {
+    AnyValue value = AnyValueArray([const AnyValueInt(1)]);
+    for (var i = 0; i < 128; i++) {
       value = AnyValueArray([value]);
     }
-    expect(() => value.toNonOtlpString(), throwsA(same(sentinel)));
+    expect(() => value.toJson(), throwsA(same(sentinel)));
     expect(reports, 1);
   });
 }
