@@ -48,8 +48,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- **BREAKING**: The declared minimum Dart SDK is 3.3 for unmodifiable typed
-  byte views
+- **BREAKING**: The API package now requires Dart 3.3 or later to support
+  unmodifiable typed byte views
   ([#148](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/148)).
 
 - **BREAKING**: `Attributes.toJson()` now emits base64 strings for bytes and
