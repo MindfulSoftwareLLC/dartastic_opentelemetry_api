@@ -3,8 +3,6 @@
 
 library;
 
-import 'dart:convert';
-
 import 'package:collection/collection.dart';
 import 'package:meta/meta.dart';
 import '../../factory/otel_factory.dart';
@@ -353,14 +351,9 @@ class Attributes {
   }
 
   @override
-  String toString() {
-    try {
-      return const JsonEncoder.withIndent('  ').convert(_entries
-          .map((key, attribute) => MapEntry(key, attribute.value.toObject())));
-    } catch (_) {
-      return '{${_entries.entries.map((e) => '${e.key}: ${e.value.value}').join(', ')}}';
-    }
-  }
+  // Use the bounded diagnostic rendering of each AnyValue.
+  String toString() =>
+      '{${_entries.entries.map((e) => '${e.key}: ${e.value.value}').join(', ')}}';
 
   /// Returns a JSON-compatible object for non-OTLP protocols.
   ///

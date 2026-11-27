@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import 'dart:collection';
-import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:dartastic_opentelemetry_api/src/api/common/any_value.dart';
@@ -11,7 +10,7 @@ import 'package:dartastic_opentelemetry_api/src/api/otel_api.dart';
 import 'package:test/test.dart';
 
 AnyValueBytes _bytes(List<int> value) =>
-    AnyValue.fromBytes(Uint8List.fromList(value));
+    AnyValueBytes(Uint8List.fromList(value));
 
 void main() {
   group('attribute', () {
@@ -259,7 +258,7 @@ void main() {
 
       test('AnyValueBytes copies the caller list and is unmodifiable', () {
         final source = Uint8List.fromList([1, 2]);
-        final value = AnyValue.fromBytes(source);
+        final value = AnyValueBytes(source);
         final hashBefore = value.hashCode;
 
         source[0] = 3;
@@ -835,20 +834,13 @@ void main() {
         expect(listWithInf.toString(), contains('-Infinity'));
       });
 
-      test(
-          'a normal attribute map still renders as JSON via the non-fallback path',
-          () {
+      test('a normal attribute map uses the same debug format', () {
         final attrs = Attributes.of({
           'a': 'hello',
           'b': 42,
           'c': true,
         });
-        final str = attrs.toString();
-        expect(() => jsonDecode(str), returnsNormally);
-        final decoded = jsonDecode(str) as Map<String, dynamic>;
-        expect(decoded['a'], equals('hello'));
-        expect(decoded['b'], equals(42));
-        expect(decoded['c'], equals(true));
+        expect(attrs.toString(), '{a: hello, b: 42, c: true}');
       });
     });
   });

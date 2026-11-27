@@ -313,15 +313,12 @@ void main() {
       expect(json['double.key'], equals(3.14));
     });
 
-    test('toString returns JSON formatted string', () {
+    test('toString uses the AnyValue debug rendering', () {
       final attrs = OTelAPI.attributes([
         OTelAPI.attributeString('key', 'value'),
       ]);
 
-      final str = attrs.toString();
-
-      expect(str, contains('key'));
-      expect(str, contains('value'));
+      expect(attrs.toString(), '{key: value}');
     });
 
     test('equality works for identical attributes', () {

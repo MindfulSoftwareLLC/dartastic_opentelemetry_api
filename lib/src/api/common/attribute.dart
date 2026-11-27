@@ -41,7 +41,7 @@ class Attribute {
   String toString() {
     // Interpolating _value calls AnyValue.toString, which renders the value
     // recursively: an array of Strings reads as `["a", "b"]`, and bytes as
-    // `<3 bytes>`. It is also bounded â€” it truncates deep nesting rather than
+    // `<3 bytes>`. It is also bounded: it truncates deep nesting rather than
     // throwing, which matters because toString runs inside debuggers and
     // error messages.
     return 'AttributeValue($_value)';

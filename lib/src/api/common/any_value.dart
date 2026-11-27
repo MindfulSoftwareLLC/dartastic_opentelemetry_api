@@ -124,7 +124,7 @@ sealed class AnyValue {
   factory AnyValue.fromMap(Map<String, AnyValue> value) = AnyValueMap;
 
   /// Creates an immutable byte value by copying the supplied bytes.
-  static AnyValueBytes fromBytes(Uint8List value) => AnyValueBytes._(value);
+  factory AnyValue.fromBytes(Uint8List value) = AnyValueBytes;
 
   /// Creates the null AnyValue.
   factory AnyValue.nullValue() = AnyValueNull;
@@ -203,7 +203,7 @@ sealed class AnyValue {
     } else if (obj is Uint8List) {
       // Must precede the List check: Uint8List implements List<int>, so it
       // would otherwise become an array of AnyValueInt.
-      return AnyValueBytes._(obj);
+      return AnyValueBytes(obj);
     } else if (obj is Iterable) {
       if (!path.add(obj)) return _cycle();
       try {
@@ -419,7 +419,8 @@ class AnyValueBytes extends AnyValue {
   /// The wrapped bytes, which are unmodifiable.
   final Uint8List value;
 
-  AnyValueBytes._(Uint8List value)
+  /// Creates an immutable copy of [value].
+  AnyValueBytes(Uint8List value)
       : value = Uint8List.fromList(value).asUnmodifiableView();
   // Deep hashing walks the whole payload, which for bytes may be large, and
   // this value is immutable, so compute it once on first use.

@@ -224,7 +224,7 @@ void main() {
       // bracketing assertion is exact on every platform. On Dart-on-JS /
       // Wasm, `tracer.timeProvider` is `WebTimeProvider` (sub-ms via
       // `performance.now`) while `DateTime.now` is `Date.now` (ms-
-      // truncated) â€” bracketing with `DateTime.now` would let the event
+      // truncated). Bracketing with `DateTime.now` would let the event
       // timestamp fall up to ~1ms past `afterCreation`.
       final beforeCreation = tracer.timeProvider.nowDateTime();
       span.addEventNow(

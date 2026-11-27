@@ -58,6 +58,24 @@ void main() {
     expect(restored.getString('x'), 'NaN');
   });
 
+  test('attribute debug rendering is bounded and does not report errors', () {
+    OTelAPI.setErrorHandler((error, _) => throw StateError('$error'));
+    AnyValue deep = const AnyValueString('hidden leaf');
+    for (var i = 0; i < 129; i++) {
+      deep = AnyValueArray([deep]);
+    }
+    final attrs = OTelAPI.attributesFromMap({
+      'nan': double.nan,
+      'bytes': Uint8List.fromList([1, 2, 3]),
+      'deep': deep,
+    });
+
+    final output = attrs.toString();
+    expect(output, startsWith('{nan: NaN, bytes: <3 bytes>, deep: '));
+    expect(output, contains('...'));
+    expect(output, isNot(contains('hidden leaf')));
+  });
+
   for (final maps in [false, true]) {
     for (final wrappers in [127, 128]) {
       test('depth $wrappers, maps=$maps reports once and resets per call', () {

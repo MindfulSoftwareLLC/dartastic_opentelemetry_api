@@ -1,7 +1,7 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
-// api#94 â€” API log sites that report user misuse, invalid input, or
+// api#94: API log sites that report user misuse, invalid input, or
 // dropped/invalid data route through OTelErrorHandling.report() instead
 // of OTelLog.warn, so an installed error handler (or a factory default)
 // sees them. Per error-handling.md these are exactly the errors the
@@ -152,7 +152,7 @@ void main() {
 
     test('keep-decision: the empty provider-name fallback stays a warn', () {
       // '' coerces to the documented global default; the returned provider
-      // is fully functional and nothing is dropped â€” a genuine advisory.
+      // is fully functional and nothing is dropped. This is a genuine advisory.
       final provider = OTelAPI.tracerProvider('');
 
       expect(provider, same(OTelAPI.tracerProvider()));
