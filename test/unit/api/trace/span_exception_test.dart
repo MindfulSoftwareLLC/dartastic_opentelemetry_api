@@ -43,8 +43,8 @@ void main() {
       expect(events?.first.name, equals('exception'));
 
       final attrs = events?.first.attributes?.toMap() ?? {};
-      expect(attrs['exception.type']?.value.unwrap(), contains('Exception'));
-      expect(attrs['exception.message']?.value.unwrap(),
+      expect(attrs['exception.type']?.value.toObject(), contains('Exception'));
+      expect(attrs['exception.message']?.value.toObject(),
           equals('Exception: Test error'));
     });
 
@@ -59,8 +59,8 @@ void main() {
       expect(events, hasLength(1));
 
       final attrs = events?.first.attributes?.toMap() ?? {};
-      expect(attrs['exception.stacktrace']?.value.unwrap(), isNotNull);
-      expect(attrs['exception.stacktrace']?.value.unwrap().toString(),
+      expect(attrs['exception.stacktrace']?.value.toObject(), isNotNull);
+      expect(attrs['exception.stacktrace']?.value.toObject().toString(),
           contains('test/unit/api/trace/span_exception_test.dart'));
     });
 
@@ -70,7 +70,7 @@ void main() {
 
       final events = getReadableSpan(span).spanEvents;
       final attrs = events?.first.attributes?.toMap() ?? {};
-      expect(attrs['exception.escaped']?.value.unwrap(), true);
+      expect(attrs['exception.escaped']?.value.toObject(), true);
     });
 
     test('records exception with additional attributes', () {
@@ -83,9 +83,9 @@ void main() {
 
       final events = getReadableSpan(span).spanEvents;
       final attrs = events?.first.attributes?.toMap() ?? {};
-      expect(attrs['custom.attribute']?.value.unwrap(), equals('value'));
-      expect(attrs['exception.type']?.value.unwrap(), contains('Exception'));
-      expect(attrs['exception.message']?.value.unwrap(),
+      expect(attrs['custom.attribute']?.value.toObject(), equals('value'));
+      expect(attrs['exception.type']?.value.toObject(), contains('Exception'));
+      expect(attrs['exception.message']?.value.toObject(),
           equals('Exception: Test error'));
     });
 
@@ -100,9 +100,9 @@ void main() {
 
       final events = getReadableSpan(span).spanEvents;
       final attrs = events?.first.attributes?.toMap() ?? {};
-      expect(attrs['exception.type']?.value.unwrap(), equals('CustomType'));
-      expect(
-          attrs['exception.message']?.value.unwrap(), equals('Custom message'));
+      expect(attrs['exception.type']?.value.toObject(), equals('CustomType'));
+      expect(attrs['exception.message']?.value.toObject(),
+          equals('Custom message'));
     });
 
     test('handles exceptions after span is ended', () {
@@ -121,10 +121,10 @@ void main() {
       final events = getReadableSpan(span).spanEvents;
       expect(events, hasLength(2));
       expect(
-          events?[0].attributes?.toMap()['exception.message']?.value.unwrap(),
+          events?[0].attributes?.toMap()['exception.message']?.value.toObject(),
           equals('Exception: Error 1'));
       expect(
-          events?[1].attributes?.toMap()['exception.message']?.value.unwrap(),
+          events?[1].attributes?.toMap()['exception.message']?.value.toObject(),
           equals('Exception: Error 2'));
     });
 

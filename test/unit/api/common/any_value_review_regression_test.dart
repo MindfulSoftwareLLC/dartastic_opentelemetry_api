@@ -41,7 +41,7 @@ void main() {
       expect(reports, hasLength(1));
     });
 
-    for (final wrappers in [30, 31, 32]) {
+    for (final wrappers in [127, 128, 129]) {
       test('$kind depth $wrappers reports once for a wide subtree', () {
         final reports = <Object>[];
         OTelAPI.setErrorHandler((error, stack) => reports.add(error));
@@ -53,19 +53,19 @@ void main() {
         }
 
         final converted = AnyValue.fromObject(input);
-        converted.unwrap();
+        converted.toObject();
         converted.toJson();
-        expect(reports, hasLength(wrappers == 30 ? 0 : 1));
+        expect(reports, hasLength(wrappers == 127 ? 0 : 1));
         // The report marker belongs to one call, not to global state.
         AnyValue.fromObject(input);
-        expect(reports, hasLength(wrappers == 30 ? 0 : 2));
+        expect(reports, hasLength(wrappers == 127 ? 0 : 2));
       });
     }
   }
 
   test('nested depth error reaches a strict handler once', () {
     Object input = 0;
-    for (var i = 0; i < 33; i++) {
+    for (var i = 0; i < 129; i++) {
       input = [input];
     }
     final reports = <Object>[];
@@ -96,14 +96,14 @@ void main() {
 
   test('typed double lists obey the same depth guard', () {
     Object input = <double>[1.0, 2.5];
-    for (var i = 0; i < 31; i++) {
+    for (var i = 0; i < 128; i++) {
       input = [input];
     }
     final reports = <Object>[];
     OTelAPI.setErrorHandler((error, stack) => reports.add(error));
     final result = AnyValue.fromObject(input);
     expect(reports, hasLength(1));
-    result.unwrap();
+    result.toObject();
     expect(reports, hasLength(1));
   });
 

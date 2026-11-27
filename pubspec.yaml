@@ -5,7 +5,7 @@ repository: https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api.gi
 homepage: https://dartastic.io
 
 environment:
-  sdk: ">=3.0.0 <4.0.0"
+  sdk: ">=3.3.0 <4.0.0"
 
 # Platform compatibility - explicitly declaring web support
 targets:

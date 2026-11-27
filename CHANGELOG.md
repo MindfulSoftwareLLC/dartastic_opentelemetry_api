@@ -25,6 +25,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `AnyValue.toObject()` returns native Dart values. `AnyValue.toJson()` and
+  `Attribute.toJson()` implement the non-OTLP representation from
+  [common.md](https://opentelemetry.io/docs/specs/otel/common/#anyvalue-representation-for-non-otlp-protocols),
+  including base64 bytes and non-finite floating-point strings
+  ([#148](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/148)).
+
 - `AnyValue`, a sealed hierarchy (`AnyValueString`, `AnyValueBool`,
   `AnyValueInt`, `AnyValueDouble`, `AnyValueArray`, `AnyValueMap`,
   `AnyValueBytes`, `AnyValueNull`) representing any OpenTelemetry attribute
@@ -33,14 +39,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `AnyValue.fromObject` recursively maps primitives, `Uint8List` (as bytes),
   `DateTime` (UTC ISO-8601 string), `Iterable`/`Set` (as arrays), and enums
   and other objects via guarded `toString()`. Collection cycles and
-  depth past 32 levels yield `AnyValueNull` and report via `OTelErrorHandling`,
-  with `unwrap()` not re-reporting at the depth placeholder. `AnyValue.fromBytes`
-  is the byte-value entry point; it validates 0-255 bytes and reports invalid
-  or unreadable input instead of exposing a throwing subtype constructor.
+  containers past the 128-level safety guard yield `AnyValueNull` and report
+  via `OTelErrorHandling`. `AnyValue.fromBytes()` takes a `Uint8List` and
+  stores an unmodifiable copy. `toObject()` preserves the byte type
+  ([#148](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/148)).
   Typed `Attributes` getters return null quietly for `AnyValueNull`
   ([#123](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/123)).
 
 ### Changed
+
+- **BREAKING**: The API package now requires Dart 3.3 or later to support
+  unmodifiable typed byte views
+  ([#148](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/148)).
+
+- **BREAKING**: `Attributes.toJson()` now emits base64 strings for bytes and
+  `"NaN"`, `"Infinity"`, or `"-Infinity"` for non-finite doubles. This form
+  is lossy: `Attributes.fromJson()` reads those values back as strings
+  ([#148](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/148)).
 
 - **BREAKING**: `OTelAPI.attributesFromSemanticMap`, `attributesOf<E>`, and
   `OTelSemanticExtension.toMapEntry` accept nullable values, consistent with
@@ -56,7 +71,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `Attribute` carrying an `AnyValue` payload, so explicit type arguments
   must be removed (`Attribute<String>` becomes `Attribute`).
   `attribute.value` is now an `AnyValue` rather than the raw Dart value;
-  read it through typed `Attributes` getters or unwrap it. Construction is
+  read it through typed `Attributes` getters or `AnyValue.toObject()`. Construction is
   unaffected (the `Attribute` constructor was already private)
   ([#123](https://github.com/MindfulSoftwareLLC/dartastic_opentelemetry_api/pull/123)).
 - **BREAKING**: `LogRecord.body` is an `AnyValue?` rather than an `Object?`.
